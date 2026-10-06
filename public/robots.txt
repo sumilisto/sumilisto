@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /carrito
+
+Sitemap: https://sumilisto.com/sitemap.xml

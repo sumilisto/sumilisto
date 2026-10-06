@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ==========================================================================
+     TOKENS DE DISEÑO DE MARCA - SUMILISTO
+     Modifica estos valores para cambiar la paleta en toda la aplicación
+     ========================================================================== */
+  --color-primary: #590317;           /* Vino tinto / Borgoña principal */
+  --color-primary-hover: #73041e;     /* Hover para botones primarios */
+  --color-primary-active: #400210;    /* Estado activo / presionado */
+  --color-primary-light: #fdf2f4;     /* Fondo suave para badges y estados activos */
+  
+  --color-accent: #d97706;            /* Ámbar de acento (alertas, ofertas) */
+  --color-accent-light: #fef3c7;
+  
+  --color-surface: #ffffff;           /* Fondo principal de tarjetas y sheets */
+  --color-background: #f8fafc;        /* Fondo general de la aplicación */
+  --color-border: #e2e8f0;            /* Bordes sutiles de separación */
+  --color-border-hover: #cbd5e1;
+  
+  --color-text-main: #0f172a;         /* Texto de alto contraste */
+  --color-text-muted: #64748b;        /* Texto secundario y leyendas */
+  --color-text-inverse: #ffffff;      /* Texto sobre fondos oscuros */
+
+  --color-success: #15803d;          /* Verde para disponible / confirmaciones */
+  --color-success-bg: #f0fdf4;
+  --color-warning: #b45309;          /* Ámbar para últimas unidades */
+  --color-warning-bg: #fffbeb;
+  --color-danger: #b91c1c;           /* Rojo para agotado / no disponible */
+  --color-danger-bg: #fef2f2;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --min-touch-target: 44px;           /* Accesibilidad WCAG 2.2 AA */
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text-main);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Respeto estricto a preferencias de reducción de movimiento */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .touch-target {
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+  }
+}
