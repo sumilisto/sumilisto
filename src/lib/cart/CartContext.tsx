@@ -129,9 +129,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (quantity <= 0) {
           newItems = prev.items.filter((item) => item.sku !== sku);
         } else {
-          newItems = prev.items.map((item) =>
-            item.sku === sku ? { ...item, cantidad: quantity } : item
-          );
+          const exists = prev.items.some((item) => item.sku === sku);
+          if (exists) {
+            newItems = prev.items.map((item) =>
+              item.sku === sku ? { ...item, cantidad: quantity } : item
+            );
+          } else {
+            newItems = [...prev.items, { sku, cantidad: quantity }];
+          }
         }
 
         const updated: CartStorageData = {
@@ -207,7 +212,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isExpired = elapsed > CART_EXPIRATION_MS;
   const hoursRemaining = Math.max(0, Math.floor((CART_EXPIRATION_MS - elapsed) / (1000 * 60 * 60)));
 
-  const itemCount = cartData.items.reduce((acc, item) => acc + item.cantidad, 0);
+  const itemCount = cartData.items.filter((item) => item.cantidad > 0).length;
 
   return (
     <CartContext.Provider
