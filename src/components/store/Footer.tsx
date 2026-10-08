@@ -16,9 +16,11 @@ export const Footer: React.FC = () => {
           {/* Columna 1: Marca y Propósito */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center text-white font-black text-xl shadow-md">
-                S
-              </div>
+              <img
+                src={theme.logoUrl || "/logo.png"}
+                alt="Sumi"
+                className="h-8 w-auto object-contain rounded-md"
+              />
               <span className="text-xl font-black text-white tracking-tight">SUMILISTO</span>
             </div>
             <p className="text-sm text-slate-400 mb-4 leading-relaxed">

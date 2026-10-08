@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
-import { Plus, Minus, MessageCircle, AlertCircle, Palette } from "lucide-react";
+import { Plus, MessageCircle, AlertCircle } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -19,12 +19,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   bcvRate = 42.50,
 }) => {
-  const { getItemQuantity, addItem, updateQuantity } = useCart();
+  const { getItemQuantity, addItem } = useCart();
   const { theme } = useTheme();
   
-  // Manejo de variantes de color (si las tiene)
-  const hasVariants = Boolean(product.variantes && product.variantes.length > 1);
-  const [selectedVariantSku, setSelectedVariantSku] = useState<string>(
+  const [selectedVariantSku] = useState<string>(
     product.variantes && product.variantes.length > 0 ? product.variantes[0].sku : product.sku
   );
 
@@ -47,22 +45,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const step = minMayor || 1;
     const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 999999;
     if (quantity + step > maxStock) return;
-    if (quantity === 0) {
-      addItem(currentSku, step);
-    } else {
-      addItem(currentSku, step);
-    }
-  };
-
-  const handleDecrement = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const step = minMayor || 1;
-    if (quantity <= step) {
-      updateQuantity(currentSku, 0);
-    } else {
-      updateQuantity(currentSku, quantity - step);
-    }
+    addItem(currentSku, step);
   };
 
   const whatsappNum = theme.whatsappNumber || "584227894547";
@@ -72,19 +55,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div className="group relative flex flex-col bg-white rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-card transition-all duration-200 overflow-hidden">
-      {/* Imagen del producto */}
-      <Link href={`/producto/${product.slug}`} className="relative aspect-square w-full bg-slate-50 overflow-hidden block">
-        <Image
-          src={primaryPhoto}
-          alt={product.fotos[0]?.alt || product.nombre}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-        />
+      {/* Contenedor de la Imagen con Botón '+' en esquina inferior derecha */}
+      <div className="relative aspect-square w-full bg-slate-50 overflow-hidden">
+        <Link href={`/producto/${product.slug}`} className="absolute inset-0 block">
+          <Image
+            src={primaryPhoto}
+            alt={product.fotos[0]?.alt || product.nombre}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+        </Link>
 
         {/* Badge de estado superpuesto */}
-        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start pointer-events-none">
           <Badge status={activeVariant.status} />
           {product.destacado && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand text-white shadow-sm">
@@ -93,144 +78,82 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Presentación / Color seleccionado */}
-        <div className="absolute bottom-2.5 left-2.5 z-10">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-black/60 text-white backdrop-blur-sm">
-            {activeVariant.color && activeVariant.color !== "ESTÁNDAR" ? activeVariant.color : product.presentacion}
-          </span>
-        </div>
-      </Link>
-
-      {/* Información del producto */}
-      <div className="flex flex-col flex-1 p-3.5 sm:p-4 justify-between">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
-            {product.categoria} {product.subcategoria ? `· ${product.subcategoria}` : ""}
+        {/* Presentación / Color seleccionado sobre la foto si aplica */}
+        {activeVariant.color && activeVariant.color !== "ESTÁNDAR" && (
+          <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-black/60 text-white backdrop-blur-sm">
+              {activeVariant.color}
+            </span>
           </div>
+        )}
+
+        {/* Botón '+' en la esquina inferior derecha dentro de la imagen */}
+        {activeVariant.isAvailable ? (
+          <button
+            type="button"
+            onClick={handleIncrement}
+            aria-label={`Agregar ${product.nombre} al pedido`}
+            className="absolute bottom-2.5 right-2.5 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-brand text-white shadow-md hover:bg-brand-hover active:scale-90 transition-all flex items-center justify-center touch-target"
+          >
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+            {quantity > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center border-2 border-white shadow-sm">
+                {quantity}
+              </span>
+            )}
+          </button>
+        ) : (
+          <a
+            href={whatsappInquiryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Consultar por WhatsApp"
+            className="absolute bottom-2.5 right-2.5 z-20 w-10 h-10 rounded-2xl bg-white/90 text-emerald-600 shadow-md hover:bg-white flex items-center justify-center touch-target"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </a>
+        )}
+      </div>
+
+      {/* Información limpia del producto (sin categoría, sin SKU, sin botones de variantes) */}
+      <div className="flex flex-col flex-1 p-3 sm:p-4 justify-between">
+        <div>
           <Link href={`/producto/${product.slug}`}>
-            <h3 className="font-semibold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-brand transition-colors">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-brand transition-colors">
               {product.nombre}
             </h3>
           </Link>
-          <div className="text-xs text-slate-500 mt-0.5">
-            SKU: {currentSku}
-          </div>
-
-          {/* Selector rápido de colores (si tiene múltiples variantes) */}
-          {hasVariants && (
-            <div className="mt-2.5">
-              <div className="text-[11px] font-medium text-slate-500 mb-1.5 flex items-center gap-1">
-                <Palette className="w-3 h-3 text-brand" />
-                <span>Colores disponibles:</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {product.variantes?.map((v) => {
-                  const isSelected = v.sku === selectedVariantSku;
-                  return (
-                    <button
-                      key={v.sku}
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedVariantSku(v.sku);
-                      }}
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
-                        isSelected
-                          ? "bg-brand text-white border-brand shadow-xs"
-                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                      }`}
-                    >
-                      {v.color}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Bloque de Precios y Escala */}
-        <div className="mt-3 pt-3 border-t border-slate-100">
+        <div className="mt-2.5 pt-2 border-t border-slate-100">
           {activeVariant.isAvailable && priceMayor > 0 ? (
             <div>
               <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-lg sm:text-xl font-bold text-slate-900">
+                <span className="text-base sm:text-lg font-black text-slate-900">
                   {formatUsd(priceMayor)}
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
                   / {product.unidadVenta}
                 </span>
-                <span className="text-xs font-medium text-slate-500">
+                <span className="text-[11px] font-medium text-slate-400">
                   ({formatVes(vesAmount)})
                 </span>
               </div>
 
               {/* Escala Gran Mayor */}
-              {priceGranMayor > 0 && minGranMayor > 0 ? (
-                <div className="mt-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded inline-block">
+              {priceGranMayor > 0 && minGranMayor > 0 && (
+                <div className="mt-1 text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded inline-block">
                   Gran Mayor: {formatUsd(priceGranMayor)} (desde {minGranMayor} Unidades)
-                </div>
-              ) : (
-                <div className="mt-1 text-[11px] text-slate-500">
-                  Venta por volumen mayorista
                 </div>
               )}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium bg-slate-50 p-2 rounded-lg border border-slate-200">
               <AlertCircle className="w-4 h-4 text-slate-500 flex-shrink-0" />
-              <span>Precio y existencias sujetas a confirmación</span>
+              <span>Precio a consultar</span>
             </div>
           )}
-
-          {/* Botón de Acción / Selector de Cantidad */}
-          <div className="mt-3.5">
-            {activeVariant.isAvailable ? (
-              quantity === 0 ? (
-                <button
-                  type="button"
-                  onClick={handleIncrement}
-                  className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active text-white font-semibold text-sm transition-all shadow-sm touch-target"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Agregar al pedido</span>
-                </button>
-              ) : (
-                <div className="flex items-center justify-between w-full h-11 rounded-xl bg-slate-100 border border-slate-200 p-1">
-                  <button
-                    type="button"
-                    onClick={handleDecrement}
-                    aria-label="Disminuir cantidad"
-                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-white text-slate-700 hover:bg-slate-200 active:bg-slate-300 font-bold transition-colors touch-target shadow-xs"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <div className="text-sm font-bold text-slate-900 px-2 text-center">
-                    {quantity} <span className="text-xs font-normal text-slate-600">Unidades</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleIncrement}
-                    aria-label="Aumentar cantidad"
-                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-brand text-white hover:bg-brand-hover font-bold transition-colors touch-target shadow-xs"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              )
-            ) : (
-              <a
-                href={whatsappInquiryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 text-xs sm:text-sm font-semibold transition-colors touch-target"
-              >
-                <MessageCircle className="w-4 h-4 text-emerald-600" />
-                <span>Consultar por WhatsApp</span>
-              </a>
-            )}
-          </div>
         </div>
       </div>
     </div>

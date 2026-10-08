@@ -41,27 +41,11 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Logo de Sumilisto */}
           <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
-            {theme.logoUrl ? (
-              <img
-                src={theme.logoUrl}
-                alt="Logo Sumilisto"
-                className="h-10 sm:h-12 w-auto max-w-[150px] sm:max-w-[200px] object-contain group-hover:scale-105 transition-transform"
-              />
-            ) : (
-              <>
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white flex items-center justify-center text-brand font-black text-2xl shadow-inner group-hover:scale-105 transition-transform">
-                  S
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xl sm:text-2xl font-black tracking-tight leading-none text-white">
-                    SUMILISTO
-                  </span>
-                  <span className="text-[10px] font-semibold tracking-wider text-rose-200 uppercase mt-0.5">
-                    Suministros al Mayor
-                  </span>
-                </div>
-              </>
-            )}
+            <img
+              src={theme.logoUrl || "/logo.png"}
+              alt="Sumi"
+              className="h-9 sm:h-11 w-auto max-w-[140px] sm:max-w-[180px] object-contain group-hover:scale-105 transition-transform"
+            />
           </Link>
 
           {/* Barra de búsqueda (Escritorio / Tablet) */}
