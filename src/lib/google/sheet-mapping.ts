@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Product } from "@/types/product";
+import { Product, ProductVariant } from "@/types/product";
 
 // Limpia texto tipo "$ 22,75" o "12.5" o "$ 1.234,56" a número
 const parseNumber = (val: string | undefined): number => {
@@ -9,6 +9,16 @@ const parseNumber = (val: string | undefined): number => {
   const num = parseFloat(clean);
   return isNaN(num) ? 0 : num;
 };
+
+// Genera un slug limpio y amigable
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
 
 // Genera un nombre legible a partir del SKU si el nombre viene vacío en la hoja
 function generateNameFromSku(sku: string, color?: string): string {
@@ -39,7 +49,13 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
   let lastProductName = "";
   let lastDescription = "";
 
-  const products: Product[] = [];
+  // Mapa para agrupar productos por su nombre base y categoría
+  const groupedMap = new Map<string, {
+    nombre: string;
+    categoria: string;
+    descripcion: string;
+    variantes: ProductVariant[];
+  }>();
 
   for (const rawRow of rawRows) {
     try {
@@ -48,7 +64,6 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
         normalizedRow[key.toLowerCase().trim()] = value;
       }
 
-      // Si no hay SKU en esta fila, omitirla
       if (!normalizedRow.sku || !normalizedRow.sku.trim()) {
         continue;
       }
@@ -60,7 +75,7 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
 
       const data = parsed.data;
 
-      // Forward-fill de categoría, nombre y descripción para variantes
+      // Forward-fill para heredar el nombre/categoría/descripción de la fila padre
       if (data.categoria && data.categoria.trim()) {
         lastCategory = data.categoria.trim();
       }
@@ -85,34 +100,98 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
       const hasStock = stockLower !== "0" && stockLower !== "agotado" && stockLower !== "no";
       const isAvailable = precioMayor > 0 && (stockNum > 0 || hasStock);
 
-      products.push({
+      const colorFormatted = data.color ? data.color.trim().toUpperCase() : "ESTÁNDAR";
+
+      // Crear variante individual
+      const variant: ProductVariant = {
         sku: data.sku,
-        nombre: productName,
-        slug: data.sku.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        categoria: category,
-        presentacion: data.color ? data.color : "Estándar",
-        unidadVenta: minMayor > 1 ? `Paquete x ${minMayor}` : "Unidad",
+        color: colorFormatted,
+        presentacion: colorFormatted,
         precioMayorUsd: precioMayor > 0 ? precioMayor : undefined,
         minMayor: minMayor > 0 ? minMayor : 1,
         precioGranMayorUsd: precioGranMayor > 0 ? precioGranMayor : undefined,
         minGranMayor: minGranMayor > 0 ? minGranMayor : undefined,
         stock: stockNum > 0 ? stockNum : (isAvailable ? 100 : 0),
-        activo: true,
-        destacado: false,
-        fotos: [],
         status: isAvailable ? "disponible" : "agotado",
         isAvailable,
-        descripcionLarga: description,
-      });
+        fotos: [],
+      };
+
+      // Clave de agrupación única por producto
+      const groupKey = `${category}__${productName}`.toLowerCase();
+
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, {
+          nombre: productName,
+          categoria: category,
+          descripcion: description,
+          variantes: [variant],
+        });
+      } else {
+        const group = groupedMap.get(groupKey)!;
+        // Evitar variantes duplicadas con el mismo SKU
+        if (!group.variantes.some(v => v.sku === variant.sku)) {
+          group.variantes.push(variant);
+        }
+      }
     } catch {
-      // Ignorar fila problemática
+      // Ignorar fila inválida
     }
+  }
+
+  // Convertir los grupos agrupados en el arreglo final de Product
+  const products: Product[] = [];
+
+  for (const group of Array.from(groupedMap.values())) {
+    // Tomar la primera variante disponible como representativa, o la primera variante
+    const primaryVariant = group.variantes.find(v => v.isAvailable) || group.variantes[0];
+    if (!primaryVariant) continue;
+
+    const baseMinMayor = primaryVariant.minMayor || 1;
+    const unidadVenta = baseMinMayor > 1 ? `${baseMinMayor} Unidades` : "Unidad";
+
+    const hasAnyAvailable = group.variantes.some(v => v.isAvailable);
+
+    // Si tiene múltiples colores, la presentación resume las opciones (ej: "Roja, Dorada, Negra")
+    const colorsList = group.variantes
+      .map(v => v.color)
+      .filter((c): c is string => Boolean(c && c !== "ESTÁNDAR"));
+    
+    const presentacion = colorsList.length > 1
+      ? `${colorsList.length} Colores (${colorsList.join(", ")})`
+      : (primaryVariant.color || "Unidad");
+
+    const totalStock = group.variantes.reduce((sum, v) => sum + v.stock, 0);
+
+    // Slug amigable basado en el nombre del producto
+    const baseSlug = slugify(group.nombre);
+
+    products.push({
+      sku: primaryVariant.sku,
+      nombre: group.nombre,
+      slug: baseSlug || slugify(primaryVariant.sku),
+      categoria: group.categoria,
+      color: primaryVariant.color,
+      presentacion,
+      unidadVenta,
+      precioMayorUsd: primaryVariant.precioMayorUsd,
+      minMayor: primaryVariant.minMayor,
+      precioGranMayorUsd: primaryVariant.precioGranMayorUsd,
+      minGranMayor: primaryVariant.minGranMayor,
+      stock: totalStock,
+      activo: true,
+      destacado: false,
+      fotos: [],
+      status: hasAnyAvailable ? "disponible" : "agotado",
+      isAvailable: hasAnyAvailable,
+      descripcionLarga: group.descripcion,
+      variantes: group.variantes,
+    });
   }
 
   return products;
 }
 
-// Mantener compatibilidad con mapeo individual
 export function mapSheetRowToProduct(rawRow: Record<string, string>): Product | null {
   const result = mapSheetRowsToProducts([rawRow]);
   return result.length > 0 ? result[0] : null;

@@ -1,13 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
-import { Plus, Minus, MessageCircle, AlertCircle } from "lucide-react";
+import { Plus, Minus, MessageCircle, AlertCircle, Palette } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -16,14 +16,24 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  bcvRate = 42.50, // Tasa referencial por defecto
+  bcvRate = 42.50,
 }) => {
   const { getItemQuantity, addItem, updateQuantity } = useCart();
-  const quantity = getItemQuantity(product.sku);
+  
+  // Manejo de variantes de color (si las tiene)
+  const hasVariants = Boolean(product.variantes && product.variantes.length > 1);
+  const [selectedVariantSku, setSelectedVariantSku] = useState<string>(
+    product.variantes && product.variantes.length > 0 ? product.variantes[0].sku : product.sku
+  );
 
-  const priceMayor = product.precioMayorUsd ?? 0;
-  const priceGranMayor = product.precioGranMayorUsd ?? 0;
-  const minGranMayor = product.minGranMayor ?? 0;
+  const activeVariant = product.variantes?.find(v => v.sku === selectedVariantSku) || product;
+  const currentSku = activeVariant.sku;
+  const quantity = getItemQuantity(currentSku);
+
+  const priceMayor = activeVariant.precioMayorUsd ?? product.precioMayorUsd ?? 0;
+  const priceGranMayor = activeVariant.precioGranMayorUsd ?? product.precioGranMayorUsd ?? 0;
+  const minGranMayor = activeVariant.minGranMayor ?? product.minGranMayor ?? 0;
+  const minMayor = activeVariant.minMayor ?? product.minMayor ?? 1;
 
   const vesAmount = calculateVesTotal(priceMayor, bcvRate);
   const primaryPhoto = product.fotos[0]?.url || "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=600&q=80";
@@ -31,26 +41,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const handleIncrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!product.isAvailable) return;
+    if (!activeVariant.isAvailable) return;
     if (quantity === 0) {
-      addItem(product.sku, product.minMayor || 1);
+      addItem(currentSku, minMayor || 1);
     } else {
-      addItem(product.sku, 1);
+      addItem(currentSku, 1);
     }
   };
 
   const handleDecrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (quantity <= (product.minMayor || 1)) {
-      updateQuantity(product.sku, 0);
+    if (quantity <= (minMayor || 1)) {
+      updateQuantity(currentSku, 0);
     } else {
-      updateQuantity(product.sku, quantity - 1);
+      updateQuantity(currentSku, quantity - 1);
     }
   };
 
   const whatsappInquiryUrl = `https://wa.me/584227894547?text=${encodeURIComponent(
-    `Hola Sumilisto, quisiera consultar disponibilidad y precio del producto: ${product.nombre} (SKU: ${product.sku})`
+    `Hola Sumilisto, quisiera consultar disponibilidad y precio del producto: ${product.nombre} (SKU: ${currentSku})`
   )}`;
 
   return (
@@ -68,7 +78,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Badge de estado superpuesto */}
         <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
-          <Badge status={product.status} />
+          <Badge status={activeVariant.status} />
           {product.destacado && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#590317] text-white shadow-sm">
               Destacado
@@ -76,10 +86,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Presentación / Unidad */}
+        {/* Presentación / Color seleccionado */}
         <div className="absolute bottom-2.5 left-2.5 z-10">
           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-black/60 text-white backdrop-blur-sm">
-            {product.presentacion}
+            {activeVariant.color && activeVariant.color !== "ESTÁNDAR" ? activeVariant.color : product.presentacion}
           </span>
         </div>
       </Link>
@@ -96,13 +106,46 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </h3>
           </Link>
           <div className="text-xs text-slate-500 mt-0.5">
-            SKU: {product.sku}
+            SKU: {currentSku}
           </div>
+
+          {/* Selector rápido de colores (si tiene múltiples variantes) */}
+          {hasVariants && (
+            <div className="mt-2.5">
+              <div className="text-[11px] font-medium text-slate-500 mb-1.5 flex items-center gap-1">
+                <Palette className="w-3 h-3 text-[#590317]" />
+                <span>Colores disponibles:</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {product.variantes?.map((v) => {
+                  const isSelected = v.sku === selectedVariantSku;
+                  return (
+                    <button
+                      key={v.sku}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedVariantSku(v.sku);
+                      }}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                        isSelected
+                          ? "bg-[#590317] text-white border-[#590317] shadow-xs"
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      {v.color}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Bloque de Precios y Escala */}
         <div className="mt-3 pt-3 border-t border-slate-100">
-          {product.isAvailable && priceMayor > 0 ? (
+          {activeVariant.isAvailable && priceMayor > 0 ? (
             <div>
               <div className="flex items-baseline gap-1.5 flex-wrap">
                 <span className="text-lg sm:text-xl font-bold text-slate-900">
@@ -119,7 +162,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {/* Escala Gran Mayor */}
               {priceGranMayor > 0 && minGranMayor > 0 ? (
                 <div className="mt-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded inline-block">
-                  Gran Mayor: {formatUsd(priceGranMayor)} (desde {minGranMayor} {product.unidadVenta.toLowerCase()}s)
+                  Gran Mayor: {formatUsd(priceGranMayor)} (desde {minGranMayor} Unidades)
                 </div>
               ) : (
                 <div className="mt-1 text-[11px] text-slate-500">
@@ -136,7 +179,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           {/* Botón de Acción / Selector de Cantidad */}
           <div className="mt-3.5">
-            {product.isAvailable ? (
+            {activeVariant.isAvailable ? (
               quantity === 0 ? (
                 <button
                   type="button"
@@ -157,7 +200,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     <Minus className="w-4 h-4" />
                   </button>
                   <div className="text-sm font-bold text-slate-900 px-2 text-center">
-                    {quantity} <span className="text-xs font-normal text-slate-600">{product.unidadVenta}s</span>
+                    {quantity} <span className="text-xs font-normal text-slate-600">Unidades</span>
                   </div>
                   <button
                     type="button"

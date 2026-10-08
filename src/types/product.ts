@@ -9,6 +9,20 @@ export interface ProductPhoto {
   isPrimary?: boolean;
 }
 
+export interface ProductVariant {
+  sku: string;
+  color?: string;
+  presentacion: string;
+  precioMayorUsd?: number;
+  minMayor: number;
+  precioGranMayorUsd?: number;
+  minGranMayor?: number;
+  stock: number;
+  status: ProductStockStatus;
+  isAvailable: boolean;
+  fotos: ProductPhoto[];
+}
+
 export interface Product {
   sku: string;
   nombre: string;
@@ -16,8 +30,9 @@ export interface Product {
   categoria: ProductCategory;
   subcategoria?: string;
   marca?: string;
-  presentacion: string;           // Ej: "Bulto de 1000 u.", "Caja de 500 u."
-  unidadVenta: string;            // Ej: "Bulto", "Caja", "Paquete"
+  color?: string;
+  presentacion: string;           // Ej: "Roja", "Dorada", "50 Unidades"
+  unidadVenta: string;            // Ej: "50 Unidades", "100 Unidades"
   precioMayorUsd?: number;        // Precio base al mayor en USD
   minMayor: number;               // Cantidad mínima para compra al mayor (def: 1)
   precioGranMayorUsd?: number;    // Precio con descuento por volumen
@@ -31,6 +46,7 @@ export interface Product {
   // Campos calculados para UI
   status: ProductStockStatus;
   isAvailable: boolean;           // False si no tiene precio o stock <= 0
+  variantes?: ProductVariant[];   // Lista de colores / variantes
 }
 
 export interface ProductFilterOptions {
