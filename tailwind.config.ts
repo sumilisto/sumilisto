@@ -10,6 +10,9 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
+          DEFAULT: "var(--theme-brand)",
+          hover: "var(--theme-brand-hover)",
+          active: "var(--theme-brand-active)",
           50: "#fdf2f4",
           100: "#fbe6ea",
           200: "#f7cfd7",
@@ -19,8 +22,8 @@ const config: Config = {
           600: "#ba3152",
           700: "#9c2340",
           800: "#821f37",
-          900: "#590317", // Primary brand color
-          950: "#3d010f",
+          900: "var(--theme-brand)", // Primary brand color
+          950: "var(--theme-brand-active)",
         },
       },
       fontFamily: {

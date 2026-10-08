@@ -74,14 +74,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <section className="mt-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[#590317]" />
+              <Layers className="w-5 h-5 text-brand" />
               <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
                 Productos Relacionados en {product.categoria}
               </h2>
             </div>
             <Link
               href={`/categoria/${product.categoria.toLowerCase()}`}
-              className="text-xs sm:text-sm font-bold text-[#590317] hover:underline"
+              className="text-xs sm:text-sm font-bold text-brand hover:underline"
             >
               Ver todos en {product.categoria}
             </Link>

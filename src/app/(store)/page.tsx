@@ -19,7 +19,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-10 pb-12">
       {/* Hero Banner / Propuesta de Valor */}
-      <section className="bg-gradient-to-br from-[#590317] via-[#73041e] to-[#400210] text-white py-8 sm:py-14 px-4 sm:px-6 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-brand via-brand-hover to-brand-active text-white py-8 sm:py-14 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
         <div className="max-w-7xl mx-auto relative z-10 flex flex-col items-center text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-semibold text-rose-100 mb-4">
@@ -38,7 +38,7 @@ export default async function HomePage() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <Link
               href="#catalogo"
-              className="h-12 px-6 rounded-xl bg-white text-[#590317] hover:bg-rose-50 font-bold text-sm sm:text-base flex items-center gap-2 shadow-md hover:scale-105 active:scale-95 transition-all"
+              className="h-12 px-6 rounded-xl bg-white text-brand hover:bg-rose-50 font-bold text-sm sm:text-base flex items-center gap-2 shadow-md hover:scale-105 active:scale-95 transition-all"
             >
               <span>Explorar Catálogo</span>
               <ArrowRight className="w-4 h-4" />
@@ -86,14 +86,14 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#590317]" />
+            <TrendingUp className="w-5 h-5 text-brand" />
             <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
               Más Pedidos por Restaurantes
             </h2>
           </div>
           <Link
             href="/categoria/envases"
-            className="text-xs sm:text-sm font-bold text-[#590317] hover:underline flex items-center gap-1"
+            className="text-xs sm:text-sm font-bold text-brand hover:underline flex items-center gap-1"
           >
             <span>Ver más</span>
             <ArrowRight className="w-3.5 h-3.5" />

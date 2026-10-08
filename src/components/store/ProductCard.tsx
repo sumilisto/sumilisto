@@ -84,7 +84,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
           <Badge status={activeVariant.status} />
           {product.destacado && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#590317] text-white shadow-sm">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand text-white shadow-sm">
               Destacado
             </span>
           )}
@@ -105,7 +105,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.categoria} {product.subcategoria ? `· ${product.subcategoria}` : ""}
           </div>
           <Link href={`/producto/${product.slug}`}>
-            <h3 className="font-semibold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-[#590317] transition-colors">
+            <h3 className="font-semibold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-brand transition-colors">
               {product.nombre}
             </h3>
           </Link>
@@ -117,7 +117,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {hasVariants && (
             <div className="mt-2.5">
               <div className="text-[11px] font-medium text-slate-500 mb-1.5 flex items-center gap-1">
-                <Palette className="w-3 h-3 text-[#590317]" />
+                <Palette className="w-3 h-3 text-brand" />
                 <span>Colores disponibles:</span>
               </div>
               <div className="flex flex-wrap gap-1">
@@ -134,7 +134,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                       }}
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
                         isSelected
-                          ? "bg-[#590317] text-white border-[#590317] shadow-xs"
+                          ? "bg-brand text-white border-brand shadow-xs"
                           : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                       }`}
                     >
@@ -188,7 +188,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <button
                   type="button"
                   onClick={handleIncrement}
-                  className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#590317] hover:bg-[#73041e] active:bg-[#400210] text-white font-semibold text-sm transition-all shadow-sm touch-target"
+                  className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active text-white font-semibold text-sm transition-all shadow-sm touch-target"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Agregar al pedido</span>
@@ -210,7 +210,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     type="button"
                     onClick={handleIncrement}
                     aria-label="Aumentar cantidad"
-                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#590317] text-white hover:bg-[#73041e] font-bold transition-colors touch-target shadow-xs"
+                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-brand text-white hover:bg-brand-hover font-bold transition-colors touch-target shadow-xs"
                   >
                     <Plus className="w-4 h-4" />
                   </button>

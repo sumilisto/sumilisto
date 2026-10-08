@@ -18,7 +18,7 @@ export default function AboutPage() {
 
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs flex flex-col gap-6">
         <div>
-          <span className="text-xs font-bold text-[#590317] uppercase tracking-wider">
+          <span className="text-xs font-bold text-brand uppercase tracking-wider">
             Nuestra Empresa
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
@@ -32,17 +32,17 @@ export default function AboutPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
-            <Truck className="w-6 h-6 text-[#590317] mb-2" />
+            <Truck className="w-6 h-6 text-brand mb-2" />
             <h3 className="font-bold text-sm text-slate-900">Despachos Eficientes</h3>
             <p className="text-xs text-slate-500 mt-1">Rutas programadas en Caracas, Guarenas y Guatire.</p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
-            <Award className="w-6 h-6 text-[#590317] mb-2" />
+            <Award className="w-6 h-6 text-brand mb-2" />
             <h3 className="font-bold text-sm text-slate-900">Calidad Grado Alimento</h3>
             <p className="text-xs text-slate-500 mt-1">Materiales certificados para contacto seguro con alimentos.</p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
-            <Users className="w-6 h-6 text-[#590317] mb-2" />
+            <Users className="w-6 h-6 text-brand mb-2" />
             <h3 className="font-bold text-sm text-slate-900">Atención Personalizada</h3>
             <p className="text-xs text-slate-500 mt-1">Asesoría comercial directa e inmediata vía WhatsApp.</p>
           </div>

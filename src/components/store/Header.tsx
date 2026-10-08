@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "@/lib/cart/CartContext";
+import { useTheme } from "@/lib/theme/ThemeContext";
 import { formatVes } from "@/lib/currency/format";
 import { Search, ShoppingBag, MessageCircle, MapPin, Sparkles } from "lucide-react";
 import { InstantSearchModal } from "@/components/search/InstantSearchModal";
@@ -13,12 +15,13 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
   const { itemCount } = useCart();
+  const { theme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <>
       {/* Barra superior de tasa oficial BCV y cobertura */}
-      <div className="bg-[#400210] text-rose-100 text-xs py-1.5 px-4 sm:px-6">
+      <div className="bg-brand-active text-rose-100 text-xs py-1.5 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
           <div className="flex items-center gap-1.5 justify-center">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -34,21 +37,29 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
       </div>
 
       {/* Header principal */}
-      <header className="sticky top-0 z-30 bg-[#590317] text-white shadow-md">
+      <header className="sticky top-0 z-30 bg-brand text-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Logo de Sumilisto */}
           <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white flex items-center justify-center text-[#590317] font-black text-2xl shadow-inner group-hover:scale-105 transition-transform">
-              S
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-black tracking-tight leading-none text-white">
-                SUMILISTO
-              </span>
-              <span className="text-[10px] font-semibold tracking-wider text-rose-200 uppercase mt-0.5">
-                Suministros al Mayor
-              </span>
-            </div>
+            {theme.logoUrl ? (
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 overflow-hidden group-hover:scale-105 transition-transform">
+                <Image src={theme.logoUrl} alt="Logo" fill className="object-contain" />
+              </div>
+            ) : (
+              <>
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white flex items-center justify-center text-brand font-black text-2xl shadow-inner group-hover:scale-105 transition-transform">
+                  S
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xl sm:text-2xl font-black tracking-tight leading-none text-white">
+                    SUMILISTO
+                  </span>
+                  <span className="text-[10px] font-semibold tracking-wider text-rose-200 uppercase mt-0.5">
+                    Suministros al Mayor
+                  </span>
+                </div>
+              </>
+            )}
           </Link>
 
           {/* Barra de búsqueda (Escritorio / Tablet) */}
@@ -96,12 +107,12 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
             <Link
               href="/carrito"
               aria-label="Ver carrito de compras"
-              className="relative flex items-center gap-2 h-11 px-3.5 sm:px-4 rounded-xl bg-white text-[#590317] hover:bg-rose-50 active:bg-rose-100 font-bold text-sm transition-all shadow-sm touch-target"
+              className="relative flex items-center gap-2 h-11 px-3.5 sm:px-4 rounded-xl bg-white text-brand hover:bg-rose-50 active:bg-rose-100 font-bold text-sm transition-all shadow-sm touch-target"
             >
-              <ShoppingBag className="w-5 h-5 text-[#590317]" />
+              <ShoppingBag className="w-5 h-5 text-brand" />
               <span className="hidden sm:inline">Pedido</span>
               {itemCount > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-black bg-[#590317] text-white">
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-black bg-brand text-white">
                   {itemCount}
                 </span>
               )}

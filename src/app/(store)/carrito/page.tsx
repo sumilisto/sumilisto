@@ -187,7 +187,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
   if (items.length === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <div className="w-20 h-20 mx-auto rounded-3xl bg-rose-50 flex items-center justify-center text-[#590317] mb-4">
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-rose-50 flex items-center justify-center text-brand mb-4">
           <Truck className="w-10 h-10" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tu pedido está vacío</h1>
@@ -196,7 +196,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
         </p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 mt-6 h-12 px-6 rounded-xl bg-[#590317] text-white font-bold text-sm shadow-md hover:bg-[#73041e] transition-colors"
+          className="inline-flex items-center gap-2 mt-6 h-12 px-6 rounded-xl bg-brand text-white font-bold text-sm shadow-md hover:bg-brand-hover transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Explorar el catálogo</span>
@@ -239,7 +239,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
             </h2>
             <Link
               href="/"
-              className="text-xs font-bold text-[#590317] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
             >
               <ArrowLeft className="w-3 h-3" />
               <span>Seguir agregando</span>
@@ -271,7 +271,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                         {sku}
                       </span>
                       <span className={`inline-flex items-center px-2 py-0.2 rounded text-[10px] font-bold ${
-                        tier === "gran_mayor" ? "bg-amber-100 text-amber-900" : "bg-rose-50 text-[#590317]"
+                        tier === "gran_mayor" ? "bg-amber-100 text-amber-900" : "bg-rose-50 text-brand"
                       }`}>
                         {tier === "gran_mayor" ? "Gran Mayor" : "Mayor"}
                       </span>
@@ -324,7 +324,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                         onClick={() => {
                           updateQuantity(sku, quantity + step);
                         }}
-                        className="w-7 h-7 flex items-center justify-center rounded bg-white text-[#590317] hover:bg-slate-200 text-xs shadow-xs font-bold"
+                        className="w-7 h-7 flex items-center justify-center rounded bg-white text-brand hover:bg-slate-200 text-xs shadow-xs font-bold"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
@@ -350,7 +350,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
           {/* Tarjeta de Datos de Entrega */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-4 flex items-center gap-2">
-              <Truck className="w-4 h-4 text-[#590317]" />
+              <Truck className="w-4 h-4 text-brand" />
               <span>Datos para el Despacho</span>
             </h2>
 
@@ -365,7 +365,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                   placeholder="Ej: Hamburguesería Caracas / Juan Pérez"
                   value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#590317]/20 focus:border-[#590317]"
+                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 />
               </div>
 
@@ -375,7 +375,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                   onClick={() => setFormData({ ...formData, modalidad: "entrega" })}
                   className={`h-11 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                     formData.modalidad === "entrega"
-                      ? "bg-[#590317] text-white border-[#590317] shadow-xs"
+                      ? "bg-brand text-white border-brand shadow-xs"
                       : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                   }`}
                 >
@@ -388,7 +388,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                   onClick={() => setFormData({ ...formData, modalidad: "retiro" })}
                   className={`h-11 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                     formData.modalidad === "retiro"
-                      ? "bg-[#590317] text-white border-[#590317] shadow-xs"
+                      ? "bg-brand text-white border-brand shadow-xs"
                       : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                   }`}
                 >
@@ -404,7 +404,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                 <select
                   value={formData.zonaEntrega}
                   onChange={(e) => setFormData({ ...formData, zonaEntrega: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#590317]/20 focus:border-[#590317]"
+                  className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 >
                   <option value="Caracas - Libertador">Caracas - Municipio Libertador</option>
                   <option value="Caracas - Chacao">Caracas - Municipio Chacao</option>
@@ -424,7 +424,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                 <select
                   value={formData.metodoPago}
                   onChange={(e) => setFormData({ ...formData, metodoPago: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#590317]/20 focus:border-[#590317]"
+                  className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 >
                   <option value="Pago Móvil / Transferencia Bs (Tasa BCV)">Pago Móvil / Transferencia Bs (Tasa BCV)</option>
                   <option value="Dólares en Efectivo (Contra entrega)">Dólares en Efectivo (Contra entrega)</option>

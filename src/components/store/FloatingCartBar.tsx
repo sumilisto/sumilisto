@@ -33,7 +33,7 @@ export const FloatingCartBar: React.FC = () => {
     <aside aria-label="Resumen rápido del pedido" className="sm:hidden fixed bottom-14 left-0 right-0 z-30 px-3 pb-2 pointer-events-none">
       <Link
         href="/carrito"
-        className="pointer-events-auto flex items-center justify-between w-full h-13 px-4 py-3 rounded-2xl bg-[#590317] text-white shadow-float active:scale-[0.98] transition-transform border border-rose-900/40"
+        className="pointer-events-auto flex items-center justify-between w-full h-13 px-4 py-3 rounded-2xl bg-brand text-white shadow-float active:scale-[0.98] transition-transform border border-rose-900/40"
       >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xs text-white">

@@ -44,7 +44,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ bcvRate = 42.5
                   key={item.label}
                   type="button"
                   onClick={item.action}
-                  className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg text-slate-600 hover:text-[#590317] touch-target transition-colors"
+                  className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg text-slate-600 hover:text-brand touch-target transition-colors"
                 >
                   <Icon className="w-5 h-5 mb-0.5" />
                   <span className="text-[10px] font-medium leading-none">{item.label}</span>
@@ -74,14 +74,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ bcvRate = 42.5
                 className={cn(
                   "relative flex flex-col items-center justify-center py-1.5 px-3 rounded-lg touch-target transition-colors",
                   isActive
-                    ? "text-[#590317] font-bold"
-                    : "text-slate-600 hover:text-[#590317] font-medium"
+                    ? "text-brand font-bold"
+                    : "text-slate-600 hover:text-brand font-medium"
                 )}
               >
                 <div className="relative">
                   <Icon className="w-5 h-5 mb-0.5" />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#590317] text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brand text-white text-[10px] font-black flex items-center justify-center shadow-xs">
                       {item.badge}
                     </span>
                   )}

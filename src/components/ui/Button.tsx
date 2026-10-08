@@ -25,11 +25,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        "bg-[#590317] text-white hover:bg-[#73041e] active:bg-[#400210] focus-visible:ring-[#590317] shadow-sm",
+        "bg-brand text-white hover:bg-brand-hover active:bg-brand-active focus-visible:ring-brand shadow-sm",
       secondary:
         "bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300 focus-visible:ring-slate-400",
       outline:
-        "border-2 border-[#590317] text-[#590317] hover:bg-[#fdf2f4] active:bg-[#fbe6ea] focus-visible:ring-[#590317]",
+        "border-2 border-brand text-brand hover:bg-[#fdf2f4] active:bg-[#fbe6ea] focus-visible:ring-brand",
       ghost:
         "text-slate-700 hover:bg-slate-100 active:bg-slate-200 focus-visible:ring-slate-300",
       whatsapp:

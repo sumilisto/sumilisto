@@ -41,7 +41,7 @@ export default function FAQPage() {
 
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 text-[#590317] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-brand flex items-center justify-center">
             <HelpCircle className="w-6 h-6" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -58,7 +58,7 @@ export default function FAQPage() {
             return (
               <div key={idx} className="py-5 first:pt-0 last:pb-0">
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 mb-2">
-                  <Icon className="w-4 h-4 text-[#590317] flex-shrink-0" />
+                  <Icon className="w-4 h-4 text-brand flex-shrink-0" />
                   <span>{faq.q}</span>
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed pl-6">

@@ -171,7 +171,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       {variants.length > 1 && (
         <div className="pt-2">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
-            <Palette className="w-4 h-4 text-[#590317]" />
+            <Palette className="w-4 h-4 text-brand" />
             <span>Seleccionar Color ({variants.length} disponibles):</span>
           </div>
           <div className="flex flex-wrap gap-2.5">
@@ -188,11 +188,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   }}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border touch-target ${
                     isSelected
-                      ? "bg-[#590317] text-white border-[#590317] shadow-sm scale-105"
+                      ? "bg-brand text-white border-brand shadow-sm scale-105"
                       : "bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-white"
                   }`}
                 >
-                  <span className={`w-2.5 h-2.5 rounded-full ${isSelected ? "bg-white" : "bg-[#590317]"}`}></span>
+                  <span className={`w-2.5 h-2.5 rounded-full ${isSelected ? "bg-white" : "bg-brand"}`}></span>
                   <span>{v.color}</span>
                   {!v.isAvailable && (
                     <span className="text-[10px] text-rose-300 font-normal">(Agotado)</span>
@@ -231,7 +231,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <div className="text-sm font-black text-slate-900 uppercase">
               MAYOR: {minMayor} unds
             </div>
-            <div className="text-base font-bold text-[#590317] mt-0.5">
+            <div className="text-base font-bold text-brand mt-0.5">
               $ {priceMayor.toFixed(2).replace(".", ",")}
               <span className="text-xs font-medium text-slate-500 ml-2">
                 ({formatVes(calculateVesTotal(priceMayor, bcvRate))})
@@ -248,7 +248,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 setPackCount(1);
                 setStockAlertMessage(null);
               }}
-              className="w-5 h-5 text-[#590317] focus:ring-[#590317] cursor-pointer accent-[#590317]"
+              className="w-5 h-5 text-brand focus:ring-brand cursor-pointer accent-brand"
             />
           </div>
         </label>
@@ -274,7 +274,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   Ahorro por volumen
                 </span>
               </div>
-              <div className="text-base font-bold text-[#590317] mt-0.5">
+              <div className="text-base font-bold text-brand mt-0.5">
                 $ {priceGranMayor.toFixed(2).replace(".", ",")}
                 <span className="text-xs font-medium text-slate-500 ml-2">
                   ({formatVes(calculateVesTotal(priceGranMayor, bcvRate))})
@@ -291,7 +291,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   setPackCount(1);
                   setStockAlertMessage(null);
                 }}
-                className="w-5 h-5 text-[#590317] focus:ring-[#590317] cursor-pointer accent-[#590317]"
+                className="w-5 h-5 text-brand focus:ring-brand cursor-pointer accent-brand"
               />
             </div>
           </label>
@@ -308,7 +308,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           value={comentarios}
           onChange={(e) => setComentarios(e.target.value)}
           placeholder="(Opcional)"
-          className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#590317]/20 focus:border-[#590317]"
+          className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
         />
       </div>
 
@@ -346,7 +346,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 onClick={handleIncrement}
                 disabled={packCount >= maxPacks}
                 aria-label="Aumentar lote"
-                className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-[#590317] disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
+                className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-brand disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -359,7 +359,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               className={`flex-1 h-13 px-6 rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.99] transition-all touch-target ${
                 addedFeedback
                   ? "bg-emerald-600 text-white"
-                  : "bg-[#590317] hover:bg-[#73041e] active:bg-[#400210] text-white"
+                  : "bg-brand hover:bg-brand-hover active:bg-brand-active text-white"
               }`}
             >
               {addedFeedback ? (

@@ -34,7 +34,7 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150 touch-target border",
             !activeCategory
-              ? "bg-[#590317] text-white border-[#590317] shadow-sm"
+              ? "bg-brand text-white border-brand shadow-sm"
               : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
           )}
         >
@@ -51,7 +51,7 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150 touch-target border",
                 isActive
-                  ? "bg-[#590317] text-white border-[#590317] shadow-sm"
+                  ? "bg-brand text-white border-brand shadow-sm"
                   : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
               )}
             >

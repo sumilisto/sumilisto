@@ -63,7 +63,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-[#590317] uppercase tracking-wider">
+            <span className="text-xs font-bold text-brand uppercase tracking-wider">
               Línea Mayorista
             </span>
             <span className="text-xs text-slate-400">· {products.length} productos</span>
@@ -78,7 +78,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#590317] border border-slate-200 rounded-xl px-3 py-2 w-fit"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-brand border border-slate-200 rounded-xl px-3 py-2 w-fit"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Volver al inicio</span>
@@ -112,7 +112,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </p>
             <Link
               href="/"
-              className="inline-block mt-4 text-sm font-bold text-[#590317] hover:underline"
+              className="inline-block mt-4 text-sm font-bold text-brand hover:underline"
             >
               Ver otras categorías
             </Link>

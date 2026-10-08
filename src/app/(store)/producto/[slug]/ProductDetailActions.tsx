@@ -102,7 +102,7 @@ export const ProductDetailActions: React.FC<ProductDetailActionsProps> = ({
         <button
           type="button"
           onClick={handleAddToCart}
-          className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl bg-[#590317] hover:bg-[#73041e] active:bg-[#400210] text-white font-bold text-sm sm:text-base shadow-sm transition-all touch-target"
+          className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active text-white font-bold text-sm sm:text-base shadow-sm transition-all touch-target"
         >
           <ShoppingBag className="w-5 h-5" />
           <span>{currentQuantity > 0 ? "Actualizar pedido" : "Agregar al pedido"}</span>
