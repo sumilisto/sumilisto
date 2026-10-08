@@ -60,12 +60,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
         <Link
           href={`/categoria/${product.categoria.toLowerCase()}`}
-          className="hover:text-slate-900 transition-colors"
+          className="hover:text-slate-900 font-semibold text-slate-700 transition-colors uppercase tracking-wider"
         >
           {product.categoria}
         </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <span className="font-semibold text-slate-900 truncate max-w-xs">{product.nombre}</span>
       </nav>
 
       {/* Componente Interactivo de Ficha de Producto con Variantes de Color */}

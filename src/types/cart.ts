@@ -3,6 +3,8 @@ export type CartStatus = "activo" | "enviado_whatsapp";
 export interface CartStorageItem {
   sku: string;
   cantidad: number;
+  tier?: "mayor" | "gran_mayor";
+  comentarios?: string;
 }
 
 export interface CartStorageData {

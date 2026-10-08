@@ -14,8 +14,8 @@ interface CartContextType {
   whatsappSentAt?: number;
   isExpired: boolean;
   getItemQuantity: (sku: string) => number;
-  addItem: (sku: string, quantity?: number) => void;
-  updateQuantity: (sku: string, quantity: number) => void;
+  addItem: (sku: string, quantity?: number, tier?: "mayor" | "gran_mayor", comentarios?: string) => void;
+  updateQuantity: (sku: string, quantity: number, tier?: "mayor" | "gran_mayor", comentarios?: string) => void;
   removeItem: (sku: string) => void;
   clearCart: () => void;
   markAsSentWhatsApp: () => void;
@@ -90,7 +90,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const addItem = useCallback(
-    (sku: string, quantity = 1) => {
+    (sku: string, quantity = 1, tier?: "mayor" | "gran_mayor", comentarios?: string) => {
       setCartData((prev) => {
         const existingIndex = prev.items.findIndex((item) => item.sku === sku);
         let newItems: CartStorageItem[];
@@ -100,9 +100,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           newItems[existingIndex] = {
             ...newItems[existingIndex],
             cantidad: newItems[existingIndex].cantidad + quantity,
+            tier: tier || newItems[existingIndex].tier,
+            comentarios: comentarios !== undefined ? comentarios : newItems[existingIndex].comentarios,
           };
         } else {
-          newItems = [...prev.items, { sku, cantidad: quantity }];
+          newItems = [...prev.items, { sku, cantidad: quantity, tier, comentarios }];
         }
 
         const updated: CartStorageData = {
@@ -123,7 +125,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const updateQuantity = useCallback(
-    (sku: string, quantity: number) => {
+    (sku: string, quantity: number, tier?: "mayor" | "gran_mayor", comentarios?: string) => {
       setCartData((prev) => {
         let newItems: CartStorageItem[];
         if (quantity <= 0) {
@@ -132,10 +134,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const exists = prev.items.some((item) => item.sku === sku);
           if (exists) {
             newItems = prev.items.map((item) =>
-              item.sku === sku ? { ...item, cantidad: quantity } : item
+              item.sku === sku
+                ? {
+                    ...item,
+                    cantidad: quantity,
+                    tier: tier || item.tier,
+                    comentarios: comentarios !== undefined ? comentarios : item.comentarios,
+                  }
+                : item
             );
           } else {
-            newItems = [...prev.items, { sku, cantidad: quantity }];
+            newItems = [...prev.items, { sku, cantidad: quantity, tier, comentarios }];
           }
         }
 

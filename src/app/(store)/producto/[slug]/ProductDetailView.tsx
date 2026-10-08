@@ -11,13 +11,12 @@ import {
   ShieldCheck,
   Truck,
   MessageCircle,
-  AlertCircle,
   Palette,
   Check,
   Share2,
   Plus,
   Minus,
-  ShoppingBag,
+  AlertTriangle,
 } from "lucide-react";
 
 interface ProductDetailViewProps {
@@ -40,9 +39,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           color: product.color || product.presentacion,
           presentacion: product.presentacion,
           precioMayorUsd: product.precioMayorUsd,
-          minMayor: product.minMayor || 100,
+          minMayor: product.minMayor || 50,
           precioGranMayorUsd: product.precioGranMayorUsd,
-          minGranMayor: product.minGranMayor || 500,
+          minGranMayor: product.minGranMayor || 100,
           stock: product.stock || 500,
           status: product.status,
           isAvailable: product.isAvailable,
@@ -55,8 +54,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   );
 
   const activeVariant = variants.find((v) => v.sku === selectedSku) || variants[0];
-  const minMayor = activeVariant.minMayor || 100;
-  const minGranMayor = activeVariant.minGranMayor || 500;
+  const minMayor = activeVariant.minMayor || 50;
+  const minGranMayor = activeVariant.minGranMayor || 100;
   const priceMayor = activeVariant.precioMayorUsd ?? 0;
   const priceGranMayor = activeVariant.precioGranMayorUsd ?? 0;
 
@@ -67,6 +66,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const [packCount, setPackCount] = useState<number>(1);
   const [comentarios, setComentarios] = useState<string>("");
   const [addedFeedback, setAddedFeedback] = useState<boolean>(false);
+  const [stockAlertMessage, setStockAlertMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
 
   // Unidades totales resultantes
@@ -75,16 +75,35 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const totalUnits = packCount * unitsPerPack;
 
   const totalUsd = Math.round(pricePerPack * packCount * 100) / 100;
-  const totalVes = calculateVesTotal(totalUsd, bcvRate);
 
   const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 500;
   const maxPacks = Math.max(1, Math.floor(maxStock / unitsPerPack));
 
   const handleAddToCart = () => {
     if (!activeVariant.isAvailable) return;
-    updateQuantity(activeVariant.sku, totalUnits);
+    
+    // Si intenta agregar más del stock disponible
+    if (activeVariant.stock > 0 && totalUnits > activeVariant.stock) {
+      setStockAlertMessage(`Solo quedan ${activeVariant.stock} unidades disponibles de este producto.`);
+      setTimeout(() => setStockAlertMessage(null), 4000);
+      return;
+    }
+
+    // Guarda en el carrito con su SKU único de variante (así ROJA y DORADA se guardan como productos separados)
+    updateQuantity(activeVariant.sku, totalUnits, selectedTier, comentarios);
     setAddedFeedback(true);
+    setStockAlertMessage(null);
     setTimeout(() => setAddedFeedback(false), 2500);
+  };
+
+  const handleIncrement = () => {
+    if (packCount < maxPacks) {
+      setPackCount((prev) => prev + 1);
+      setStockAlertMessage(null);
+    } else {
+      setStockAlertMessage(`Solo quedan ${activeVariant.stock} unidades disponibles de este producto.`);
+      setTimeout(() => setStockAlertMessage(null), 4000);
+    }
   };
 
   const handleShare = async () => {
@@ -111,21 +130,18 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   return (
     <div className="flex flex-col gap-6 bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-xs max-w-4xl mx-auto">
-      {/* 1. Encabezado principal: TÍTULO, SKU Y STOCK ARRIBA DE LA IMAGEN */}
+      {/* 1. TÍTULO Y SKU ARRIBA DE LA IMAGEN (Sin stock disponible visible) */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
           {product.nombre}
         </h1>
         <div className="flex items-center gap-3 text-xs text-slate-500 mt-2 flex-wrap">
           <span>SKU: <strong className="text-slate-700">{activeVariant.sku}</strong></span>
-          <span>·</span>
-          {activeVariant.stock > 0 ? (
-            <span className="text-emerald-700 font-semibold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-              Stock disponible: {activeVariant.stock} Unidades
-            </span>
-          ) : (
-            <span className="text-rose-600 font-semibold">Agotado</span>
+          {!activeVariant.isAvailable && (
+            <>
+              <span>·</span>
+              <span className="text-rose-600 font-semibold">Agotado temporalmente</span>
+            </>
           )}
         </div>
       </div>
@@ -151,7 +167,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </div>
       </div>
 
-      {/* 3. Selector de Color (si hay múltiples variantes) */}
+      {/* 3. Selector de Color */}
       {variants.length > 1 && (
         <div className="pt-2">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
@@ -168,6 +184,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   onClick={() => {
                     setSelectedSku(v.sku);
                     setPackCount(1);
+                    setStockAlertMessage(null);
                   }}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border touch-target ${
                     isSelected
@@ -187,24 +204,35 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </div>
       )}
 
-      {/* 4. Selector de Modalidad: MAYOR y GRAN MAYOR (Estilo Radio Buttons de la referencia) */}
+      {/* 4. DESCRIPCIÓN DEL PRODUCTO (Ubicada justo después de la variación de color) */}
+      {product.descripcionLarga && (
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-sm text-slate-600 leading-relaxed">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            Descripción del Producto
+          </h2>
+          <p className="whitespace-pre-line text-xs sm:text-sm text-slate-600">{product.descripcionLarga}</p>
+        </div>
+      )}
+
+      {/* 5. Selector de Modalidad: MAYOR y GRAN MAYOR (Paleta vinotinto #590317, sin US) */}
       <div className="border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-200">
         {/* Opción MAYOR */}
         <label
           onClick={() => {
             setSelectedTier("mayor");
             setPackCount(1);
+            setStockAlertMessage(null);
           }}
           className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${
-            selectedTier === "mayor" ? "bg-emerald-50/50" : "hover:bg-slate-50"
+            selectedTier === "mayor" ? "bg-rose-50/60" : "hover:bg-slate-50"
           }`}
         >
           <div>
             <div className="text-sm font-black text-slate-900 uppercase">
               MAYOR: {minMayor} unds
             </div>
-            <div className="text-base font-bold text-slate-900 mt-0.5">
-              US$ {priceMayor.toFixed(2).replace(".", ",")}
+            <div className="text-base font-bold text-[#590317] mt-0.5">
+              $ {priceMayor.toFixed(2).replace(".", ",")}
               <span className="text-xs font-medium text-slate-500 ml-2">
                 ({formatVes(calculateVesTotal(priceMayor, bcvRate))})
               </span>
@@ -218,8 +246,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               onChange={() => {
                 setSelectedTier("mayor");
                 setPackCount(1);
+                setStockAlertMessage(null);
               }}
-              className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-[#25D366]"
+              className="w-5 h-5 text-[#590317] focus:ring-[#590317] cursor-pointer accent-[#590317]"
             />
           </div>
         </label>
@@ -230,9 +259,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             onClick={() => {
               setSelectedTier("gran_mayor");
               setPackCount(1);
+              setStockAlertMessage(null);
             }}
             className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${
-              selectedTier === "gran_mayor" ? "bg-emerald-50/50" : "hover:bg-slate-50"
+              selectedTier === "gran_mayor" ? "bg-rose-50/60" : "hover:bg-slate-50"
             }`}
           >
             <div>
@@ -240,12 +270,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 <span className="text-sm font-black text-slate-900 uppercase">
                   GRAN MAYOR: {minGranMayor} unds
                 </span>
-                <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-amber-200 text-amber-900">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">
                   Ahorro por volumen
                 </span>
               </div>
-              <div className="text-base font-bold text-slate-900 mt-0.5">
-                US$ {priceGranMayor.toFixed(2).replace(".", ",")}
+              <div className="text-base font-bold text-[#590317] mt-0.5">
+                $ {priceGranMayor.toFixed(2).replace(".", ",")}
                 <span className="text-xs font-medium text-slate-500 ml-2">
                   ({formatVes(calculateVesTotal(priceGranMayor, bcvRate))})
                 </span>
@@ -259,15 +289,16 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 onChange={() => {
                   setSelectedTier("gran_mayor");
                   setPackCount(1);
+                  setStockAlertMessage(null);
                 }}
-                className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-[#25D366]"
+                className="w-5 h-5 text-[#590317] focus:ring-[#590317] cursor-pointer accent-[#590317]"
               />
             </div>
           </label>
         )}
       </div>
 
-      {/* 5. Comentarios (Opcional) */}
+      {/* 6. Comentarios (Opcional) */}
       <div>
         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
           Comentarios
@@ -281,7 +312,15 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         />
       </div>
 
-      {/* 6. Barra de Acción Inferior: Contador [ - 1 + ] y Botón [ Agregar US$ XX.XX ] */}
+      {/* Mensaje de alerta de stock si el usuario intenta exceder */}
+      {stockAlertMessage && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold animate-shake">
+          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          <span>{stockAlertMessage}</span>
+        </div>
+      )}
+
+      {/* 7. Barra de Acción Inferior: Contador [ - 1 + ] y Botón Vinotinto [ Agregar $ XX,XX ] */}
       <div className="pt-2">
         {activeVariant.isAvailable ? (
           <div className="flex items-center gap-3">
@@ -289,7 +328,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <div className="flex items-center rounded-xl bg-slate-100 border border-slate-200 p-1">
               <button
                 type="button"
-                onClick={() => setPackCount((prev) => Math.max(1, prev - 1))}
+                onClick={() => {
+                  setPackCount((prev) => Math.max(1, prev - 1));
+                  setStockAlertMessage(null);
+                }}
                 disabled={packCount <= 1}
                 aria-label="Disminuir lote"
                 className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
@@ -301,27 +343,23 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (packCount < maxPacks) {
-                    setPackCount((prev) => prev + 1);
-                  }
-                }}
+                onClick={handleIncrement}
                 disabled={packCount >= maxPacks}
                 aria-label="Aumentar lote"
-                className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-emerald-700 disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
+                className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-[#590317] disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
               >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Botón Principal de Agregar con Monto en Vivo */}
+            {/* Botón Principal de Agregar con Paleta Vinotinto de Sumilisto */}
             <button
               type="button"
               onClick={handleAddToCart}
-              className={`flex-1 h-13 px-6 rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm transition-all touch-target ${
+              className={`flex-1 h-13 px-6 rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.99] transition-all touch-target ${
                 addedFeedback
                   ? "bg-emerald-600 text-white"
-                  : "bg-[#2F857D] hover:bg-[#266d66] active:bg-[#1d5550] text-white"
+                  : "bg-[#590317] hover:bg-[#73041e] active:bg-[#400210] text-white"
               }`}
             >
               {addedFeedback ? (
@@ -331,7 +369,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 </>
               ) : (
                 <>
-                  <span>Agregar US$ {totalUsd.toFixed(2).replace(".", ",")}</span>
+                  <span>Agregar $ {totalUsd.toFixed(2).replace(".", ",")}</span>
                   <span className="text-xs font-normal opacity-90">({totalUnits} unds)</span>
                 </>
               )}
@@ -348,26 +386,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <span>Consultar disponibilidad por WhatsApp</span>
           </a>
         )}
-
-        {packCount >= maxPacks && activeVariant.stock > 0 && (
-          <div className="text-[11px] text-amber-700 font-semibold bg-amber-50 px-3 py-1.5 rounded-lg mt-2 text-center">
-            ⚠️ Has seleccionado el stock máximo disponible ({maxStock} Unidades).
-          </div>
-        )}
       </div>
 
-      {/* 7. Descripción del Producto */}
-      {product.descripcionLarga && (
-        <div className="pt-4 border-t border-slate-100 text-sm text-slate-600 leading-relaxed">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-            Descripción del Producto
-          </h2>
-          <p className="whitespace-pre-line">{product.descripcionLarga}</p>
-        </div>
-      )}
-
       {/* 8. Botón secundario y garantías */}
-      <div className="flex items-center justify-between gap-3 pt-2 text-xs text-slate-500">
+      <div className="flex items-center justify-between gap-3 pt-2 text-xs text-slate-500 border-t border-slate-100">
         <a
           href={whatsappInquiryUrl}
           target="_blank"
