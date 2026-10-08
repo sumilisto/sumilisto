@@ -1,17 +1,18 @@
 import React from "react";
 import Link from "next/link";
-import { MOCK_PRODUCTS } from "@/lib/mock/products";
+import { getProducts, getBcvRate } from "@/lib/api/store";
 import { STORE_CATEGORIES } from "@/lib/constants/brand";
 import { ProductCard } from "@/components/store/ProductCard";
 import { CategoryChips } from "@/components/store/CategoryChips";
 import { ArrowRight, Sparkles, TrendingUp, ShieldCheck, Truck, Percent } from "lucide-react";
 
-export default function HomePage() {
-  const bcvRate = 42.50; // Tasa referencial para modo MOCK
+export default async function HomePage() {
+  const [products, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
 
-  // Filtrar productos destacados y con descuento a gran mayor
-  const featuredProducts = MOCK_PRODUCTS.filter((p) => p.destacado && p.isAvailable);
-  const granMayorDeals = MOCK_PRODUCTS.filter(
+  // Filtrar productos disponibles
+  // Por ahora mostramos los primeros como destacados si no hay bandera
+  const featuredProducts = products.filter((p) => p.isAvailable).slice(0, 4);
+  const granMayorDeals = products.filter(
     (p) => p.isAvailable && p.precioGranMayorUsd && p.precioGranMayorUsd > 0
   ).slice(0, 4);
 
@@ -137,13 +138,13 @@ export default function HomePage() {
       <section id="catalogo" className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-            Catálogo Completo de Productos ({MOCK_PRODUCTS.length})
+            Catálogo Completo de Productos ({products.length})
           </h2>
           <span className="text-xs text-slate-500">Stock para entrega inmediata</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-          {MOCK_PRODUCTS.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.sku} product={product} bcvRate={bcvRate} />
           ))}
         </div>

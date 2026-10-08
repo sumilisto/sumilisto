@@ -2,10 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { CartProvider } from "@/lib/cart/CartContext";
+import { ProductsProvider } from "@/lib/products/ProductsContext";
 import { Header } from "@/components/store/Header";
 import { Footer } from "@/components/store/Footer";
 import { MobileBottomNav } from "@/components/store/MobileBottomNav";
 import { FloatingCartBar } from "@/components/store/FloatingCartBar";
+import { getProducts, getBcvRate } from "@/lib/api/store";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,20 +46,24 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [products, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
+
   return (
     <html lang="es-VE" className={inter.variable}>
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col selection:bg-[#590317] selection:text-white">
         <CartProvider>
-          <Header bcvRate={42.50} />
-          <main className="flex-1 pb-16 sm:pb-0">{children}</main>
-          <FloatingCartBar />
-          <MobileBottomNav bcvRate={42.50} />
-          <Footer />
+          <ProductsProvider products={products} bcvRate={bcvRate}>
+            <Header bcvRate={bcvRate} />
+            <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+            <FloatingCartBar />
+            <MobileBottomNav bcvRate={bcvRate} />
+            <Footer />
+          </ProductsProvider>
         </CartProvider>
       </body>
     </html>

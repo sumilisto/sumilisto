@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MOCK_PRODUCTS } from "@/lib/mock/products";
+import { getProducts } from "@/lib/api/store";
 import { STORE_CATEGORIES } from "@/lib/constants/brand";
 import { ProductCard } from "@/components/store/ProductCard";
 import { CategoryChips } from "@/components/store/CategoryChips";
@@ -36,11 +36,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const products = MOCK_PRODUCTS.filter(
+  const allProducts = await getProducts();
+  const products = allProducts.filter(
     (p) => p.categoria.toLowerCase() === category.nombre.toLowerCase()
   );
 
-  const bcvRate = 42.50;
+  const bcvRate = 42.50; // We can leave this, or fetch it if needed inside the component or get from context
 
   // Extraer subcategorías únicas
   const subcategories = Array.from(

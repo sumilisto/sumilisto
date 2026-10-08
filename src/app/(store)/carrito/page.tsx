@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/cart/CartContext";
-import { MOCK_PRODUCTS } from "@/lib/mock/products";
+import { useProducts } from "@/lib/products/ProductsContext";
 import { calculateProductPrice } from "@/lib/pricing/pricing";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { CustomerOrderForm } from "@/types/cart";
@@ -34,7 +34,7 @@ export default function CartPage() {
     markAsSentWhatsApp,
   } = useCart();
 
-  const bcvRate = 42.50; // Referencial MOCK
+  const { products, bcvRate } = useProducts();
 
   // Formulario del cliente
   const [formData, setFormData] = useState<CustomerOrderForm>({
@@ -49,7 +49,7 @@ export default function CartPage() {
   const cartLines = useMemo(() => {
     return items
       .map((item) => {
-        const product = MOCK_PRODUCTS.find((p) => p.sku === item.sku);
+        const product = products.find((p) => p.sku === item.sku);
         if (!product) return null;
         const pricing = calculateProductPrice(product, item.cantidad);
         const subtotalVes = calculateVesTotal(pricing.subtotalUsd, bcvRate);
@@ -62,7 +62,7 @@ export default function CartPage() {
         };
       })
       .filter(Boolean);
-  }, [items, bcvRate]);
+  }, [items, products, bcvRate]);
 
   const totalUsd = useMemo(() => {
     return cartLines.reduce((acc, line) => acc + (line?.pricing.subtotalUsd || 0), 0);

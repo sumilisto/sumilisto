@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MOCK_PRODUCTS } from "@/lib/mock/products";
+import { useProducts } from "@/lib/products/ProductsContext";
 import { Product } from "@/types/product";
 import { normalizeSearchString } from "@/lib/utils";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
@@ -21,6 +21,7 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
   onClose,
   bcvRate,
 }) => {
+  const { products } = useProducts();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +48,7 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
     }
 
     const normalizedQuery = normalizeSearchString(query);
-    const filtered = MOCK_PRODUCTS.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchName = normalizeSearchString(product.nombre).includes(normalizedQuery);
       const matchSku = normalizeSearchString(product.sku).includes(normalizedQuery);
       const matchCat = normalizeSearchString(product.categoria).includes(normalizedQuery);

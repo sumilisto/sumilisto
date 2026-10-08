@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart/CartContext";
-import { MOCK_PRODUCTS } from "@/lib/mock/products";
+import { useProducts } from "@/lib/products/ProductsContext";
 import { calculateProductPrice } from "@/lib/pricing/pricing";
 import { formatUsd } from "@/lib/currency/format";
 import { ShoppingBag, ArrowRight } from "lucide-react";
@@ -12,16 +12,17 @@ import { ShoppingBag, ArrowRight } from "lucide-react";
 export const FloatingCartBar: React.FC = () => {
   const pathname = usePathname();
   const { items, itemCount } = useCart();
+  const { products } = useProducts();
 
   // Calcular subtotal aproximado en el cliente para el floating bar
   const totalUsd = useMemo(() => {
     return items.reduce((acc, cartItem) => {
-      const product = MOCK_PRODUCTS.find((p) => p.sku === cartItem.sku);
+      const product = products.find((p) => p.sku === cartItem.sku);
       if (!product || !product.isAvailable) return acc;
       const pricing = calculateProductPrice(product, cartItem.cantidad);
       return acc + pricing.subtotalUsd;
     }, 0);
-  }, [items]);
+  }, [items, products]);
 
   // No mostrar en la propia página de carrito ni si está vacío
   if (pathname === "/carrito" || itemCount === 0) {

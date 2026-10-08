@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MOCK_PRODUCTS } from "@/lib/mock/products";
+import { getProducts, getBcvRate } from "@/lib/api/store";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { ProductCard } from "@/components/store/ProductCard";
@@ -25,7 +25,8 @@ interface ProductPageProps {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = MOCK_PRODUCTS.find((p) => p.slug === slug);
+  const allProducts = await getProducts();
+  const product = allProducts.find((p) => p.slug === slug);
 
   if (!product) {
     return { title: "Producto no encontrado" };
@@ -49,13 +50,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = MOCK_PRODUCTS.find((p) => p.slug === slug);
+  const [allProducts, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
+  const product = allProducts.find((p) => p.slug === slug);
 
   if (!product) {
     notFound();
   }
 
-  const bcvRate = 42.50;
   const priceMayor = product.precioMayorUsd ?? 0;
   const priceGranMayor = product.precioGranMayorUsd ?? 0;
   const minGranMayor = product.minGranMayor ?? 0;
@@ -64,9 +65,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const vesGranMayor = calculateVesTotal(priceGranMayor, bcvRate);
 
   // Productos relacionados en la misma categoría
-  const relatedProducts = MOCK_PRODUCTS.filter(
+  const relatedProducts = allProducts.filter(
     (p) => p.categoria === product.categoria && p.sku !== product.sku
   ).slice(0, 4);
+
 
   // WhatsApp de consulta directa
   const whatsappUrl = `https://wa.me/584227894547?text=${encodeURIComponent(
