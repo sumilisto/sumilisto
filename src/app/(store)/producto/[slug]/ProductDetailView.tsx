@@ -6,9 +6,9 @@ import Link from "next/link";
 import { Product, ProductVariant } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
+import { calculateProductPrice } from "@/lib/pricing/pricing";
 import { useCart } from "@/lib/cart/CartContext";
 import {
-  ChevronRight,
   ShieldCheck,
   Truck,
   MessageCircle,
@@ -31,7 +31,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   product,
   bcvRate,
 }) => {
-  const { getItemQuantity, updateQuantity, addItem } = useCart();
+  const { getItemQuantity, updateQuantity } = useCart();
   
   // Lista de variantes de color
   const variants = product.variantes && product.variantes.length > 0
@@ -39,7 +39,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     : [
         {
           sku: product.sku,
-          color: product.presentacion,
+          color: product.color || product.presentacion,
           presentacion: product.presentacion,
           precioMayorUsd: product.precioMayorUsd,
           minMayor: product.minMayor,
@@ -58,12 +58,30 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   const activeVariant = variants.find((v) => v.sku === selectedSku) || variants[0];
   const currentQuantityInCart = getItemQuantity(activeVariant.sku);
-  const minMayor = activeVariant.minMayor || 1;
+  const minMayor = activeVariant.minMayor || 100;
+  const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 500;
 
   const [selectedQty, setSelectedQty] = useState<number>(
     currentQuantityInCart > 0 ? currentQuantityInCart : minMayor
   );
   const [copied, setCopied] = useState(false);
+
+  // Cálculo en vivo del subtotal con el motor de precios
+  const pricing = calculateProductPrice(
+    {
+      sku: activeVariant.sku,
+      precioMayorUsd: activeVariant.precioMayorUsd,
+      minMayor: activeVariant.minMayor,
+      precioGranMayorUsd: activeVariant.precioGranMayorUsd,
+      minGranMayor: activeVariant.minGranMayor,
+      stock: activeVariant.stock,
+      activo: true,
+    },
+    selectedQty
+  );
+
+  const currentSubtotalUsd = pricing.subtotalUsd;
+  const currentSubtotalVes = calculateVesTotal(currentSubtotalUsd, bcvRate);
 
   const priceMayor = activeVariant.precioMayorUsd ?? 0;
   const priceGranMayor = activeVariant.precioGranMayorUsd ?? 0;
@@ -98,7 +116,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   };
 
   const whatsappInquiryUrl = `https://wa.me/584227894547?text=${encodeURIComponent(
-    `Hola Sumilisto, quisiera consultar sobre el producto: ${product.nombre} (Color: ${activeVariant.color}, SKU: ${activeVariant.sku})`
+    `Hola Sumilisto, quisiera consultar sobre el producto: ${product.nombre} (Color: ${activeVariant.color}, SKU: ${activeVariant.sku}, Cantidad: ${selectedQty} Unidades)`
   )}`;
 
   return (
@@ -146,11 +164,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           <div className="flex items-center gap-3 text-xs text-slate-500 mt-2 pb-4 border-b border-slate-100 flex-wrap">
             <span>SKU: <strong className="text-slate-700">{activeVariant.sku}</strong></span>
             <span>·</span>
-            <span>Unidad Mínima: <strong className="text-slate-700">{minMayor} Unidades</strong></span>
+            <span>Lote Mínimo: <strong className="text-slate-700">{minMayor} Unidades</strong></span>
             {activeVariant.stock > 0 && (
               <>
                 <span>·</span>
-                <span className="text-emerald-700 font-semibold">Stock disponible ({activeVariant.stock})</span>
+                <span className="text-emerald-700 font-semibold">Stock disponible: {activeVariant.stock} Unidades</span>
               </>
             )}
           </div>
@@ -160,7 +178,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <div className="mt-5 p-4 rounded-2xl bg-rose-50/50 border border-rose-100">
               <div className="text-xs font-bold uppercase tracking-wider text-[#590317] mb-2.5 flex items-center gap-1.5">
                 <Palette className="w-4 h-4 text-[#590317]" />
-                <span>Selecciona el Color ({variants.length} opciones disponibles):</span>
+                <span>Selecciona el Color ({variants.length} colores disponibles):</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {variants.map((v) => {
@@ -171,9 +189,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       type="button"
                       onClick={() => {
                         setSelectedSku(v.sku);
-                        setSelectedQty(v.minMayor || 1);
+                        const vMin = v.minMayor || 100;
+                        setSelectedQty(vMin);
                       }}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
                         isSelected
                           ? "bg-[#590317] text-white border-[#590317] shadow-sm scale-105"
                           : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
@@ -269,50 +288,78 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         {/* Acciones de Compra y Botones */}
         <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
           {activeVariant.isAvailable ? (
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              {/* Selector de Cantidad */}
-              <div className="flex items-center rounded-xl bg-slate-100 border border-slate-200 p-1 w-full sm:w-auto justify-between sm:justify-start">
-                <button
-                  type="button"
-                  onClick={() => setSelectedQty((prev) => Math.max(minMayor, prev - minMayor))}
-                  disabled={selectedQty <= minMayor}
-                  aria-label="Disminuir cantidad"
-                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-200 transition-colors shadow-xs touch-target"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <div className="px-4 text-center font-black text-slate-900 text-sm sm:text-base min-w-[5rem]">
-                  {selectedQty} <span className="text-xs font-normal text-slate-500">Unidades</span>
+            <div className="flex flex-col gap-3">
+              {/* Resumen dinámico del Subtotal de la selección */}
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900 text-white shadow-xs">
+                <div>
+                  <div className="text-[11px] text-slate-300 font-medium uppercase tracking-wider">
+                    Subtotal ({selectedQty} Unidades · Color {activeVariant.color}):
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-white flex items-baseline gap-2">
+                    <span>{formatUsd(currentSubtotalUsd)}</span>
+                    <span className="text-xs font-medium text-rose-200">
+                      ({formatVes(currentSubtotalVes)})
+                    </span>
+                  </div>
                 </div>
+                {pricing.tier === "gran_mayor" && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-400 text-emerald-950">
+                    Tarifa Gran Mayor
+                  </span>
+                )}
+              </div>
+
+              {/* Selector de Cantidad + Botón Agregar al Carrito */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                {/* Selector de Cantidad */}
+                <div className="flex items-center rounded-xl bg-slate-100 border border-slate-200 p-1 w-full sm:w-auto justify-between sm:justify-start">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedQty((prev) => Math.max(minMayor, prev - minMayor))}
+                    disabled={selectedQty <= minMayor}
+                    aria-label="Disminuir cantidad"
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-200 transition-colors shadow-xs touch-target"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <div className="px-4 text-center font-black text-slate-900 text-sm sm:text-base min-w-[6rem]">
+                    {selectedQty} <span className="text-xs font-normal text-slate-500">Unidades</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedQty + minMayor <= maxStock) {
+                        setSelectedQty((prev) => prev + minMayor);
+                      }
+                    }}
+                    disabled={selectedQty + minMayor > maxStock}
+                    aria-label="Aumentar cantidad"
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-200 transition-colors shadow-xs touch-target"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Botón Agregar al Carrito */}
                 <button
                   type="button"
-                  onClick={() => {
-                    const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 999999;
-                    if (selectedQty + minMayor <= maxStock) {
-                      setSelectedQty((prev) => prev + minMayor);
-                    }
-                  }}
-                  disabled={activeVariant.stock > 0 && selectedQty + minMayor > activeVariant.stock}
-                  aria-label="Aumentar cantidad"
-                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-200 transition-colors shadow-xs touch-target"
+                  onClick={handleAddToCart}
+                  className="flex-1 w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-[#590317] hover:bg-[#73041e] active:bg-[#400210] text-white font-bold text-sm sm:text-base shadow-sm hover:shadow-md transition-all touch-target"
                 >
-                  <Plus className="w-4 h-4" />
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>
+                    {currentQuantityInCart > 0
+                      ? `Actualizar (${selectedQty} Unidades)`
+                      : `Agregar ${selectedQty} Unidades al Pedido`}
+                  </span>
                 </button>
               </div>
 
-              {/* Botón Agregar al Carrito */}
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="flex-1 w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-[#590317] hover:bg-[#73041e] active:bg-[#400210] text-white font-bold text-sm sm:text-base shadow-sm hover:shadow-md transition-all touch-target"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                <span>
-                  {currentQuantityInCart > 0
-                    ? `Actualizar pedido (${selectedQty} Unidades)`
-                    : `Agregar ${activeVariant.color} al Pedido`}
-                </span>
-              </button>
+              {selectedQty >= maxStock && (
+                <div className="text-[11px] text-amber-700 font-semibold bg-amber-50 px-2.5 py-1 rounded-md text-center">
+                  ⚠️ Has alcanzado el límite máximo de stock disponible ({maxStock} Unidades).
+                </div>
+              )}
             </div>
           ) : (
             <a

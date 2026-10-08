@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Product, ProductVariant } from "@/types/product";
 
-// Limpia texto tipo "$ 22,75" o "12.5" o "$ 1.234,56" a número
+// Limpia texto tipo "$ 22,75" o "12.5" a número
 const parseNumber = (val: string | undefined): number => {
   if (!val) return 0;
   const withoutSymbol = val.replace(/\$/g, "").trim();
@@ -20,15 +20,51 @@ function slugify(text: string): string {
     .replace(/(^-|-$)+/g, "");
 }
 
-// Genera un nombre legible a partir del SKU si el nombre viene vacío en la hoja
-function generateNameFromSku(sku: string, color?: string): string {
-  const parts = sku.split("-");
-  if (parts.length >= 2) {
-    const type = parts[0] === "DOY" ? "Bolsa Doypack" : parts[0];
-    const sizeOrColor = color || parts.slice(1).join(" ");
-    return `${type} ${sizeOrColor}`.trim();
+// Diccionario para decodificar colores comunes de SKUs
+const COLOR_MAP: Record<string, string> = {
+  ROJ: "ROJA",
+  DOR: "DORADA",
+  NEG: "NEGRA",
+  KRA: "KRAFT",
+  TRA: "TRANSPARENTE",
+  BLA: "BLANCA",
+  PLA: "PLATEADA",
+  VER: "VERDE",
+  AZU: "AZUL",
+};
+
+/**
+ * Analiza el SKU (ej: DOY-ROJ-250, DOY-KRA-9X14+3) para extraer:
+ * - Color exacto
+ * - Identificador único de producto base
+ * - Nombre descriptivo si no viene en el Excel
+ */
+function parseSkuInfo(sku: string): { baseKey: string; color: string; defaultName: string } {
+  const parts = sku.toUpperCase().trim().split("-");
+
+  if (parts.length >= 3) {
+    const prefix = parts[0];       // DOY
+    const colorCode = parts[1];    // ROJ, DOR, NEG, KRA, TRA, BLA
+    const sizeCode = parts.slice(2).join("-"); // 250, 500, 1000, 9X14+3, etc.
+
+    const color = COLOR_MAP[colorCode] || colorCode;
+    const baseKey = `${prefix}-${sizeCode}`;
+
+    let defaultName = `Bolsa Doypack ${sizeCode}`;
+    if (sizeCode === "250" || sizeCode === "500" || sizeCode === "1000") {
+      defaultName = `Bolsa para Café ${sizeCode}Gr con Ziplock + Válvula`;
+    } else if (sizeCode.includes("X")) {
+      defaultName = `Bolsa Doypack ${sizeCode} cm con Ziplock`;
+    }
+
+    return { baseKey, color, defaultName };
   }
-  return sku;
+
+  return {
+    baseKey: sku,
+    color: "ESTÁNDAR",
+    defaultName: sku,
+  };
 }
 
 const SheetRowSchema = z.object({
@@ -37,7 +73,7 @@ const SheetRowSchema = z.object({
   producto: z.string().optional().default(""),
   color: z.string().optional().default(""),
   descripcion: z.string().optional().default(""),
-  stock: z.string().optional().default("0"),
+  stock: z.string().optional().default(""),
   "unid al mayor": z.string().optional(),
   "precio al mayor": z.string().optional(),
   "unid gran mayor": z.string().optional(),
@@ -45,12 +81,9 @@ const SheetRowSchema = z.object({
 });
 
 export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Product[] {
-  let lastCategory = "Bolsas";
-  let lastProductName = "";
-  let lastDescription = "";
-
-  // Mapa para agrupar productos por su nombre base y categoría
+  // Mapa agrupado por clave única de producto base (ej: DOY-250, DOY-500, DOY-9X14+3)
   const groupedMap = new Map<string, {
+    baseKey: string;
     nombre: string;
     categoria: string;
     descripcion: string;
@@ -74,54 +107,53 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
       }
 
       const data = parsed.data;
+      const sku = data.sku.trim();
 
-      // Forward-fill para heredar el nombre/categoría/descripción de la fila padre
-      if (data.categoria && data.categoria.trim()) {
-        lastCategory = data.categoria.trim();
-      }
-      if (data.producto && data.producto.trim()) {
-        lastProductName = data.producto.trim();
-      }
-      if (data.descripcion && data.descripcion.trim()) {
-        lastDescription = data.descripcion.trim();
-      }
+      // Extraer datos estructurados del SKU
+      const { baseKey, color: skuColor, defaultName } = parseSkuInfo(sku);
 
-      const productName = data.producto?.trim() || lastProductName || generateNameFromSku(data.sku, data.color);
-      const category = data.categoria?.trim() || lastCategory || "Bolsas";
-      const description = data.descripcion?.trim() || lastDescription || "";
+      // Usar color del Excel si existe, si no el deducido del SKU
+      const finalColor = data.color && data.color.trim() ? data.color.trim().toUpperCase() : skuColor;
+
+      // Nombre del producto: Si el Excel tiene nombre, usarlo; si no, el nombre generado para ese tamaño específico
+      const productName = data.producto && data.producto.trim() ? data.producto.trim() : defaultName;
+      const category = data.categoria && data.categoria.trim() ? data.categoria.trim() : "Bolsas";
+      const description = data.descripcion && data.descripcion.trim()
+        ? data.descripcion.trim()
+        : `Empaque Doypack resistente con cierre hermético Ziplock. Ideal para café, granos, frutos secos, polvos y alimentos.`;
 
       const precioMayor = parseNumber(data["precio al mayor"]);
       const precioGranMayor = parseNumber(data["precio gran mayor"]);
-      const minMayor = parseNumber(data["unid al mayor"]);
-      const minGranMayor = parseNumber(data["unid gran mayor"]);
-      const stockNum = parseNumber(data.stock);
+      const minMayor = parseNumber(data["unid al mayor"]) || 100;
+      const minGranMayor = parseNumber(data["unid gran mayor"]) || 500;
+      
+      const stockParsed = parseNumber(data.stock);
+      const stockNum = data.stock && data.stock.trim() ? stockParsed : 500; // Si no pone stock, asigna 500 por defecto
 
       const stockLower = String(data.stock).toLowerCase().trim();
-      const hasStock = stockLower !== "0" && stockLower !== "agotado" && stockLower !== "no";
-      const isAvailable = precioMayor > 0 && (stockNum > 0 || hasStock);
+      const isExplicitlyAgotado = stockLower === "0" || stockLower === "agotado" || stockLower === "no";
+      const isAvailable = precioMayor > 0 && !isExplicitlyAgotado && stockNum > 0;
 
-      const colorFormatted = data.color ? data.color.trim().toUpperCase() : "ESTÁNDAR";
-
-      // Crear variante individual
       const variant: ProductVariant = {
-        sku: data.sku,
-        color: colorFormatted,
-        presentacion: colorFormatted,
+        sku,
+        color: finalColor,
+        presentacion: finalColor,
         precioMayorUsd: precioMayor > 0 ? precioMayor : undefined,
-        minMayor: minMayor > 0 ? minMayor : 1,
+        minMayor,
         precioGranMayorUsd: precioGranMayor > 0 ? precioGranMayor : undefined,
-        minGranMayor: minGranMayor > 0 ? minGranMayor : undefined,
-        stock: stockNum > 0 ? stockNum : (isAvailable ? 100 : 0),
+        minGranMayor,
+        stock: isExplicitlyAgotado ? 0 : stockNum,
         status: isAvailable ? "disponible" : "agotado",
         isAvailable,
         fotos: [],
       };
 
-      // Clave de agrupación única por producto
-      const groupKey = `${category}__${productName}`.toLowerCase();
+      // Clave de agrupación EXACTA: basada en el baseKey (ej: BOLSAS__DOY-250)
+      const groupKey = `${category}__${baseKey}`.toUpperCase();
 
       if (!groupedMap.has(groupKey)) {
         groupedMap.set(groupKey, {
+          baseKey,
           nombre: productName,
           categoria: category,
           descripcion: description,
@@ -129,7 +161,14 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
         });
       } else {
         const group = groupedMap.get(groupKey)!;
-        // Evitar variantes duplicadas con el mismo SKU
+        // Si no tiene nombre completo pero esta fila sí lo tiene, actualizarlo
+        if (data.producto && data.producto.trim()) {
+          group.nombre = data.producto.trim();
+        }
+        if (data.descripcion && data.descripcion.trim()) {
+          group.descripcion = data.descripcion.trim();
+        }
+        // Agregar variante si no existe ya ese SKU
         if (!group.variantes.some(v => v.sku === variant.sku)) {
           group.variantes.push(variant);
         }
@@ -139,20 +178,18 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
     }
   }
 
-  // Convertir los grupos agrupados en el arreglo final de Product
   const products: Product[] = [];
 
   for (const group of Array.from(groupedMap.values())) {
-    // Tomar la primera variante disponible como representativa, o la primera variante
     const primaryVariant = group.variantes.find(v => v.isAvailable) || group.variantes[0];
     if (!primaryVariant) continue;
 
-    const baseMinMayor = primaryVariant.minMayor || 1;
-    const unidadVenta = baseMinMayor > 1 ? `${baseMinMayor} Unidades` : "Unidad";
+    const baseMinMayor = primaryVariant.minMayor || 100;
+    const unidadVenta = `${baseMinMayor} Unidades`;
 
     const hasAnyAvailable = group.variantes.some(v => v.isAvailable);
 
-    // Si tiene múltiples colores, la presentación resume las opciones (ej: "Roja, Dorada, Negra")
+    // Lista de colores limpios
     const colorsList = group.variantes
       .map(v => v.color)
       .filter((c): c is string => Boolean(c && c !== "ESTÁNDAR"));
@@ -163,13 +200,12 @@ export function mapSheetRowsToProducts(rawRows: Record<string, string>[]): Produ
 
     const totalStock = group.variantes.reduce((sum, v) => sum + v.stock, 0);
 
-    // Slug amigable basado en el nombre del producto
     const baseSlug = slugify(group.nombre);
 
     products.push({
       sku: primaryVariant.sku,
       nombre: group.nombre,
-      slug: baseSlug || slugify(primaryVariant.sku),
+      slug: baseSlug ? `${baseSlug}-${slugify(group.baseKey)}` : slugify(primaryVariant.sku),
       categoria: group.categoria,
       color: primaryVariant.color,
       presentacion,
