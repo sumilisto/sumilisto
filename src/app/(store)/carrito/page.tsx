@@ -90,7 +90,7 @@ export default function CartPage() {
     cartLines.forEach((line, index) => {
       if (!line) return;
       const { product, quantity, pricing } = line;
-      linesText += `${index + 1}. *${quantity} × ${product.nombre}* (${product.presentacion})\n   Tarifa: ${pricing.tier === "gran_mayor" ? "Gran Mayor" : "Mayor"} · ${formatUsd(pricing.unitPriceUsd)} c/u = *${formatUsd(pricing.subtotalUsd)}*\n`;
+      linesText += `${index + 1}. *${quantity} Unidades × ${product.nombre}* (${product.presentacion})\n   Tarifa: ${pricing.tier === "gran_mayor" ? "Gran Mayor" : "Mayor"} · Total = *${formatUsd(pricing.subtotalUsd)}*\n`;
     });
 
     const message = `👋 *NUEVO PEDIDO DE SUMINISTROS — SUMILISTO*
@@ -250,17 +250,27 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                     <div className="flex items-center rounded-lg bg-slate-100 border border-slate-200 p-0.5">
                       <button
                         type="button"
-                        onClick={() => updateQuantity(product.sku, quantity - 1)}
+                        onClick={() => {
+                          const step = product.minMayor || 1;
+                          if (quantity <= step) {
+                            removeItem(product.sku);
+                          } else {
+                            updateQuantity(product.sku, quantity - step);
+                          }
+                        }}
                         className="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-700 hover:bg-slate-200 text-xs shadow-xs"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="w-8 text-center text-xs font-bold text-slate-900">
-                        {quantity}
+                      <span className="px-2 text-center text-xs font-bold text-slate-900 min-w-[3.5rem]">
+                        {quantity} <span className="text-[10px] font-normal text-slate-500">Unid.</span>
                       </span>
                       <button
                         type="button"
-                        onClick={() => updateQuantity(product.sku, quantity + 1)}
+                        onClick={() => {
+                          const step = product.minMayor || 1;
+                          updateQuantity(product.sku, quantity + step);
+                        }}
                         className="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-700 hover:bg-slate-200 text-xs shadow-xs"
                       >
                         <Plus className="w-3 h-3" />

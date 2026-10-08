@@ -274,19 +274,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <div className="flex items-center rounded-xl bg-slate-100 border border-slate-200 p-1 w-full sm:w-auto justify-between sm:justify-start">
                 <button
                   type="button"
-                  onClick={() => setSelectedQty((prev) => Math.max(minMayor, prev - 1))}
+                  onClick={() => setSelectedQty((prev) => Math.max(minMayor, prev - minMayor))}
                   disabled={selectedQty <= minMayor}
                   aria-label="Disminuir cantidad"
                   className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-200 transition-colors shadow-xs touch-target"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <div className="px-4 text-center font-black text-slate-900 text-base min-w-[3rem]">
-                  {selectedQty}
+                <div className="px-4 text-center font-black text-slate-900 text-sm sm:text-base min-w-[5rem]">
+                  {selectedQty} <span className="text-xs font-normal text-slate-500">Unidades</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedQty((prev) => prev + 1)}
+                  onClick={() => setSelectedQty((prev) => prev + minMayor)}
                   aria-label="Aumentar cantidad"
                   className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 hover:bg-slate-200 transition-colors shadow-xs touch-target"
                 >

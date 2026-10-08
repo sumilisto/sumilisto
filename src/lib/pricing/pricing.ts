@@ -17,16 +17,14 @@ export interface PricingResult {
 /**
  * Motor de precios mayorista para Sumilisto
  * Reglas de negocio:
- * 1. Solo aplica Mayor y Gran Mayor.
- * 2. Si un producto no tiene precio base (precioMayorUsd <= 0), no está disponible.
- * 3. Si cantidad >= minGranMayor y existe precioGranMayorUsd, aplica Gran Mayor.
- * 4. Si falta precioGranMayorUsd, se mantiene precioMayorUsd.
+ * 1. La venta se realiza por lotes/paquetes de unidades mínimas (ej: 100 unidades).
+ * 2. precioMayorUsd es el precio del paquete de minMayor (ej: $ 22,75 por 100 unidades).
+ * 3. Si cantidad >= minGranMayor y existe precioGranMayorUsd, aplica tarifa Gran Mayor.
  */
 export function calculateProductPrice(
   product: Pick<Product, "sku" | "precioMayorUsd" | "minMayor" | "precioGranMayorUsd" | "minGranMayor" | "stock" | "activo">,
   quantity: number
 ): PricingResult {
-  // Validación de disponibilidad
   if (!product.activo) {
     return {
       unitPriceUsd: 0,
@@ -62,34 +60,37 @@ export function calculateProductPrice(
   const granMayorPrice = product.precioGranMayorUsd ?? 0;
   const minGranMayor = product.minGranMayor ?? 0;
 
-  // Gran Mayor aplica si cantidad >= minGranMayor y el precio está definido y es menor o igual
   const hasGranMayor = granMayorPrice > 0 && minGranMayor > minMayor;
   const qualifiesGranMayor = hasGranMayor && quantity >= minGranMayor;
 
   let unitPriceUsd = basePrice;
+  let subtotalUsd = 0;
   let tier: "mayor" | "gran_mayor" = "mayor";
 
   if (qualifiesGranMayor) {
-    unitPriceUsd = granMayorPrice;
     tier = "gran_mayor";
+    unitPriceUsd = granMayorPrice;
+    // Si compra a Gran Mayor (ej: minGranMayor = 500, precio = $41.20)
+    const factor = quantity / minGranMayor;
+    subtotalUsd = Math.round(granMayorPrice * factor * 100) / 100;
+  } else {
+    tier = "mayor";
+    unitPriceUsd = basePrice;
+    // Precio base por lote de minMayor (ej: 100 unid = $22.75, 200 unid = $45.50)
+    const factor = quantity / minMayor;
+    subtotalUsd = Math.round(basePrice * factor * 100) / 100;
   }
-
-  // Cálculo en centavos para precisión
-  const unitCents = Math.round(unitPriceUsd * 100);
-  const subtotalCents = unitCents * quantity;
-  const subtotalUsd = Math.round(subtotalCents) / 100;
 
   // Notificación de ahorro para el siguiente nivel
   let savingsNextTier: PricingResult["savingsNextTier"] = undefined;
   if (!qualifiesGranMayor && hasGranMayor) {
     const unitsNeeded = minGranMayor - quantity;
     if (unitsNeeded > 0) {
-      const savingsPerUnit = Math.round((basePrice - granMayorPrice) * 100) / 100;
       savingsNextTier = {
         unitsNeeded,
         priceNextTierUsd: granMayorPrice,
-        savingsPerUnitUsd: savingsPerUnit,
-        message: `Agrega ${unitsNeeded} más y paga $ ${granMayorPrice.toFixed(2).replace(".", ",")} c/u (Gran Mayor)`,
+        savingsPerUnitUsd: 0,
+        message: `Llega a ${minGranMayor} unidades y paga tarifa Gran Mayor: $ ${granMayorPrice.toFixed(2).replace(".", ",")}`,
       };
     }
   }

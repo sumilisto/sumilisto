@@ -42,20 +42,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!activeVariant.isAvailable) return;
+    const step = minMayor || 1;
     if (quantity === 0) {
-      addItem(currentSku, minMayor || 1);
+      addItem(currentSku, step);
     } else {
-      addItem(currentSku, 1);
+      addItem(currentSku, step);
     }
   };
 
   const handleDecrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (quantity <= (minMayor || 1)) {
+    const step = minMayor || 1;
+    if (quantity <= step) {
       updateQuantity(currentSku, 0);
     } else {
-      updateQuantity(currentSku, quantity - 1);
+      updateQuantity(currentSku, quantity - step);
     }
   };
 
