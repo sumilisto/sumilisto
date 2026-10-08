@@ -120,6 +120,8 @@ export default function CartPage() {
           quantity: item.cantidad,
           tier,
           step,
+          minMayor,
+          minGranMayor,
           unitPriceUsd,
           subtotalUsd,
           subtotalVes,
@@ -270,7 +272,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                       <span className="text-[10px] font-bold text-slate-400 uppercase">
                         {sku}
                       </span>
-                      <span className={`inline-flex items-center px-2 py-0.2 rounded text-[10px] font-bold ${
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
                         tier === "gran_mayor" ? "bg-amber-100 text-amber-900" : "bg-rose-50 text-brand"
                       }`}>
                         {tier === "gran_mayor" ? "Gran Mayor" : "Mayor"}
@@ -306,10 +308,14 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                       <button
                         type="button"
                         onClick={() => {
-                          if (quantity <= step) {
+                          if (tier === "gran_mayor" && quantity === minGranMayor) {
+                            // Step down to Mayor tier
+                            const nextQuantity = Math.max(minMayor, minGranMayor - minMayor);
+                            updateQuantity(sku, nextQuantity, "mayor");
+                          } else if (quantity <= minMayor) {
                             removeItem(sku);
                           } else {
-                            updateQuantity(sku, quantity - step);
+                            updateQuantity(sku, quantity - step, tier);
                           }
                         }}
                         className="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-700 hover:bg-slate-200 text-xs shadow-xs"
@@ -322,7 +328,9 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                       <button
                         type="button"
                         onClick={() => {
-                          updateQuantity(sku, quantity + step);
+                          const nextQuantity = quantity + step;
+                          const nextTier = nextQuantity >= minGranMayor ? "gran_mayor" : "mayor";
+                          updateQuantity(sku, nextQuantity, nextTier);
                         }}
                         className="w-7 h-7 flex items-center justify-center rounded bg-white text-brand hover:bg-slate-200 text-xs shadow-xs font-bold"
                       >

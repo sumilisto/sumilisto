@@ -97,13 +97,40 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   };
 
   const handleIncrement = () => {
-    if (packCount < maxPacks) {
-      setPackCount((prev) => prev + 1);
-      setStockAlertMessage(null);
-    } else {
+    let nextPackCount = packCount + 1;
+    let nextTotalUnits = nextPackCount * unitsPerPack;
+
+    // Si excede el stock
+    if (activeVariant.stock > 0 && nextTotalUnits > activeVariant.stock) {
       setStockAlertMessage(`Solo quedan ${activeVariant.stock} unidades disponibles de este producto.`);
       setTimeout(() => setStockAlertMessage(null), 4000);
+      return;
     }
+
+    // Si está en MAYOR y llega a la cantidad de GRAN MAYOR, auto-cambiar
+    if (selectedTier === "mayor" && priceGranMayor > 0 && minGranMayor > 0 && nextTotalUnits >= minGranMayor) {
+      setSelectedTier("gran_mayor");
+      setPackCount(Math.floor(nextTotalUnits / minGranMayor));
+      setStockAlertMessage(null);
+      return;
+    }
+
+    setPackCount(nextPackCount);
+    setStockAlertMessage(null);
+  };
+
+  const handleDecrement = () => {
+    if (packCount <= 1) {
+      // Si está en Gran Mayor y presiona menos, bajar a Mayor
+      if (selectedTier === "gran_mayor") {
+        setSelectedTier("mayor");
+        const fallbackUnits = Math.max(minMayor, minGranMayor - minMayor);
+        setPackCount(Math.floor(fallbackUnits / minMayor));
+      }
+      return;
+    }
+    setPackCount((prev) => prev - 1);
+    setStockAlertMessage(null);
   };
 
   const handleShare = async () => {
@@ -328,11 +355,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <div className="flex items-center rounded-xl bg-slate-100 border border-slate-200 p-1">
               <button
                 type="button"
-                onClick={() => {
-                  setPackCount((prev) => Math.max(1, prev - 1));
-                  setStockAlertMessage(null);
-                }}
-                disabled={packCount <= 1}
+                onClick={handleDecrement}
+                disabled={packCount <= 1 && selectedTier !== "gran_mayor"}
                 aria-label="Disminuir lote"
                 className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
               >
