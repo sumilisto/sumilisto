@@ -43,6 +43,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     if (!activeVariant.isAvailable) return;
     const step = minMayor || 1;
+    const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 999999;
+    if (quantity + step > maxStock) return;
     if (quantity === 0) {
       addItem(currentSku, step);
     } else {

@@ -286,9 +286,15 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedQty((prev) => prev + minMayor)}
+                  onClick={() => {
+                    const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 999999;
+                    if (selectedQty + minMayor <= maxStock) {
+                      setSelectedQty((prev) => prev + minMayor);
+                    }
+                  }}
+                  disabled={activeVariant.stock > 0 && selectedQty + minMayor > activeVariant.stock}
                   aria-label="Aumentar cantidad"
-                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 hover:bg-slate-200 transition-colors shadow-xs touch-target"
+                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-200 transition-colors shadow-xs touch-target"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
