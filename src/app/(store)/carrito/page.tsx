@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/cart/CartContext";
 import { useProducts } from "@/lib/products/ProductsContext";
+import { useTheme } from "@/lib/theme/ThemeContext";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { CustomerOrderForm } from "@/types/cart";
 import { Product, ProductVariant } from "@/types/product";
@@ -35,6 +36,7 @@ export default function CartPage() {
   } = useCart();
 
   const { products, bcvRate } = useProducts();
+  const { theme } = useTheme();
 
   // Formulario del cliente
   const [formData, setFormData] = useState<CustomerOrderForm>({
@@ -179,8 +181,8 @@ ${formData.notas ? `• *Notas adicionales:* ${formData.notas}\n` : ""}
 _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
 🔗 Tienda: https://sumilisto.com`;
 
-    return `https://wa.me/584227894547?text=${encodeURIComponent(message)}`;
-  }, [cartLines, totalUsd, totalVes, bcvRate, orderCode, formData]);
+    return `https://wa.me/${theme.whatsappNumber || "584227894547"}?text=${encodeURIComponent(message)}`;
+  }, [cartLines, totalUsd, totalVes, bcvRate, orderCode, formData, theme.whatsappNumber]);
 
   const handleSendOrder = () => {
     markAsSentWhatsApp();
@@ -251,7 +253,7 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
           <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/80 p-2 sm:p-4">
             {cartLines.map((line) => {
               if (!line) return null;
-              const { product, variant, sku, quantity, tier, step, subtotalUsd, subtotalVes, comentarios } = line;
+              const { product, variant, sku, quantity, tier, step, minMayor, minGranMayor, subtotalUsd, subtotalVes, comentarios } = line;
 
               return (
                 <div key={sku} className="py-4 first:pt-2 last:pb-2 flex gap-3 sm:gap-4 items-center">

@@ -7,6 +7,7 @@ import { Product, ProductVariant } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
+import { useTheme } from "@/lib/theme/ThemeContext";
 import {
   ShieldCheck,
   Truck,
@@ -29,6 +30,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   bcvRate,
 }) => {
   const { getItemQuantity, updateQuantity } = useCart();
+  const { theme } = useTheme();
   
   // Lista de variantes de color
   const variants = product.variantes && product.variantes.length > 0
@@ -151,7 +153,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     }
   };
 
-  const whatsappInquiryUrl = `https://wa.me/584227894547?text=${encodeURIComponent(
+  const whatsappNum = theme.whatsappNumber || "584227894547";
+  const whatsappInquiryUrl = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(
     `Hola Sumilisto, quisiera consultar sobre el producto: ${product.nombre} (Color: ${activeVariant.color}, SKU: ${activeVariant.sku}, Modalidad: ${selectedTier === "gran_mayor" ? "Gran Mayor" : "Mayor"} de ${totalUnits} unds)`
   )}`;
 

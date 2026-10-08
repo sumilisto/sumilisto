@@ -7,6 +7,7 @@ import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
+import { useTheme } from "@/lib/theme/ThemeContext";
 import { Plus, Minus, MessageCircle, AlertCircle, Palette } from "lucide-react";
 
 interface ProductCardProps {
@@ -19,6 +20,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   bcvRate = 42.50,
 }) => {
   const { getItemQuantity, addItem, updateQuantity } = useCart();
+  const { theme } = useTheme();
   
   // Manejo de variantes de color (si las tiene)
   const hasVariants = Boolean(product.variantes && product.variantes.length > 1);
@@ -63,7 +65,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const whatsappInquiryUrl = `https://wa.me/584227894547?text=${encodeURIComponent(
+  const whatsappNum = theme.whatsappNumber || "584227894547";
+  const whatsappInquiryUrl = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(
     `Hola Sumilisto, quisiera consultar disponibilidad y precio del producto: ${product.nombre} (SKU: ${currentSku})`
   )}`;
 

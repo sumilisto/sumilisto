@@ -1,9 +1,14 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { DEFAULT_STORE_CONFIG, STORE_CATEGORIES } from "@/lib/constants/brand";
+import { useTheme } from "@/lib/theme/ThemeContext";
 import { MessageCircle, MapPin, Clock, ShieldCheck, Truck, Phone } from "lucide-react";
 
 export const Footer: React.FC = () => {
+  const { theme } = useTheme();
+  const whatsappNum = theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber;
   return (
     <footer className="bg-slate-900 text-slate-300 pt-12 pb-24 sm:pb-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -79,13 +84,13 @@ export const Footer: React.FC = () => {
               ¿Requieres cotización para gran volumen o tienes dudas sobre un pedido?
             </p>
             <a
-              href={`https://wa.me/${DEFAULT_STORE_CONFIG.whatsappNumber}?text=Hola%20Sumilisto,%20deseo%20atención%20para%20mi%20negocio`}
+              href={`https://wa.me/${whatsappNum}?text=Hola%20Sumilisto,%20deseo%20atención%20para%20mi%20negocio`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-sm transition-colors shadow-sm"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>WhatsApp: +58 422 789 4547</span>
+              <span>WhatsApp: +{whatsappNum}</span>
             </a>
           </div>
         </div>

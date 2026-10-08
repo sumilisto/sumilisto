@@ -1,22 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-
-interface ThemeSettings {
-  brandColor: string;
-  logoUrl: string | null;
-}
+import { saveStoreSettings, StoreSettings } from "@/lib/actions/settings";
 
 interface ThemeContextType {
-  theme: ThemeSettings;
-  updateTheme: (newTheme: Partial<ThemeSettings>) => void;
+  theme: StoreSettings;
+  updateTheme: (newTheme: Partial<StoreSettings>) => void;
   resetTheme: () => void;
 }
-
-const DEFAULT_THEME: ThemeSettings = {
-  brandColor: "#590317",
-  logoUrl: null,
-};
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
@@ -37,31 +28,48 @@ function adjustColorBrightness(hex: string, percent: number) {
                b.toString(16).padStart(2, '0');
 }
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
+export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSettings: StoreSettings }> = ({ children, initialSettings }) => {
+  const [theme, setTheme] = useState<StoreSettings>(initialSettings);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const storedTheme = localStorage.getItem("sumilisto_theme");
-    if (storedTheme) {
-      try {
-        setTheme(JSON.parse(storedTheme));
-      } catch (e) {}
+    // Verificar si hay configuración guardada en localStorage (como fallback instantáneo)
+    if (typeof window !== "undefined") {
+      const local = localStorage.getItem("sumilisto_theme");
+      if (local) {
+        try {
+          const parsed = JSON.parse(local);
+          setTheme((prev) => ({ ...prev, ...parsed }));
+        } catch {}
+      }
     }
   }, []);
 
-  const updateTheme = (newTheme: Partial<ThemeSettings>) => {
-    setTheme(prev => {
-      const updated = { ...prev, ...newTheme };
+  const updateTheme = async (newTheme: Partial<StoreSettings>) => {
+    const updated = { ...theme, ...newTheme };
+    setTheme(updated);
+    if (typeof window !== "undefined") {
       localStorage.setItem("sumilisto_theme", JSON.stringify(updated));
-      return updated;
-    });
+    }
+    try {
+      await saveStoreSettings(updated);
+    } catch {}
   };
 
-  const resetTheme = () => {
-    setTheme(DEFAULT_THEME);
-    localStorage.removeItem("sumilisto_theme");
+  const resetTheme = async () => {
+    const defaultSettings: StoreSettings = {
+      brandColor: "#590317",
+      logoUrl: null,
+      whatsappNumber: "584227894547",
+    };
+    setTheme(defaultSettings);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("sumilisto_theme");
+    }
+    try {
+      await saveStoreSettings(defaultSettings);
+    } catch {}
   };
 
   return (

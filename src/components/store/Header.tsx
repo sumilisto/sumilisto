@@ -42,9 +42,11 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
           {/* Logo de Sumilisto */}
           <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
             {theme.logoUrl ? (
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 overflow-hidden group-hover:scale-105 transition-transform">
-                <Image src={theme.logoUrl} alt="Logo" fill className="object-contain" />
-              </div>
+              <img
+                src={theme.logoUrl}
+                alt="Logo Sumilisto"
+                className="h-10 sm:h-12 w-auto max-w-[150px] sm:max-w-[200px] object-contain group-hover:scale-105 transition-transform"
+              />
             ) : (
               <>
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white flex items-center justify-center text-brand font-black text-2xl shadow-inner group-hover:scale-105 transition-transform">
@@ -93,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
 
             {/* Enlace de WhatsApp directo */}
             <a
-              href="https://wa.me/584227894547?text=Hola%20Sumilisto,%20quisiera%20hacer%20una%20consulta%20de%20suministros"
+              href={`https://wa.me/${theme.whatsappNumber || "584227894547"}?text=Hola%20Sumilisto,%20quisiera%20hacer%20una%20consulta%20de%20suministros`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Contactar por WhatsApp"

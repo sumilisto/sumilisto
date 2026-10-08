@@ -9,6 +9,7 @@ import { Footer } from "@/components/store/Footer";
 import { MobileBottomNav } from "@/components/store/MobileBottomNav";
 import { FloatingCartBar } from "@/components/store/FloatingCartBar";
 import { getProducts, getBcvRate } from "@/lib/api/store";
+import { getStoreSettings } from "@/lib/actions/settings";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -52,12 +53,16 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [products, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
+  const [products, bcvRate, settings] = await Promise.all([
+    getProducts(), 
+    getBcvRate(),
+    getStoreSettings()
+  ]);
 
   return (
     <html lang="es-VE" className={inter.variable}>
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col selection:bg-brand selection:text-white">
-        <ThemeProvider>
+        <ThemeProvider initialSettings={settings}>
           <CartProvider>
             <ProductsProvider products={products} bcvRate={bcvRate}>
               <Header bcvRate={bcvRate} />
