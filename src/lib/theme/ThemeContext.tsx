@@ -76,18 +76,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
         `}} />
       )}
       {/* Splash Screen */}
-      {mounted && !splashDone && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500"
-          style={{ backgroundColor: theme.brandColor }}
-        >
-          <img
-            src={theme.logoUrl || "/logo.png"}
-            alt="Sumi"
-            className="w-44 h-44 object-contain animate-pulse"
-          />
-        </div>
+      {!splashDone && (
+        <style dangerouslySetInnerHTML={{ __html: `body { overflow: hidden; }` }} />
       )}
+      <div
+        className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-700 ease-in-out ${
+          splashDone ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+        style={{ backgroundColor: theme.brandColor }}
+      >
+        <img
+          src={theme.logoUrl || "/logo.png"}
+          alt="Sumilisto"
+          className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 object-contain animate-pulse"
+        />
+      </div>
       {children}
     </ThemeContext.Provider>
   );
