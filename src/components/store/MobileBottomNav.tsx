@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart/CartContext";
-import { Home, Layers, Search, ShoppingBag, MessageCircle } from "lucide-react";
+import { useTheme } from "@/lib/theme/ThemeContext";
+import { Home, Layers, Search, ShoppingBag, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InstantSearchModal } from "@/components/search/InstantSearchModal";
 
@@ -15,19 +16,15 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ bcvRate = 42.50 }) => {
   const pathname = usePathname();
   const { itemCount } = useCart();
+  const { theme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const navItems = [
     { label: "Inicio", href: "/", icon: Home },
     { label: "Categorías", href: "/#categorias", icon: Layers },
+    { label: "Carrito", href: "/carrito", icon: ShoppingBag, badge: itemCount },
     { label: "Buscar", action: () => setIsSearchOpen(true), icon: Search },
-    { label: "Pedido", href: "/carrito", icon: ShoppingBag, badge: itemCount },
-    {
-      label: "WhatsApp",
-      href: "https://wa.me/584227894547?text=Hola%20Sumilisto,%20quisiera%20hacer%20un%20pedido%20de%20suministros",
-      icon: MessageCircle,
-      external: true,
-    },
+    { label: "Despachos", href: "#despachos", icon: Truck },
   ];
 
   return (
@@ -36,7 +33,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ bcvRate = 42.5
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = !item.action && pathname === item.href;
+            const isActive = !item.action && (pathname === item.href || (item.href === "/carrito" && pathname?.startsWith("/carrito")));
 
             if (item.action) {
               return (
@@ -49,21 +46,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ bcvRate = 42.5
                   <Icon className="w-5 h-5 mb-0.5" />
                   <span className="text-[10px] font-medium leading-none">{item.label}</span>
                 </button>
-              );
-            }
-
-            if (item.external) {
-              return (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg text-emerald-600 hover:text-emerald-700 touch-target transition-colors"
-                >
-                  <Icon className="w-5 h-5 mb-0.5 text-emerald-600" />
-                  <span className="text-[10px] font-semibold leading-none">{item.label}</span>
-                </a>
               );
             }
 

@@ -1,12 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { saveStoreSettings, StoreSettings } from "@/lib/actions/settings";
+import { saveStoreSettings } from "@/lib/actions/settings";
+import { StoreSettings, DEFAULT_SETTINGS } from "@/lib/constants/settings";
 
 interface ThemeContextType {
   theme: StoreSettings;
-  updateTheme: (newTheme: Partial<StoreSettings>) => void;
-  resetTheme: () => void;
+  updateTheme: (newTheme: Partial<StoreSettings>) => Promise<void>;
+  resetTheme: () => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -14,15 +15,12 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 function adjustColorBrightness(hex: string, percent: number) {
   let color = hex.replace(/^#/, '');
   if (color.length === 3) color = color[0]+color[0]+color[1]+color[1]+color[2]+color[2];
-  
   let r = parseInt(color.substring(0,2), 16);
   let g = parseInt(color.substring(2,4), 16);
   let b = parseInt(color.substring(4,6), 16);
-  
   r = Math.max(0, Math.min(255, Math.round(r + (r * percent / 100))));
   g = Math.max(0, Math.min(255, Math.round(g + (g * percent / 100))));
   b = Math.max(0, Math.min(255, Math.round(b + (b * percent / 100))));
-  
   return '#' + r.toString(16).padStart(2, '0') +
                g.toString(16).padStart(2, '0') +
                b.toString(16).padStart(2, '0');
@@ -31,10 +29,12 @@ function adjustColorBrightness(hex: string, percent: number) {
 export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSettings: StoreSettings }> = ({ children, initialSettings }) => {
   const [theme, setTheme] = useState<StoreSettings>(initialSettings);
   const [mounted, setMounted] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
+    // Splash screen - hide after 2s
+    const splashTimer = setTimeout(() => setSplashDone(true), 2000);
     setMounted(true);
-    // Verificar si hay configuración guardada en localStorage (como fallback instantáneo)
     if (typeof window !== "undefined") {
       const local = localStorage.getItem("sumilisto_theme");
       if (local) {
@@ -44,6 +44,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
         } catch {}
       }
     }
+    return () => clearTimeout(splashTimer);
   }, []);
 
   const updateTheme = async (newTheme: Partial<StoreSettings>) => {
@@ -52,24 +53,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
     if (typeof window !== "undefined") {
       localStorage.setItem("sumilisto_theme", JSON.stringify(updated));
     }
-    try {
-      await saveStoreSettings(updated);
-    } catch {}
+    try { await saveStoreSettings(updated); } catch {}
   };
 
   const resetTheme = async () => {
-    const defaultSettings: StoreSettings = {
-      brandColor: "#590317",
-      logoUrl: null,
-      whatsappNumber: "584227894547",
-    };
-    setTheme(defaultSettings);
+    setTheme(DEFAULT_SETTINGS);
     if (typeof window !== "undefined") {
       localStorage.removeItem("sumilisto_theme");
     }
-    try {
-      await saveStoreSettings(defaultSettings);
-    } catch {}
+    try { await saveStoreSettings(DEFAULT_SETTINGS); } catch {}
   };
 
   return (
@@ -82,6 +74,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
             --theme-brand-active: ${adjustColorBrightness(theme.brandColor, -15)};
           }
         `}} />
+      )}
+      {/* Splash Screen */}
+      {mounted && !splashDone && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500"
+          style={{ backgroundColor: theme.brandColor }}
+        >
+          <img
+            src={theme.logoUrl || "/logo.png"}
+            alt="Sumi"
+            className="w-44 h-44 object-contain animate-pulse"
+          />
+        </div>
       )}
       {children}
     </ThemeContext.Provider>

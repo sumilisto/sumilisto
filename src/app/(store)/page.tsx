@@ -4,74 +4,20 @@ import { getProducts, getBcvRate } from "@/lib/api/store";
 import { STORE_CATEGORIES } from "@/lib/constants/brand";
 import { ProductCard } from "@/components/store/ProductCard";
 import { CategoryChips } from "@/components/store/CategoryChips";
-import { ArrowRight, Sparkles, TrendingUp, ShieldCheck, Truck, Percent } from "lucide-react";
+import { HeroSection } from "@/components/store/HeroSection";
+import { TrendingUp, ArrowRight } from "lucide-react";
 
 export default async function HomePage() {
   const [products, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
 
-  // Filtrar productos disponibles
-  // Por ahora mostramos los primeros como destacados si no hay bandera
   const featuredProducts = products.filter((p) => p.isAvailable).slice(0, 4);
-  const granMayorDeals = products.filter(
-    (p) => p.isAvailable && p.precioGranMayorUsd && p.precioGranMayorUsd > 0
-  ).slice(0, 4);
 
   return (
     <div className="flex flex-col gap-6 sm:gap-10 pb-12">
-      {/* Hero Banner / Propuesta de Valor */}
-      <section className="bg-gradient-to-br from-brand via-brand-hover to-brand-active text-white py-8 sm:py-14 px-4 sm:px-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-semibold text-rose-100 mb-4">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Precios Directos de Distribución Mayorista</span>
-          </div>
+      {/* Hero Banner / Propuesta de Valor (dinámico desde Settings) */}
+      <HeroSection />
 
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white max-w-3xl leading-tight">
-            Suministros y Empaques al Mayor para tu Restaurante
-          </h1>
-
-          <p className="mt-3 sm:mt-4 text-sm sm:text-lg text-rose-100 max-w-2xl leading-relaxed">
-            Envases térmicos, bolsas kraft, cubiertos y papel antigrasa con escala de descuento al <strong>Gran Mayor</strong>. Despachos rápidos en <strong>Caracas, Guarenas y Guatire</strong>.
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            <Link
-              href="#catalogo"
-              className="h-12 px-6 rounded-xl bg-white text-brand hover:bg-rose-50 font-bold text-sm sm:text-base flex items-center gap-2 shadow-md hover:scale-105 active:scale-95 transition-all"
-            >
-              <span>Explorar Catálogo</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="https://wa.me/584227894547?text=Hola%20Sumilisto,%20deseo%20asesoría%20sobre%20suministros%20para%20mi%20negocio"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-12 px-6 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm sm:text-base flex items-center gap-2 shadow-md hover:scale-105 active:scale-95 transition-all"
-            >
-              <span>Consultar por WhatsApp</span>
-            </a>
-          </div>
-
-          {/* Ventajas rápidas */}
-          <div className="mt-8 pt-6 border-t border-white/15 grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-3xl text-xs sm:text-sm text-rose-200">
-            <div className="flex items-center justify-center gap-2">
-              <Truck className="w-4 h-4 text-amber-300 flex-shrink-0" />
-              <span>Despacho Caracas / Guarenas / Guatire</span>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <Percent className="w-4 h-4 text-amber-300 flex-shrink-0" />
-              <span>Escala Gran Mayor por volumen</span>
-            </div>
-            <div className="col-span-2 md:col-span-1 flex items-center justify-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-amber-300 flex-shrink-0" />
-              <span>Pago verificado contra entrega / retiro</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Selector de Categorías (Chips horizontales) */}
+      {/* Selector de Categorías */}
       <section id="categorias" className="max-w-7xl mx-auto w-full">
         <div className="px-4 sm:px-6 mb-2 flex items-center justify-between">
           <h2 className="text-base sm:text-lg font-bold text-slate-900">
@@ -82,7 +28,7 @@ export default async function HomePage() {
         <CategoryChips />
       </section>
 
-      {/* Sección 1: Más Pedidos (Destacados) */}
+      {/* Sección: Más Pedidos (Destacados) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -107,34 +53,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Sección 2: Ofertas al Gran Mayor */}
-      <section className="bg-amber-50/60 py-8 px-4 sm:px-6 border-y border-amber-200/60">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-200 text-amber-900">
-                  Ahorro por volumen
-                </span>
-                <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Escala Gran Mayor
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-                Precios especiales llevando a partir de 4 a 10 bultos o cajas
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {granMayorDeals.map((product) => (
-              <ProductCard key={product.sku} product={product} bcvRate={bcvRate} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Sección 3: Todo el Catálogo Organizado */}
+      {/* Catálogo Completo */}
       <section id="catalogo" className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">

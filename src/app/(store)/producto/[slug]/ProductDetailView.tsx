@@ -20,6 +20,60 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+// ──── Galería de imágenes (hasta 10 fotos) ────
+interface GalleryProps {
+  photos: { url: string; alt?: string }[];
+  productName: string;
+  status: import("@/types/product").ProductStockStatus;
+}
+function ProductGallery({ photos, productName, status }: GalleryProps) {
+  const safePhotos = photos.slice(0, 10);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const mainUrl = safePhotos[activeIdx]?.url ||
+    "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=1000&q=80";
+
+  return (
+    <div className="space-y-2">
+      <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
+        <Image src={mainUrl} alt={productName} fill priority
+          sizes="(max-width: 768px) 100vw, 800px"
+          className="object-cover object-center" />
+        <div className="absolute top-3 left-3 z-10">
+          <Badge status={status} />
+        </div>
+        {safePhotos.length > 1 && (
+          <>
+            <button type="button" onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <button type="button" onClick={() => setActiveIdx(i => Math.min(safePhotos.length - 1, i + 1))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </>
+        )}
+      </div>
+      {safePhotos.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {safePhotos.map((photo, idx) => (
+            <button key={idx} type="button" onClick={() => setActiveIdx(idx)}
+              className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                idx === activeIdx ? "border-brand shadow-md" : "border-slate-200 opacity-60 hover:opacity-100"
+              }`}>
+              <img src={photo.url} alt={(photo as any).alt || productName} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface ProductDetailViewProps {
   product: Product;
   bcvRate: number;
@@ -176,26 +230,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Imagen del producto */}
-      <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
-        <Image
-          src={product.fotos[0]?.url || "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=1000&q=80"}
-          alt={product.nombre}
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, 800px"
-          className="object-cover object-center"
-        />
-        <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 items-start">
-          <Badge status={activeVariant.status} />
-        </div>
-
-        <div className="absolute bottom-3 left-3 z-10">
-          <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-black/75 text-white backdrop-blur-sm shadow-sm">
-            Color: {activeVariant.color}
-          </span>
-        </div>
-      </div>
+      {/* 2. Galería de imágenes (hasta 10 fotos) */}
+      <ProductGallery
+        photos={activeVariant.fotos && activeVariant.fotos.length > 0 ? activeVariant.fotos : product.fotos}
+        productName={product.nombre}
+        status={activeVariant.status}
+      />
 
       {/* 3. Selector de Color */}
       {variants.length > 1 && (
