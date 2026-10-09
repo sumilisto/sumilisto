@@ -29,11 +29,8 @@ function adjustColorBrightness(hex: string, percent: number) {
 export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSettings: StoreSettings }> = ({ children, initialSettings }) => {
   const [theme, setTheme] = useState<StoreSettings>(initialSettings);
   const [mounted, setMounted] = useState(false);
-  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    // Splash screen - hide after 2s
-    const splashTimer = setTimeout(() => setSplashDone(true), 2000);
     setMounted(true);
     if (typeof window !== "undefined") {
       const local = localStorage.getItem("sumilisto_theme");
@@ -44,7 +41,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
         } catch {}
       }
     }
-    return () => clearTimeout(splashTimer);
   }, []);
 
   const updateTheme = async (newTheme: Partial<StoreSettings>) => {
@@ -75,22 +71,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
           }
         `}} />
       )}
-      {/* Splash Screen */}
-      {!splashDone && (
-        <style dangerouslySetInnerHTML={{ __html: `body { overflow: hidden; }` }} />
-      )}
-      <div
-        className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-700 ease-in-out ${
-          splashDone ? "opacity-0 pointer-events-none" : "opacity-100"
-        }`}
-        style={{ backgroundColor: theme.brandColor }}
-      >
-        <img
-          src={theme.logoUrl || "/logo.png"}
-          alt="Sumilisto"
-          className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 object-contain animate-pulse"
-        />
-      </div>
       {children}
     </ThemeContext.Provider>
   );
