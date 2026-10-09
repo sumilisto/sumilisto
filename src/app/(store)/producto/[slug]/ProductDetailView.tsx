@@ -33,10 +33,10 @@ function ProductGallery({ photos, productName, status }: GalleryProps) {
     "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=1000&q=80";
 
   return (
-    <div className="space-y-2">
-      <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
+    <div className="space-y-3 max-w-lg mx-auto w-full">
+      <div className="relative aspect-square sm:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
         <Image src={mainUrl} alt={productName} fill priority
-          sizes="(max-width: 768px) 100vw, 800px"
+          sizes="(max-width: 768px) 100vw, 512px"
           className="object-cover object-center" />
         <div className="absolute top-3 left-3 z-10">
           <Badge status={status} />
@@ -44,13 +44,13 @@ function ProductGallery({ photos, productName, status }: GalleryProps) {
         {safePhotos.length > 1 && (
           <>
             <button type="button" onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60">
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 shadow-sm">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7"/>
               </svg>
             </button>
             <button type="button" onClick={() => setActiveIdx(i => Math.min(safePhotos.length - 1, i + 1))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60">
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 shadow-sm">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
               </svg>
@@ -59,7 +59,7 @@ function ProductGallery({ photos, productName, status }: GalleryProps) {
         )}
       </div>
       {safePhotos.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 justify-center">
           {safePhotos.map((photo, idx) => (
             <button key={idx} type="button" onClick={() => setActiveIdx(idx)}
               className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all ${
