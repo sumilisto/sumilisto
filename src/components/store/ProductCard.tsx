@@ -61,6 +61,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             src={primaryPhoto}
             alt={product.fotos[0]?.alt || product.nombre}
             fill
+            unoptimized={true}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
