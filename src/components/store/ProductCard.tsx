@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
-import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
+import { formatUsd } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { Plus, MessageCircle, AlertCircle } from "lucide-react";
@@ -35,7 +35,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const minGranMayor = activeVariant.minGranMayor ?? product.minGranMayor ?? 0;
   const minMayor = activeVariant.minMayor ?? product.minMayor ?? 1;
 
-  const vesAmount = calculateVesTotal(priceMayor, bcvRate);
   const primaryPhoto = product.fotos[0]?.url || "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=600&q=80";
 
   const handleIncrement = (e: React.MouseEvent) => {
@@ -77,15 +76,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
         </div>
-
-        {/* Presentación / Color seleccionado sobre la foto si aplica */}
-        {activeVariant.color && activeVariant.color !== "ESTÁNDAR" && (
-          <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-black/60 text-white backdrop-blur-sm">
-              {activeVariant.color}
-            </span>
-          </div>
-        )}
 
         {/* Botón '+' en la esquina inferior derecha dentro de la imagen */}
         {activeVariant.isAvailable ? (
@@ -134,10 +124,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   {formatUsd(priceMayor)}
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
-                  / {product.unidadVenta}
-                </span>
-                <span className="text-[11px] font-medium text-slate-400">
-                  ({formatVes(vesAmount)})
+                  {product.unidadVenta}
                 </span>
               </div>
 
