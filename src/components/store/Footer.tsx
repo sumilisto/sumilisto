@@ -19,73 +19,45 @@ export const Footer: React.FC = () => {
       className="pt-12 pb-24 sm:pb-12 border-t border-slate-800 transition-colors"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {/* Columna 1: Marca y Propósito */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <img
                 src={theme.logoUrl || "/logo.png"}
-                alt="Sumi"
-                className="h-8 w-auto object-contain rounded-md"
+                alt="Logo"
+                className="h-10 w-auto object-contain rounded-md"
               />
-              <span className="text-xl font-black text-white tracking-tight">SUMILISTO</span>
             </div>
             <p className="text-sm mb-4 leading-relaxed" style={{ color: footerText }}>
               {theme.footerDescription || DEFAULT_SETTINGS.footerDescription}
             </p>
             <div className="flex items-center gap-2 text-xs" style={{ color: footerText }}>
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
               <span>Compra directa y confirmación en tiempo real por WhatsApp</span>
             </div>
           </div>
 
-          {/* Columna 2: Categorías Rápidas */}
+          {/* Columna 2: Cobertura y Horarios */}
           <div>
             <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
-              Suministros al Mayor
+              Zonas de Entrega y Horarios
             </h4>
-            <ul className="space-y-2 text-sm">
-              {STORE_CATEGORIES.map((cat) => (
-                <li key={cat.id}>
-                  <Link
-                    href={`/categoria/${cat.slug}`}
-                    className="hover:text-white transition-colors"
-                    style={{ color: footerText }}
-                  >
-                    {cat.nombre}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link href="/" className="text-emerald-400 hover:text-white transition-colors font-medium">
-                  Ver todo el catálogo →
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Columna 3: Cobertura y Horarios */}
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
-              Zonas de Entrega
-            </h4>
-            <div className="space-y-2.5 text-sm" style={{ color: footerText }}>
+            <div className="space-y-3 text-sm" style={{ color: footerText }}>
               <div className="flex items-start gap-2">
                 <Truck className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span>{theme.footerDeliveryText || DEFAULT_SETTINGS.footerDeliveryText}</span>
               </div>
               <div className="flex items-start gap-2">
                 <Clock className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span>{theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span>Venezuela</span>
+                <div className="whitespace-pre-line leading-relaxed">
+                  {theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Columna 4: Contacto Directo */}
+          {/* Columna 3: Contacto Directo */}
           <div>
             <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
               Atención al Cliente

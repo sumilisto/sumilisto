@@ -63,7 +63,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   despachoText: "Despachos en Caracas, Guarenas y Guatire",
   // Footer
   footerDescription: "Tu aliado confiable en suministros y empaques al Mayor y Gran Mayor para restaurantes, cadenas de comida rápida y servicios de alimentos en Venezuela.",
-  footerSchedule: "Lunes a Viernes: 8:00 AM - 5:00 PM",
+  footerSchedule: "Lunes a Viernes: 8:00 AM - 5:00 PM\nSábados: 8:00 AM - 1:00 PM",
   footerDeliveryText: "Despachos en Caracas, Guarenas y Guatire. Envíos nacionales por encomienda.",
   footerBgColor: "#0f172a",
   footerTextColor: "#94a3b8",

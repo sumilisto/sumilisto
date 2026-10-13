@@ -20,10 +20,9 @@ const COLOR_FIELDS = [
 ] as const;
 
 const HEIGHT_OPTIONS = [
-  { value: "sm", label: "Pequeño (compacto)" },
-  { value: "md", label: "Mediano (por defecto)" },
-  { value: "lg", label: "Grande" },
-  { value: "xl", label: "Extra grande" },
+  { value: "sm", label: "Compacto / Delgado (Recomendado)" },
+  { value: "md", label: "Mediano" },
+  { value: "lg", label: "Amplio" },
 ];
 
 export default function AdminSettingsPage() {
@@ -306,25 +305,28 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          {/* Carrusel de imágenes */}
+          {/* Carrusel de multimedia */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-slate-700">Imágenes del Carrusel</label>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block">Multimedia del Carrusel</label>
+                <p className="text-[11px] text-slate-400">Soporta Imágenes (JPG, PNG), GIFs animados y Videos (.mp4, .webm).</p>
+              </div>
               <button type="button" onClick={addSlide}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-xs font-bold hover:bg-brand/20">
-                <Plus className="w-3.5 h-3.5" /> Agregar imagen
+                <Plus className="w-3.5 h-3.5" /> Agregar slide
               </button>
             </div>
             {heroSlides.length === 0 && (
               <p className="text-xs text-slate-400 bg-slate-50 rounded-xl p-4 text-center">
-                Sin imágenes — el banner mostrará el degradado de color de marca.
+                Sin multimedia — el banner mostrará el degradado con el color de marca.
               </p>
             )}
             <div className="space-y-3">
               {heroSlides.map((slide, idx) => (
                 <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-600">Imagen {idx + 1}</span>
+                    <span className="text-xs font-bold text-slate-600">Slide {idx + 1} (Imagen, GIF o Video)</span>
                     <button type="button" onClick={() => removeSlide(idx)} className="text-slate-400 hover:text-rose-500">
                       <X className="w-4 h-4" />
                     </button>
@@ -332,13 +334,13 @@ export default function AdminSettingsPage() {
                   <input type="url" value={slide.imageUrl}
                     onChange={e => updateSlide(idx, "imageUrl", e.target.value)}
                     className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs mb-2 focus:outline-none focus:ring-2 focus:ring-brand/20"
-                    placeholder="https://... URL de la imagen" />
+                    placeholder="https://... URL de la Imagen, GIF o Video (.mp4)" />
                   <div className="flex items-center gap-2">
                     <LinkIcon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                     <input type="text" value={slide.linkUrl || ""}
                       onChange={e => updateSlide(idx, "linkUrl", e.target.value)}
                       className="flex-1 h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-brand/20"
-                      placeholder="Link al hacer clic (ej: /categoria/envases)" />
+                      placeholder="Link al hacer clic (opcional, ej: /categoria/envases)" />
                   </div>
                 </div>
               ))}
@@ -394,10 +396,11 @@ export default function AdminSettingsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-slate-700 mb-1 block">Horario de Atención</label>
-              <input type="text" value={footerSchedule} onChange={e => setFooterSchedule(e.target.value)}
-                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
-                placeholder="Lunes a Viernes: 8:00 AM - 5:00 PM" />
+              <label className="text-xs font-bold text-slate-700 mb-1 block">Horario de Atención (Multilínea)</label>
+              <textarea value={footerSchedule} onChange={e => setFooterSchedule(e.target.value)} rows={2}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand/20"
+                placeholder={"Lunes a Viernes: 8:00 AM - 5:00 PM\nSábados: 8:00 AM - 1:00 PM"} />
+              <p className="text-[11px] text-slate-400 mt-1">Presiona Enter para saltar de línea.</p>
             </div>
 
             <div>
