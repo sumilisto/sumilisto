@@ -23,6 +23,21 @@ export interface StoreSettings {
   heroSlides: HeroSlide[];
   // Despachos
   despachoText: string;
+  // Footer
+  footerDescription: string;
+  footerSchedule: string;
+  footerDeliveryText: string;
+  footerBgColor: string;
+  footerTextColor: string;
+  // Barra Inferior Móvil (etiquetas y colores)
+  bottomNavBgColor: string;
+  bottomNavTextColor: string;
+  bottomNavActiveColor: string;
+  navLabelInicio: string;
+  navLabelCategorias: string;
+  navLabelCarrito: string;
+  navLabelBuscar: string;
+  navLabelDespachos: string;
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -40,4 +55,19 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   heroHeight: "md",
   heroSlides: [],
   despachoText: "Despachos en Caracas, Guarenas y Guatire",
+  // Footer
+  footerDescription: "Tu aliado confiable en suministros y empaques al Mayor y Gran Mayor para restaurantes, cadenas de comida rápida y servicios de alimentos en Venezuela.",
+  footerSchedule: "Lunes a Viernes: 8:00 AM - 5:00 PM",
+  footerDeliveryText: "Despachos en Caracas, Guarenas y Guatire. Envíos nacionales por encomienda.",
+  footerBgColor: "#0f172a",
+  footerTextColor: "#94a3b8",
+  // Barra Inferior Móvil
+  bottomNavBgColor: "#ffffff",
+  bottomNavTextColor: "#475569",
+  bottomNavActiveColor: "#166534",
+  navLabelInicio: "Inicio",
+  navLabelCategorias: "Categorías",
+  navLabelCarrito: "Carrito",
+  navLabelBuscar: "Buscar",
+  navLabelDespachos: "Despachos",
 };

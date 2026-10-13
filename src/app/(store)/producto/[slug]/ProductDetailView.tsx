@@ -29,6 +29,12 @@ interface GalleryProps {
 function ProductGallery({ photos, productName, status }: GalleryProps) {
   const safePhotos = photos.slice(0, 10);
   const [activeIdx, setActiveIdx] = useState(0);
+
+  // Garantizar que siempre inicie en la 1era foto cuando cambian las fotos o variante
+  React.useEffect(() => {
+    setActiveIdx(0);
+  }, [photos]);
+
   const mainUrl = safePhotos[activeIdx]?.url ||
     "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=1000&q=80";
 

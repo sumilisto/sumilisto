@@ -43,6 +43,23 @@ export default function AdminSettingsPage() {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(theme.heroSlides || []);
   const [despachoText, setDespachoText] = useState(theme.despachoText || "");
 
+  // Footer settings state
+  const [footerDescription, setFooterDescription] = useState(theme.footerDescription || DEFAULT_SETTINGS.footerDescription);
+  const [footerSchedule, setFooterSchedule] = useState(theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule);
+  const [footerDeliveryText, setFooterDeliveryText] = useState(theme.footerDeliveryText || DEFAULT_SETTINGS.footerDeliveryText);
+  const [footerBgColor, setFooterBgColor] = useState(theme.footerBgColor || DEFAULT_SETTINGS.footerBgColor);
+  const [footerTextColor, setFooterTextColor] = useState(theme.footerTextColor || DEFAULT_SETTINGS.footerTextColor);
+
+  // Barra Inferior Móvil settings state
+  const [bottomNavBgColor, setBottomNavBgColor] = useState(theme.bottomNavBgColor || DEFAULT_SETTINGS.bottomNavBgColor);
+  const [bottomNavTextColor, setBottomNavTextColor] = useState(theme.bottomNavTextColor || DEFAULT_SETTINGS.bottomNavTextColor);
+  const [bottomNavActiveColor, setBottomNavActiveColor] = useState(theme.bottomNavActiveColor || DEFAULT_SETTINGS.bottomNavActiveColor);
+  const [navLabelInicio, setNavLabelInicio] = useState(theme.navLabelInicio || DEFAULT_SETTINGS.navLabelInicio);
+  const [navLabelCategorias, setNavLabelCategorias] = useState(theme.navLabelCategorias || DEFAULT_SETTINGS.navLabelCategorias);
+  const [navLabelCarrito, setNavLabelCarrito] = useState(theme.navLabelCarrito || DEFAULT_SETTINGS.navLabelCarrito);
+  const [navLabelBuscar, setNavLabelBuscar] = useState(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
+  const [navLabelDespachos, setNavLabelDespachos] = useState(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
+
   useEffect(() => {
     const c: Record<string, string> = {};
     COLOR_FIELDS.forEach(f => { c[f.key] = (theme as any)[f.key] || (DEFAULT_SETTINGS as any)[f.key]; });
@@ -54,6 +71,21 @@ export default function AdminSettingsPage() {
     setHeroHeight(theme.heroHeight || "md");
     setHeroSlides(theme.heroSlides || []);
     setDespachoText(theme.despachoText || DEFAULT_SETTINGS.despachoText);
+
+    setFooterDescription(theme.footerDescription || DEFAULT_SETTINGS.footerDescription);
+    setFooterSchedule(theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule);
+    setFooterDeliveryText(theme.footerDeliveryText || DEFAULT_SETTINGS.footerDeliveryText);
+    setFooterBgColor(theme.footerBgColor || DEFAULT_SETTINGS.footerBgColor);
+    setFooterTextColor(theme.footerTextColor || DEFAULT_SETTINGS.footerTextColor);
+
+    setBottomNavBgColor(theme.bottomNavBgColor || DEFAULT_SETTINGS.bottomNavBgColor);
+    setBottomNavTextColor(theme.bottomNavTextColor || DEFAULT_SETTINGS.bottomNavTextColor);
+    setBottomNavActiveColor(theme.bottomNavActiveColor || DEFAULT_SETTINGS.bottomNavActiveColor);
+    setNavLabelInicio(theme.navLabelInicio || DEFAULT_SETTINGS.navLabelInicio);
+    setNavLabelCategorias(theme.navLabelCategorias || DEFAULT_SETTINGS.navLabelCategorias);
+    setNavLabelCarrito(theme.navLabelCarrito || DEFAULT_SETTINGS.navLabelCarrito);
+    setNavLabelBuscar(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
+    setNavLabelDespachos(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
   }, [theme]);
 
   useEffect(() => {
@@ -95,6 +127,21 @@ export default function AdminSettingsPage() {
       heroHeight,
       heroSlides,
       despachoText: despachoText.trim(),
+      // Footer
+      footerDescription: footerDescription.trim(),
+      footerSchedule: footerSchedule.trim(),
+      footerDeliveryText: footerDeliveryText.trim(),
+      footerBgColor,
+      footerTextColor,
+      // Barra Inferior
+      bottomNavBgColor,
+      bottomNavTextColor,
+      bottomNavActiveColor,
+      navLabelInicio: navLabelInicio.trim(),
+      navLabelCategorias: navLabelCategorias.trim(),
+      navLabelCarrito: navLabelCarrito.trim(),
+      navLabelBuscar: navLabelBuscar.trim(),
+      navLabelDespachos: navLabelDespachos.trim(),
     } as any);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
@@ -293,6 +340,155 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── PIE DE PÁGINA (FOOTER) ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+            <Layout className="w-4 h-4 text-brand" /> Pie de Página (Footer)
+          </h2>
+          <p className="text-xs text-slate-500">
+            Personaliza el texto informativo, horarios, cobertura y colores del final de la página.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color de Fondo del Footer</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={footerBgColor}
+                    onChange={e => setFooterBgColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={footerBgColor}
+                  onChange={e => setFooterBgColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color del Texto del Footer</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={footerTextColor}
+                    onChange={e => setFooterTextColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={footerTextColor}
+                  onChange={e => setFooterTextColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Descripción / Mensaje de la Empresa</label>
+            <textarea value={footerDescription} onChange={e => setFooterDescription(e.target.value)} rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand/20"
+              placeholder="Descripción que aparece debajo del logo en el pie de página..." />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1 block">Horario de Atención</label>
+              <input type="text" value={footerSchedule} onChange={e => setFooterSchedule(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+                placeholder="Lunes a Viernes: 8:00 AM - 5:00 PM" />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1 block">Texto de Zonas de Entrega</label>
+              <input type="text" value={footerDeliveryText} onChange={e => setFooterDeliveryText(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+                placeholder="Despachos en Caracas, Guarenas y Guatire..." />
+            </div>
+          </div>
+        </section>
+
+        {/* ── BARRA INFERIOR MÓVIL ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+            <Layout className="w-4 h-4 text-brand" /> Barra Inferior Móvil (Navegación)
+          </h2>
+          <p className="text-xs text-slate-500">
+            Personaliza los títulos y colores de los botones que ven los clientes en su celular.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color de Fondo</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={bottomNavBgColor}
+                    onChange={e => setBottomNavBgColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={bottomNavBgColor}
+                  onChange={e => setBottomNavBgColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color Texto / Íconos Inactivos</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={bottomNavTextColor}
+                    onChange={e => setBottomNavTextColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={bottomNavTextColor}
+                  onChange={e => setBottomNavTextColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color Ícono Activo</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={bottomNavActiveColor}
+                    onChange={e => setBottomNavActiveColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={bottomNavActiveColor}
+                  onChange={e => setBottomNavActiveColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 1 (Inicio)</label>
+              <input type="text" value={navLabelInicio} onChange={e => setNavLabelInicio(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 2 (Categorías)</label>
+              <input type="text" value={navLabelCategorias} onChange={e => setNavLabelCategorias(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 3 (Carrito)</label>
+              <input type="text" value={navLabelCarrito} onChange={e => setNavLabelCarrito(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 4 (Buscar)</label>
+              <input type="text" value={navLabelBuscar} onChange={e => setNavLabelBuscar(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div className="col-span-2 sm:col-span-1">
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 5 (Despachos)</label>
+              <input type="text" value={navLabelDespachos} onChange={e => setNavLabelDespachos(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
             </div>
           </div>
         </section>

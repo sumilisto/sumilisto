@@ -3,14 +3,21 @@
 import React from "react";
 import Link from "next/link";
 import { DEFAULT_STORE_CONFIG, STORE_CATEGORIES } from "@/lib/constants/brand";
+import { DEFAULT_SETTINGS } from "@/lib/constants/settings";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { MessageCircle, MapPin, Clock, ShieldCheck, Truck, Phone } from "lucide-react";
 
 export const Footer: React.FC = () => {
   const { theme } = useTheme();
   const whatsappNum = theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber;
+  const footerBg = theme.footerBgColor || "#0f172a";
+  const footerText = theme.footerTextColor || "#94a3b8";
+
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-12 pb-24 sm:pb-12 border-t border-slate-800">
+    <footer
+      style={{ backgroundColor: footerBg, color: footerText }}
+      className="pt-12 pb-24 sm:pb-12 border-t border-slate-800 transition-colors"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Columna 1: Marca y Propósito */}
@@ -23,10 +30,10 @@ export const Footer: React.FC = () => {
               />
               <span className="text-xl font-black text-white tracking-tight">SUMILISTO</span>
             </div>
-            <p className="text-sm text-slate-400 mb-4 leading-relaxed">
-              Tu aliado confiable en suministros y empaques al Mayor y Gran Mayor para restaurantes, cadenas de comida rápida y servicios de alimentos en Venezuela.
+            <p className="text-sm mb-4 leading-relaxed" style={{ color: footerText }}>
+              {theme.footerDescription || DEFAULT_SETTINGS.footerDescription}
             </p>
-            <div className="flex items-center gap-2 text-xs text-slate-400">
+            <div className="flex items-center gap-2 text-xs" style={{ color: footerText }}>
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>Compra directa y confirmación en tiempo real por WhatsApp</span>
             </div>
@@ -43,13 +50,14 @@ export const Footer: React.FC = () => {
                   <Link
                     href={`/categoria/${cat.slug}`}
                     className="hover:text-white transition-colors"
+                    style={{ color: footerText }}
                   >
                     {cat.nombre}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/" className="text-rose-300 hover:text-white transition-colors font-medium">
+                <Link href="/" className="text-emerald-400 hover:text-white transition-colors font-medium">
                   Ver todo el catálogo →
                 </Link>
               </li>
@@ -61,17 +69,17 @@ export const Footer: React.FC = () => {
             <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
               Zonas de Entrega
             </h4>
-            <div className="space-y-2.5 text-sm text-slate-400">
+            <div className="space-y-2.5 text-sm" style={{ color: footerText }}>
               <div className="flex items-start gap-2">
-                <Truck className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
-                <span>Despachos en <strong>Caracas, Guarenas y Guatire</strong>. Envíos nacionales por encomienda.</span>
+                <Truck className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <span>{theme.footerDeliveryText || DEFAULT_SETTINGS.footerDeliveryText}</span>
               </div>
               <div className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
-                <span>{DEFAULT_STORE_CONFIG.schedule}</span>
+                <Clock className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <span>{theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule}</span>
               </div>
               <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span>Venezuela</span>
               </div>
             </div>
@@ -82,7 +90,7 @@ export const Footer: React.FC = () => {
             <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
               Atención al Cliente
             </h4>
-            <p className="text-sm text-slate-400 mb-3">
+            <p className="text-sm mb-3" style={{ color: footerText }}>
               ¿Requieres cotización para gran volumen o tienes dudas sobre un pedido?
             </p>
             <a
@@ -99,17 +107,17 @@ export const Footer: React.FC = () => {
 
         {/* Separador y Copyright */}
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 text-center sm:text-left">
-          <div>
+          <div style={{ color: footerText }}>
             © {new Date().getFullYear()} Sumilisto. Todos los derechos reservados. Suministros para restaurantes en Venezuela.
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/terminos" className="hover:text-slate-400 transition-colors">
+            <Link href="/terminos" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Términos
             </Link>
-            <Link href="/privacidad" className="hover:text-slate-400 transition-colors">
+            <Link href="/privacidad" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Privacidad
             </Link>
-            <Link href="/preguntas-frecuentes" className="hover:text-slate-400 transition-colors">
+            <Link href="/preguntas-frecuentes" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Preguntas Frecuentes
             </Link>
           </div>
