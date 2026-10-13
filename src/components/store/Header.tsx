@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
 
             {/* Enlace de WhatsApp directo */}
             <a
-              href={`https://wa.me/${theme.whatsappNumber || "584227894547"}?text=Hola%20Sumilisto,%20quisiera%20hacer%20una%20consulta%20de%20suministros`}
+              href={`https://wa.me/${theme.whatsappNumber || "584227864547"}?text=Hola%20Sumilisto,%20quisiera%20hacer%20una%20consulta%20de%20suministros`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Contactar por WhatsApp"

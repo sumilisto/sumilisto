@@ -174,14 +174,14 @@ ${linesText}
 ----------------------------------------
 📍 *DATOS DE DESPACHO:*
 • *Cliente:* ${formData.nombre || "Por confirmar"}
-• *Modalidad:* ${formData.modalidad === "entrega" ? "Entrega a domicilio" : "Retiro en almacén"}
+• *Modalidad:* Entrega a domicilio
 • *Zona:* ${formData.zonaEntrega}
 • *Método de pago:* ${formData.metodoPago}
 ${formData.notas ? `• *Notas adicionales:* ${formData.notas}\n` : ""}
 _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
 🔗 Tienda: https://sumilisto.com`;
 
-    return `https://wa.me/${theme.whatsappNumber || "584227894547"}?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/${theme.whatsappNumber || "584227864547"}?text=${encodeURIComponent(message)}`;
   }, [cartLines, totalUsd, totalVes, bcvRate, orderCode, formData, theme.whatsappNumber]);
 
   const handleSendOrder = () => {
@@ -379,51 +379,24 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, modalidad: "entrega" })}
-                  className={`h-11 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                    formData.modalidad === "entrega"
-                      ? "bg-brand text-white border-brand shadow-xs"
-                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                  }`}
-                >
-                  <Truck className="w-3.5 h-3.5" />
-                  <span>Entrega a domicilio</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, modalidad: "retiro" })}
-                  className={`h-11 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                    formData.modalidad === "retiro"
-                      ? "bg-brand text-white border-brand shadow-xs"
-                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                  }`}
-                >
-                  <Building className="w-3.5 h-3.5" />
-                  <span>Retiro en almacén</span>
-                </button>
+              <div className="flex items-center gap-2 h-11 px-3 rounded-xl bg-brand text-white border border-brand text-xs font-bold">
+                <Truck className="w-3.5 h-3.5" />
+                <span>Entrega a domicilio</span>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Zona de Entrega / Municipio *
+                  Zona de Entrega *
                 </label>
                 <select
                   value={formData.zonaEntrega}
                   onChange={(e) => setFormData({ ...formData, zonaEntrega: e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 >
-                  <option value="Caracas - Libertador">Caracas - Municipio Libertador</option>
-                  <option value="Caracas - Chacao">Caracas - Municipio Chacao</option>
-                  <option value="Caracas - Baruta">Caracas - Municipio Baruta</option>
-                  <option value="Caracas - Sucre">Caracas - Municipio Sucre</option>
-                  <option value="Caracas - El Hatillo">Caracas - Municipio El Hatillo</option>
+                  <option value="Caracas">Caracas</option>
                   <option value="Guarenas">Guarenas</option>
                   <option value="Guatire">Guatire</option>
-                  <option value="Envíos Nacionales">Envíos Nacionales (Encomienda)</option>
+                  <option value="Envío Nacional - ZOOM">Envío Nacional - ZOOM</option>
                 </select>
               </div>
 
@@ -437,9 +410,8 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                   className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 >
                   <option value="Pago Móvil / Transferencia Bs (Tasa BCV)">Pago Móvil / Transferencia Bs (Tasa BCV)</option>
-                  <option value="Dólares en Efectivo (Contra entrega)">Dólares en Efectivo (Contra entrega)</option>
-                  <option value="Zelle / Binance USDT">Zelle / Binance USDT</option>
-                  <option value="Transferencia Banesco Panamá">Transferencia Banesco Panamá</option>
+                  <option value="Dólares en Efectivo">Dólares en Efectivo</option>
+                  <option value="Binance USDT">Binance USDT</option>
                 </select>
               </div>
             </div>

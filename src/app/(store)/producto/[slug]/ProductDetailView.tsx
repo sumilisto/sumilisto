@@ -207,7 +207,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     }
   };
 
-  const whatsappNum = theme.whatsappNumber || "584227894547";
+  const whatsappNum = theme.whatsappNumber || "584227864547";
   const whatsappInquiryUrl = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(
     `Hola Sumilisto, quisiera consultar sobre el producto: ${product.nombre} (Color: ${activeVariant.color}, SKU: ${activeVariant.sku}, Modalidad: ${selectedTier === "gran_mayor" ? "Gran Mayor" : "Mayor"} de ${totalUnits} unds)`
   )}`;
@@ -216,6 +216,22 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-xs max-w-5xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         
+        {/* Título y SKU - Primero en móvil */}
+        <div className="flex flex-col gap-1 md:hidden">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-snug">
+            {product.nombre}
+          </h1>
+          <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+            <span>SKU: <strong className="text-slate-700">{activeVariant.sku}</strong></span>
+            {!activeVariant.isAvailable && (
+              <>
+                <span>·</span>
+                <span className="text-rose-600 font-semibold">Agotado temporalmente</span>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Columna Izquierda: Galería */}
         <div className="flex flex-col gap-4">
           <ProductGallery
@@ -225,10 +241,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           />
         </div>
 
-        {/* Columna Derecha: Título, precio, botones */}
+        {/* Columna Derecha: Título (solo desktop), precio, botones */}
         <div className="flex flex-col gap-6">
-          {/* Título y SKU */}
-          <div>
+          {/* Título y SKU - Solo visible en desktop */}
+          <div className="hidden md:block">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
               {product.nombre}
             </h1>
@@ -248,7 +264,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <div className="pt-1">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
                 <Palette className="w-4 h-4 text-brand" />
-                <span>Seleccionar Color ({variants.length} disponibles):</span>
+                <span>SELECCIONA LA VARIANTE ({variants.length} disponibles):</span>
               </div>
               <div className="flex flex-wrap gap-2.5">
                 {variants.map((v) => {
