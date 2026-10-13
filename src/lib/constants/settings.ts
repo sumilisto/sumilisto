@@ -26,15 +26,15 @@ export interface StoreSettings {
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  brandColor: "#590317",
+  brandColor: "#166534",
   bgColor: "#f8fafc",
   textColor: "#0f172a",
   accentColor: "#d97706",
   cardBgColor: "#ffffff",
-  navBgColor: "#590317",
+  navBgColor: "#14532D",
   fontScale: "base",
   logoUrl: null,
-  whatsappNumber: "584227894547",
+  whatsappNumber: "584227864547",
   heroTitle: "Suministros y Empaques al Mayor para tu Restaurante",
   heroSubtitle: "Envases térmicos, bolsas kraft, cubiertos y papel antigrasa con escala de descuento al Gran Mayor. Despachos rápidos en Caracas, Guarenas y Guatire.",
   heroHeight: "md",
