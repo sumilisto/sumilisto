@@ -68,6 +68,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
             --theme-brand: ${theme.brandColor};
             --theme-brand-hover: ${adjustColorBrightness(theme.brandColor, 15)};
             --theme-brand-active: ${adjustColorBrightness(theme.brandColor, -15)};
+            --theme-soft-bg: ${theme.softBgColor || "#f0fdf4"};
+            --theme-topbar-text: ${theme.topBarTextColor || "#f0fdf4"};
           }
         `}} />
       )}

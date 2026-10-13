@@ -15,6 +15,8 @@ const COLOR_FIELDS = [
   { key: "cardBgColor", label: "Fondo de Tarjetas de Producto", desc: "Fondo de cada tarjeta en el catálogo" },
   { key: "textColor", label: "Color de Texto Principal", desc: "Color del texto más importante" },
   { key: "accentColor", label: "Color de Acento / Destacado", desc: "Usado en badges y etiquetas especiales" },
+  { key: "softBgColor", label: "Color de Fondo Suave (Selección de producto y detalles)", desc: "Reemplaza el tono rosa/carne en las opciones activas del producto" },
+  { key: "topBarTextColor", label: "Color de Texto en Barra Superior (Tasa BCV y Banner)", desc: "Color de las letras en la barra superior y detalles del banner" },
 ] as const;
 
 const HEIGHT_OPTIONS = [

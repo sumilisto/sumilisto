@@ -29,6 +29,10 @@ export interface StoreSettings {
   footerDeliveryText: string;
   footerBgColor: string;
   footerTextColor: string;
+  // Color Suave / Fondo secundario (para fondos de selección, banners secundarios, modales)
+  softBgColor: string;
+  // Color de texto en barra superior / banners
+  topBarTextColor: string;
   // Barra Inferior Móvil (etiquetas y colores)
   bottomNavBgColor: string;
   bottomNavTextColor: string;
@@ -47,6 +51,8 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   accentColor: "#d97706",
   cardBgColor: "#ffffff",
   navBgColor: "#14532D",
+  softBgColor: "#f0fdf4",
+  topBarTextColor: "#f0fdf4",
   fontScale: "base",
   logoUrl: null,
   whatsappNumber: "584227864547",

@@ -321,8 +321,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 setPackCount(1);
                 setStockAlertMessage(null);
               }}
+              style={{
+                backgroundColor: selectedTier === "mayor" ? (theme.softBgColor || "#f0fdf4") : undefined,
+              }}
               className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${
-                selectedTier === "mayor" ? "bg-rose-50/60" : "hover:bg-slate-50"
+                selectedTier !== "mayor" ? "hover:bg-slate-50" : ""
               }`}
             >
               <div>
@@ -359,8 +362,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   setPackCount(1);
                   setStockAlertMessage(null);
                 }}
+                style={{
+                  backgroundColor: selectedTier === "gran_mayor" ? (theme.softBgColor || "#f0fdf4") : undefined,
+                }}
                 className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${
-                  selectedTier === "gran_mayor" ? "bg-rose-50/60" : "hover:bg-slate-50"
+                  selectedTier !== "gran_mayor" ? "hover:bg-slate-50" : ""
                 }`}
               >
                 <div>

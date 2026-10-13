@@ -74,7 +74,7 @@ export function HeroSection() {
       )}
 
       <div className="max-w-7xl mx-auto relative z-10 flex flex-col items-center text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-semibold text-rose-100 mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-semibold text-white/90 mb-4">
           <Sparkles className="w-4 h-4 text-amber-300" />
           <span>Precios Directos de Distribución Mayorista</span>
         </div>
@@ -83,14 +83,14 @@ export function HeroSection() {
           {theme.heroTitle}
         </h1>
 
-        <p className="mt-3 sm:mt-4 text-sm sm:text-lg text-rose-100 max-w-2xl leading-relaxed">
+        <p className="mt-3 sm:mt-4 text-sm sm:text-lg text-white/90 max-w-2xl leading-relaxed" style={{ color: theme.topBarTextColor || "rgba(255,255,255,0.9)" }}>
           {theme.heroSubtitle}
         </p>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link
             href="#catalogo"
-            className="h-12 px-6 rounded-xl bg-white text-brand hover:bg-rose-50 font-bold text-sm sm:text-base flex items-center gap-2 shadow-md hover:scale-105 active:scale-95 transition-all"
+            className="h-12 px-6 rounded-xl bg-white text-brand hover:opacity-95 font-bold text-sm sm:text-base flex items-center gap-2 shadow-md hover:scale-105 active:scale-95 transition-all"
           >
             <span>Explorar Catálogo</span>
             <ArrowRight className="w-4 h-4" />
@@ -106,7 +106,7 @@ export function HeroSection() {
         </div>
 
         {/* Ventajas rápidas */}
-        <div id="despachos" className="mt-8 pt-6 border-t border-white/15 grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-3xl text-xs sm:text-sm text-rose-200">
+        <div id="despachos" className="mt-8 pt-6 border-t border-white/15 grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-3xl text-xs sm:text-sm text-white/80">
           <div className="flex items-center justify-center gap-2">
             <Truck className="w-4 h-4 text-amber-300 flex-shrink-0" />
             <span>{theme.despachoText || "Despacho Caracas / Guarenas / Guatire"}</span>

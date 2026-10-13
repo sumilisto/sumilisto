@@ -274,9 +274,14 @@ _Disponibilidad y precios sujetos a confirmación por el asesor comercial._
                       <span className="text-[10px] font-bold text-slate-400 uppercase">
                         {sku}
                       </span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                        tier === "gran_mayor" ? "bg-amber-100 text-amber-900" : "bg-rose-50 text-brand"
-                      }`}>
+                      <span
+                        style={{
+                          backgroundColor: tier === "gran_mayor" ? undefined : (theme.softBgColor || "#f0fdf4"),
+                        }}
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                          tier === "gran_mayor" ? "bg-amber-100 text-amber-900" : "text-brand"
+                        }`}
+                      >
                         {tier === "gran_mayor" ? "Gran Mayor" : "Mayor"}
                       </span>
                     </div>

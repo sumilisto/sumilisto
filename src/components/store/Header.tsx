@@ -21,16 +21,16 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
   return (
     <>
       {/* Barra superior de tasa oficial BCV y cobertura */}
-      <div className="bg-brand-active text-rose-100 text-xs py-1.5 px-4 sm:px-6">
+      <div className="bg-brand-active text-xs py-1.5 px-4 sm:px-6" style={{ color: theme.topBarTextColor || "#f0fdf4" }}>
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
           <div className="flex items-center gap-1.5 justify-center">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="font-semibold text-white">Tasa oficial BCV:</span>
             <span className="font-bold text-white">{formatVes(bcvRate)}</span>
-            <span className="text-rose-200/80 hidden md:inline">· Precios en Bs. calculados al cambio oficial</span>
+            <span className="opacity-80 hidden md:inline">· Precios en Bs. calculados al cambio oficial</span>
           </div>
-          <div className="flex items-center gap-1.5 text-rose-200 text-[11px] justify-center">
-            <MapPin className="w-3.5 h-3.5 text-rose-300" />
+          <div className="flex items-center gap-1.5 text-[11px] justify-center opacity-90">
+            <MapPin className="w-3.5 h-3.5" />
             <span>Despachos en Caracas, Guarenas y Guatire</span>
           </div>
         </div>
@@ -53,11 +53,11 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              className="w-full h-11 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-rose-100 border border-white/20 flex items-center justify-between text-sm transition-all focus:outline-none focus:ring-2 focus:ring-white/40"
+              className="w-full h-11 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 border border-white/20 flex items-center justify-between text-sm transition-all focus:outline-none focus:ring-2 focus:ring-white/40"
             >
               <div className="flex items-center gap-2.5">
-                <Search className="w-4 h-4 text-rose-200" />
-                <span className="text-rose-200">Buscar envases, bolsas, cubiertos, papel...</span>
+                <Search className="w-4 h-4 text-white/70" />
+                <span className="text-white/70">Buscar envases, bolsas, cubiertos, papel...</span>
               </div>
               <kbd className="hidden lg:inline-block px-2 py-0.5 text-[10px] font-bold bg-white/20 rounded text-white">
                 Buscar
