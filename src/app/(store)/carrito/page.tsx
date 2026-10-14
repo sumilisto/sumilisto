@@ -1,457 +1,444 @@
-"use client";
+'use client';
 
-import React, { useState, useMemo } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useCart } from "@/lib/cart/CartContext";
-import { useProducts } from "@/lib/products/ProductsContext";
-import { useTheme } from "@/lib/theme/ThemeContext";
-import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
-import { CustomerOrderForm } from "@/types/cart";
-import { Product, ProductVariant } from "@/types/product";
-import {
-  Trash2,
-  Plus,
-  Minus,
-  MessageCircle,
-  ArrowLeft,
-  Truck,
-  Building,
-  CreditCard,
-  Clock,
-  AlertCircle,
-  Sparkles,
-} from "lucide-react";
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Trash2, Plus, Minus, MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
+import { useCart } from '@/lib/cart/CartContext';
+import { useProducts } from '@/lib/products/ProductsContext';
+import { useTheme } from '@/lib/theme/ThemeContext';
+import { formatUsd } from '@/lib/currency/format';
+
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=600&q=80';
+
+interface Line {
+  sku: string;
+  nombre: string;
+  presentacion: string;
+  unidadVenta: string;
+  foto: string;
+  cantidad: number;
+  step: number;
+  maxStock: number;
+  precioUnitario: number;
+  subtotal: number;
+  nivel: 'mayor' | 'gran_mayor';
+}
 
 export default function CartPage() {
-  const {
-    items,
-    itemCount,
-    updateQuantity,
-    removeItem,
-    clearCart,
-    status,
-    hoursRemaining,
-    markAsSentWhatsApp,
-  } = useCart();
-
+  const { items, updateQuantity, removeItem, clearCart, markAsSentWhatsApp } = useCart();
   const { products, bcvRate } = useProducts();
   const { theme } = useTheme();
 
-  // Formulario del cliente
-  const [formData, setFormData] = useState<CustomerOrderForm>({
-    nombre: "",
-    modalidad: "entrega",
-    zonaEntrega: "Caracas",
-    metodoPago: "Pago Móvil / Transferencia",
-    notas: "",
-  });
+  // Formulario
+  const [nombre, setNombre] = useState('');
+  const [personaContacto, setPersonaContacto] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [direccion, setDireccion] = useState('');
+  const [zonaEntrega, setZonaEntrega] = useState('');
+  const [metodoPago, setMetodoPago] = useState('');
+  const [notas, setNotas] = useState('');
 
-  // Calcular líneas de pedido y totales buscando el producto y su variante exacta
-  const cartLines = useMemo(() => {
-    return items
-      .map((item) => {
-        let foundProduct: Product | undefined;
-        let foundVariant: ProductVariant | undefined;
+  // GPS y validación
+  const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [errorValidacion, setErrorValidacion] = useState('');
 
-        for (const p of products) {
-          if (p.sku === item.sku) {
-            foundProduct = p;
-            foundVariant = p.variantes?.find((v) => v.sku === item.sku) || undefined;
-            break;
-          }
-          const v = p.variantes?.find((v) => v.sku === item.sku);
-          if (v) {
-            foundProduct = p;
-            foundVariant = v;
-            break;
-          }
-        }
+  // Une el carrito (sku + cantidad) con los datos del producto
+  const lines: Line[] = useMemo(() => {
+    const result: Line[] = [];
+    for (const item of items) {
+      if (item.cantidad <= 0) continue;
 
-        if (!foundProduct) return null;
+      let product = products.find((p) => p.sku === item.sku);
+      let variant = product?.variantes?.find((v) => v.sku === item.sku);
 
-        const effectiveVariant: ProductVariant = foundVariant || {
-          sku: foundProduct.sku,
-          color: foundProduct.color || foundProduct.presentacion,
-          presentacion: foundProduct.presentacion,
-          precioMayorUsd: foundProduct.precioMayorUsd,
-          minMayor: foundProduct.minMayor || 50,
-          precioGranMayorUsd: foundProduct.precioGranMayorUsd,
-          minGranMayor: foundProduct.minGranMayor || 100,
-          stock: foundProduct.stock,
-          status: foundProduct.status,
-          isAvailable: foundProduct.isAvailable,
-          fotos: foundProduct.fotos,
-        };
+      if (!product) {
+        product = products.find((p) => p.variantes?.some((v) => v.sku === item.sku));
+        variant = product?.variantes?.find((v) => v.sku === item.sku);
+      }
+      if (!product) continue;
 
-        const minMayor = effectiveVariant.minMayor || 50;
-        const minGranMayor = effectiveVariant.minGranMayor || 100;
-        const priceMayor = effectiveVariant.precioMayorUsd || 0;
-        const priceGranMayor = effectiveVariant.precioGranMayorUsd || 0;
+      const precioMayor = variant?.precioMayorUsd ?? product.precioMayorUsd ?? 0;
+      const precioGranMayor = variant?.precioGranMayorUsd ?? product.precioGranMayorUsd ?? 0;
+      const minGranMayor = variant?.minGranMayor ?? product.minGranMayor ?? 0;
+      const minMayor = variant?.minMayor ?? product.minMayor ?? 1;
+      const stock = variant?.stock ?? product.stock ?? 0;
 
-        // Tarifa aplicada: Gran Mayor si se eligió o si la cantidad alcanza minGranMayor
-        const isGranMayor =
-          item.tier === "gran_mayor" ||
-          (priceGranMayor > 0 && minGranMayor > 0 && item.cantidad >= minGranMayor);
+      const aplicaGranMayor =
+        precioGranMayor > 0 && minGranMayor > 0 && item.cantidad >= minGranMayor;
+      const precioUnitario = aplicaGranMayor ? precioGranMayor : precioMayor;
 
-        let subtotalUsd = 0;
-        let unitPriceUsd = priceMayor;
-        let tier: "mayor" | "gran_mayor" = "mayor";
-        let step = minMayor;
+      const presentacion = variant?.presentacion ?? product.presentacion ?? '';
+      const color = variant?.color ?? '';
 
-        if (isGranMayor && priceGranMayor > 0 && minGranMayor > 0) {
-          tier = "gran_mayor";
-          unitPriceUsd = priceGranMayor;
-          step = minGranMayor;
-          const factor = item.cantidad / minGranMayor;
-          subtotalUsd = Math.round(priceGranMayor * factor * 100) / 100;
-        } else {
-          tier = "mayor";
-          unitPriceUsd = priceMayor;
-          step = minMayor;
-          const factor = item.cantidad / minMayor;
-          subtotalUsd = Math.round(priceMayor * factor * 100) / 100;
-        }
+      result.push({
+        sku: item.sku,
+        nombre: product.nombre,
+        presentacion: [color, presentacion].filter(Boolean).join(' - '),
+        unidadVenta: product.unidadVenta,
+        foto: variant?.fotos?.[0]?.url || product.fotos?.[0]?.url || FALLBACK_IMAGE,
+        cantidad: item.cantidad,
+        step: minMayor || 1,
+        maxStock: stock > 0 ? stock : 999999,
+        precioUnitario,
+        subtotal: precioUnitario * item.cantidad,
+        nivel: aplicaGranMayor ? 'gran_mayor' : 'mayor',
+      });
+    }
+    return result;
+  }, [items, products]);
 
-        const subtotalVes = calculateVesTotal(subtotalUsd, bcvRate);
+  const totalUsd = lines.reduce((acc, l) => acc + l.subtotal, 0);
+  const totalVes = totalUsd * (bcvRate || 0);
 
-        return {
-          product: foundProduct,
-          variant: effectiveVariant,
-          sku: item.sku,
-          quantity: item.cantidad,
-          tier,
-          step,
-          minMayor,
-          minGranMayor,
-          unitPriceUsd,
-          subtotalUsd,
-          subtotalVes,
-          comentarios: item.comentarios,
-        };
-      })
-      .filter(Boolean);
-  }, [items, products, bcvRate]);
-
-  const totalUsd = useMemo(() => {
-    return cartLines.reduce((acc, line) => acc + (line?.subtotalUsd || 0), 0);
-  }, [cartLines]);
-
-  const totalVes = useMemo(() => {
-    return calculateVesTotal(totalUsd, bcvRate);
-  }, [totalUsd, bcvRate]);
-
-  // Generación de código corto de pedido: SUM-AAMMDD-XXXX
-  const orderCode = useMemo(() => {
-    const now = new Date();
-    const yy = String(now.getFullYear()).slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    const rand = Math.floor(1000 + Math.random() * 9000);
-    return `SUM-${yy}${mm}${dd}-${rand}`;
-  }, []);
-
-  // Construcción del mensaje estructurado para WhatsApp
-  const whatsappUrl = useMemo(() => {
-    if (cartLines.length === 0) return "";
-
-    let linesText = "";
-    cartLines.forEach((line, index) => {
-      if (!line) return;
-      const { product, variant, quantity, tier, subtotalUsd, comentarios } = line;
-      linesText += `${index + 1}. *${quantity} Unidades × ${product.nombre}* (Color: ${variant.color || "Estándar"})\n   Tarifa: *${tier === "gran_mayor" ? "Gran Mayor" : "Mayor"}* · Subtotal = *${formatUsd(subtotalUsd)}*${comentarios ? `\n   Nota: ${comentarios}` : ""}\n`;
-    });
-
-    const message = `👋 *NUEVO PEDIDO DE SUMINISTROS — SUMILISTO*
-Código: *${orderCode}*
-----------------------------------------
-📋 *DETALLE DEL PEDIDO:*
-${linesText}
-----------------------------------------
-💵 *TOTAL A PAGAR:*
-• *${formatUsd(totalUsd)}*
-• *${formatVes(totalVes)}* (Ref. Tasa BCV: ${formatVes(bcvRate)})
-----------------------------------------
-📍 *DATOS DE DESPACHO:*
-• *Cliente:* ${formData.nombre || "Por confirmar"}
-• *Modalidad:* Entrega a domicilio
-• *Zona:* ${formData.zonaEntrega}
-• *Método de pago:* ${formData.metodoPago}
-${formData.notas ? `• *Notas adicionales:* ${formData.notas}\n` : ""}
-_Disponibilidad y precios sujetos a confirmación por el asesor comercial._
-🔗 Tienda: https://sumilisto.com`;
-
-    return `https://wa.me/${theme.whatsappNumber || "584227864547"}?text=${encodeURIComponent(message)}`;
-  }, [cartLines, totalUsd, totalVes, bcvRate, orderCode, formData, theme.whatsappNumber]);
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Tu navegador no soporta geolocalización');
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGpsLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setGpsLoading(false);
+      },
+      (error) => {
+        console.error(error);
+        alert('No se pudo obtener la ubicación GPS. Verifica los permisos.');
+        setGpsLoading(false);
+      }
+    );
+  };
 
   const handleSendOrder = () => {
+    if (!nombre.trim() || !zonaEntrega || !metodoPago) {
+      setErrorValidacion(
+        'Por favor completa los campos obligatorios: Nombre, Zona de Entrega y Método de Pago.'
+      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setErrorValidacion('');
+
+    let message = `🛒 *NUEVO PEDIDO MAYORISTA - SUMILISTO*\n\n`;
+    message += `👤 *Cliente:* ${nombre}\n`;
+    if (personaContacto) message += `🤝 *Persona de contacto:* ${personaContacto}\n`;
+    if (telefono) message += `📞 *Teléfono:* ${telefono}\n`;
+    message += `📍 *Zona de Entrega:* ${zonaEntrega}\n`;
+    if (direccion) message += `🏠 *Dirección Escrita:* ${direccion}\n`;
+    if (gpsLocation) {
+      message += `🗺️ *GPS:* https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}\n`;
+    }
+    message += `💳 *Método de Pago:* ${metodoPago}\n`;
+    if (notas) message += `📝 *Notas:* ${notas}\n`;
+
+    message += `\n📦 *DETALLE DEL PEDIDO:*\n`;
+    lines.forEach((l, index) => {
+      const detalle = l.presentacion ? ` (${l.presentacion})` : '';
+      message += `${index + 1}. ${l.nombre}${detalle} - Cant: ${l.cantidad} x ${formatUsd(
+        l.precioUnitario
+      )} = ${formatUsd(l.subtotal)}\n`;
+    });
+
+    message += `\n💰 *TOTAL USD:* ${formatUsd(totalUsd)}`;
+    if (bcvRate) {
+      message += `\n💵 *TOTAL VES (BCV):* Bs. ${totalVes.toLocaleString('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+
+    const whatsappNumber = theme.whatsappNumber;
+    if (!whatsappNumber) {
+      setErrorValidacion('El número de WhatsApp de la tienda no está configurado. Intenta más tarde.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(whatsappUrl, '_blank');
     markAsSentWhatsApp();
   };
 
-  if (items.length === 0) {
+  if (lines.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <div className="w-20 h-20 mx-auto rounded-3xl bg-rose-50 flex items-center justify-center text-brand mb-4">
-          <Truck className="w-10 h-10" />
-        </div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tu pedido está vacío</h1>
-        <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-          Explora nuestro catálogo mayorista de envases, bolsas, cubiertos y papel para tu restaurante o negocio.
-        </p>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4">
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Tu carrito está vacío</h2>
+        <p className="text-slate-500 mb-6">Aún no has agregado productos mayoristas a tu pedido.</p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 mt-6 h-12 px-6 rounded-xl bg-brand text-white font-bold text-sm shadow-md hover:bg-brand-hover transition-colors"
+          className="inline-flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:bg-[#20bd5a] transition-all"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Explorar el catálogo</span>
+          <ArrowLeft className="w-5 h-5" /> Volver a la tienda
         </Link>
       </div>
     );
   }
 
+  const inputClass =
+    'w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-      {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Resumen de tu Pedido Mayorista
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            {itemCount} {itemCount === 1 ? "producto seleccionado" : "productos seleccionados"} · Código: <strong className="text-slate-800">{orderCode}</strong>
-          </p>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-extrabold text-slate-900 mb-6">Resumen de tu Pedido Mayorista</h1>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={clearCart}
-            className="text-xs text-rose-700 hover:text-rose-900 font-semibold flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Vaciar pedido</span>
-          </button>
+      {errorValidacion && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-medium animate-pulse">
+          ⚠️ {errorValidacion}
         </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Columna Izquierda: Lista de productos en pedido */}
-        <div className="lg:col-span-7 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-600">
-              Artículos en el pedido
-            </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* LISTA DE PRODUCTOS */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+            <span className="font-bold text-slate-700">
+              Artículos en el pedido ({lines.length})
+            </span>
+            <button
+              type="button"
+              onClick={clearCart}
+              className="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center gap-1 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" /> Vaciar pedido
+            </button>
+          </div>
+
+          {lines.map((l) => (
+            <div
+              key={l.sku}
+              className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl border border-slate-100 overflow-hidden bg-slate-50">
+                  <Image
+                    src={l.foto}
+                    alt={l.nombre}
+                    fill
+                    unoptimized={true}
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800 text-sm sm:text-base">{l.nombre}</h3>
+                  {l.presentacion && (
+                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-medium">
+                      {l.presentacion}
+                    </span>
+                  )}
+                  <p className="text-slate-500 text-sm mt-1">
+                    {formatUsd(l.precioUnitario)} c/u
+                    {l.unidadVenta ? ` · ${l.unidadVenta}` : ''}
+                  </p>
+                  {l.nivel === 'gran_mayor' && (
+                    <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded inline-block mt-1">
+                      Precio Gran Mayor aplicado
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50">
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(l.sku, l.cantidad - l.step)}
+                    className="p-2 text-slate-600 hover:bg-slate-200 rounded-l-xl transition-colors"
+                    aria-label="Disminuir cantidad"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="px-4 font-bold text-slate-800 text-sm">{l.cantidad}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (l.cantidad + l.step > l.maxStock) return;
+                      updateQuantity(l.sku, l.cantidad + l.step);
+                    }}
+                    className="p-2 text-slate-600 hover:bg-slate-200 rounded-r-xl transition-colors"
+                    aria-label="Aumentar cantidad"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="text-right">
+                  <p className="font-extrabold text-slate-900">{formatUsd(l.subtotal)}</p>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(l.sku)}
+                    className="text-red-500 hover:text-red-700 text-xs mt-1 flex items-center gap-0.5 ml-auto"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <div className="pt-2">
             <Link
               href="/"
-              className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
+              className="text-emerald-600 hover:text-emerald-700 font-semibold text-sm inline-flex items-center gap-1"
             >
-              <ArrowLeft className="w-3 h-3" />
-              <span>Seguir agregando</span>
+              ← Seguir agregando productos
             </Link>
-          </div>
-
-          <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/80 p-2 sm:p-4">
-            {cartLines.map((line) => {
-              if (!line) return null;
-              const { product, variant, sku, quantity, tier, step, minMayor, minGranMayor, subtotalUsd, subtotalVes, comentarios } = line;
-
-              return (
-                <div key={sku} className="py-4 first:pt-2 last:pb-2 flex gap-3 sm:gap-4 items-center">
-                  {/* Foto miniatura */}
-                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
-                    <Image
-                      src={product.fotos[0]?.url || "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=200&q=80"}
-                      alt={product.nombre}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  </div>
-
-                  {/* Info y precios */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        {sku}
-                      </span>
-                      <span
-                        style={{
-                          backgroundColor: tier === "gran_mayor" ? undefined : (theme.softBgColor || "#f0fdf4"),
-                        }}
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                          tier === "gran_mayor" ? "bg-amber-100 text-amber-900" : "text-brand"
-                        }`}
-                      >
-                        {tier === "gran_mayor" ? "Gran Mayor" : "Mayor"}
-                      </span>
-                    </div>
-
-                    <h3 className="font-bold text-sm text-slate-900 truncate">
-                      {product.nombre}
-                    </h3>
-                    <div className="text-xs text-slate-600 font-medium">
-                      Color: <strong>{variant.color || "Estándar"}</strong>
-                    </div>
-
-                    {comentarios && (
-                      <div className="text-[11px] text-slate-500 italic mt-0.5">
-                        Nota: {comentarios}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Selector y Subtotal */}
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    <div className="text-right">
-                      <div className="font-black text-sm sm:text-base text-slate-900">
-                        {formatUsd(subtotalUsd)}
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        {formatVes(subtotalVes)}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center rounded-lg bg-slate-100 border border-slate-200 p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (tier === "gran_mayor" && quantity === minGranMayor) {
-                            // Step down to Mayor tier
-                            const nextQuantity = Math.max(minMayor, minGranMayor - minMayor);
-                            updateQuantity(sku, nextQuantity, "mayor");
-                          } else if (quantity <= minMayor) {
-                            removeItem(sku);
-                          } else {
-                            updateQuantity(sku, quantity - step, tier);
-                          }
-                        }}
-                        className="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-700 hover:bg-slate-200 text-xs shadow-xs"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="px-2 text-center text-xs font-bold text-slate-900 min-w-[3.5rem]">
-                        {quantity} <span className="text-[10px] font-normal text-slate-500">unds</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextQuantity = quantity + step;
-                          const nextTier = nextQuantity >= minGranMayor ? "gran_mayor" : "mayor";
-                          updateQuantity(sku, nextQuantity, nextTier);
-                        }}
-                        className="w-7 h-7 flex items-center justify-center rounded bg-white text-brand hover:bg-slate-200 text-xs shadow-xs font-bold"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => removeItem(sku)}
-                      className="text-[11px] text-rose-600 hover:text-rose-800 flex items-center gap-1 font-medium"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span>Quitar</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
 
-        {/* Columna Derecha: Formulario y Totales */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          {/* Tarjeta de Datos de Entrega */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 mb-4 flex items-center gap-2">
-              <Truck className="w-4 h-4 text-brand" />
-              <span>Datos para el Despacho</span>
-            </h2>
+        {/* FORMULARIO DE DESPACHO */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit space-y-5">
+          <h2 className="text-lg font-bold text-slate-900 border-b pb-3 flex items-center gap-2">
+            📍 DATOS PARA EL DESPACHO
+          </h2>
 
-            <div className="flex flex-col gap-3.5">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nombre o Empresa / Restaurante *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: Hamburguesería Caracas / Juan Pérez"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 h-11 px-3 rounded-xl bg-brand text-white border border-brand text-xs font-bold">
-                <Truck className="w-3.5 h-3.5" />
-                <span>Entrega a domicilio</span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Zona de Entrega *
-                </label>
-                <select
-                  value={formData.zonaEntrega}
-                  onChange={(e) => setFormData({ ...formData, zonaEntrega: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                >
-                  <option value="Caracas">Caracas</option>
-                  <option value="Guarenas">Guarenas</option>
-                  <option value="Guatire">Guatire</option>
-                  <option value="Envío Nacional - ZOOM">Envío Nacional - ZOOM</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Método de Pago Estimado
-                </label>
-                <select
-                  value={formData.metodoPago}
-                  onChange={(e) => setFormData({ ...formData, metodoPago: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                >
-                  <option value="Pago Móvil / Transferencia Bs (Tasa BCV)">Pago Móvil / Transferencia Bs (Tasa BCV)</option>
-                  <option value="Dólares en Efectivo">Dólares en Efectivo</option>
-                  <option value="Binance USDT">Binance USDT</option>
-                </select>
-              </div>
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Nombre o Empresa / Restaurante *
+            </label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Ej: Hamburguesería Caracas / Juan Pérez"
+              className={inputClass}
+            />
           </div>
 
-          {/* Resumen Total y Botón WhatsApp */}
-          <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-md flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Total en Dólares:</span>
-              <span className="text-2xl sm:text-3xl font-black text-white">{formatUsd(totalUsd)}</span>
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Persona de Contacto</label>
+            <input
+              type="text"
+              value={personaContacto}
+              onChange={(e) => setPersonaContacto(e.target.value)}
+              placeholder="Nombre de quien recibe"
+              className={inputClass}
+            />
+          </div>
 
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Ref. Bolívares (BCV):</span>
-              <div className="text-right">
-                <span className="text-lg font-bold text-emerald-400">{formatVes(totalVes)}</span>
-                <div className="text-[10px] text-slate-400">Tasa oficial: {formatVes(bcvRate)}</div>
-              </div>
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Número de Teléfono</label>
+            <input
+              type="tel"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              placeholder="Ej: 0412-1234567"
+              className={inputClass}
+            />
+          </div>
 
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={handleSendOrder}
-              className="w-full h-14 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-base flex items-center justify-center gap-2.5 shadow-md active:scale-[0.99] transition-all"
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Zona de Entrega *</label>
+            <select
+              value={zonaEntrega}
+              onChange={(e) => setZonaEntrega(e.target.value)}
+              className={inputClass}
             >
-              <MessageCircle className="w-5 h-5" />
-              <span>Enviar Pedido por WhatsApp</span>
-            </a>
-
-            <div className="text-[11px] text-slate-400 text-center leading-tight">
-              Al enviar tu pedido, nuestro asesor confirmará existencias y coordinará el despacho contigo inmediatamente.
-            </div>
+              <option value="">Selecciona una zona...</option>
+              <option value="Caracas">Caracas</option>
+              <option value="Guarenas">Guarenas</option>
+              <option value="Guatire">Guatire</option>
+              <option value="Envío Nacional">Envío Nacional</option>
+            </select>
           </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Dirección Escrita / Referencia
+            </label>
+            <textarea
+              value={direccion}
+              onChange={(e) => setDireccion(e.target.value)}
+              rows={2}
+              placeholder="Calle, edificio, local o punto de referencia exacto"
+              className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            />
+          </div>
+
+          {zonaEntrega && zonaEntrega !== 'Envío Nacional' && (
+            <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl space-y-2">
+              <span className="block text-xs font-bold text-emerald-900">Ubicación GPS (Opcional)</span>
+              <button
+                type="button"
+                onClick={handleGetLocation}
+                disabled={gpsLoading}
+                className="w-full py-2 px-3 bg-white border border-emerald-300 text-emerald-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm"
+              >
+                <MapPin className="w-4 h-4 text-emerald-600" />
+                {gpsLoading
+                  ? 'Obteniendo GPS...'
+                  : gpsLocation
+                  ? '✅ Ubicación GPS Capturada'
+                  : 'Compartir ubicación GPS actual'}
+              </button>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Método de Pago *</label>
+            <select
+              value={metodoPago}
+              onChange={(e) => setMetodoPago(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">Selecciona método de pago...</option>
+              <option value="Pago Móvil / Transferencia (Tasa BCV)">
+                Pago Móvil / Transferencia Bs (Tasa BCV)
+              </option>
+              <option value="Dólares en Efectivo">Dólares en Efectivo</option>
+              <option value="Binance USDT">Binance USDT</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Notas u Observaciones</label>
+            <input
+              type="text"
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+              placeholder="Instrucciones especiales para el pedido"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between items-center text-slate-600 text-sm">
+              <span>Total en Dólares:</span>
+              <span className="font-extrabold text-slate-900 text-lg">{formatUsd(totalUsd)}</span>
+            </div>
+            {bcvRate > 0 && (
+              <div className="flex justify-between items-center text-slate-600 text-sm">
+                <span>Ref. Bolívares (BCV):</span>
+                <span className="font-bold text-slate-700">
+                  Bs.{' '}
+                  {totalVes.toLocaleString('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSendOrder}
+            className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
+          >
+            <MessageCircle className="w-5 h-5" />
+            Enviar Pedido por WhatsApp
+          </button>
+
+          <p className="text-[11px] text-slate-400 text-center leading-tight">
+            Al enviar tu pedido, nuestro asesor confirmará existencias y coordinará el despacho contigo
+            inmediatamente.
+          </p>
         </div>
       </div>
     </div>

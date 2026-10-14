@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { DEFAULT_SETTINGS, HeroSlide } from "@/lib/constants/settings";
+import { loginAdmin, logoutAdmin, isAdminAuthenticated } from "@/lib/actions/auth";
 import {
   Save, RefreshCcw, Image as ImageIcon, Palette, Phone, Lock,
   User, LogOut, CheckCircle2, Type, Layout, Truck, Plus, X, Link as LinkIcon,
@@ -29,6 +30,8 @@ export default function AdminSettingsPage() {
   const { theme, updateTheme, resetTheme } = useTheme();
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [authError, setAuthError] = useState("");
@@ -89,26 +92,49 @@ export default function AdminSettingsPage() {
     setNavLabelDespachos(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
   }, [theme]);
 
+  // Verifica con el servidor si ya hay una sesión de administrador válida
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (sessionStorage.getItem("sumilisto_admin_auth") === "true") setIsAuthenticated(true);
-    }
+    let active = true;
+    isAdminAuthenticated()
+      .then((ok) => {
+        if (active) {
+          setIsAuthenticated(ok);
+          setAuthChecked(true);
+        }
+      })
+      .catch(() => {
+        if (active) setAuthChecked(true);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (usernameInput.trim().toLowerCase() === "admin" &&
-        (passwordInput === "sumilisto2024" || passwordInput === "Sumilisto2024")) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem("sumilisto_admin_auth", "true");
-    } else {
-      setAuthError("Usuario o contraseña incorrectos");
+    setLoggingIn(true);
+    setAuthError("");
+    try {
+      const res = await loginAdmin(usernameInput, passwordInput);
+      if (res.ok) {
+        setIsAuthenticated(true);
+        setPasswordInput("");
+      } else {
+        setAuthError(res.error || "Usuario o contraseña incorrectos");
+      }
+    } catch {
+      setAuthError("No se pudo iniciar sesión. Intenta de nuevo.");
+    } finally {
+      setLoggingIn(false);
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    sessionStorage.removeItem("sumilisto_admin_auth");
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+    } finally {
+      setIsAuthenticated(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -161,6 +187,15 @@ export default function AdminSettingsPage() {
   const updateSlide = (idx: number, field: keyof HeroSlide, val: string) =>
     setHeroSlides(prev => prev.map((s, i) => i === idx ? { ...s, [field]: val } : s));
 
+  // Mientras el servidor confirma la sesión, no se muestra nada
+  if (!authChecked) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-24 text-center text-sm text-slate-400">
+        Verificando acceso...
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 sm:py-24">
@@ -177,8 +212,9 @@ export default function AdminSettingsPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Usuario</label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input type="text" placeholder="admin" value={usernameInput}
+                <input type="text" placeholder="Usuario" value={usernameInput}
                   onChange={e => setUsernameInput(e.target.value)}
+                  autoComplete="username"
                   className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20" required />
               </div>
             </div>
@@ -188,12 +224,16 @@ export default function AdminSettingsPage() {
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input type="password" placeholder="••••••••" value={passwordInput}
                   onChange={e => setPasswordInput(e.target.value)}
+                  autoComplete="current-password"
                   className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20" required />
               </div>
             </div>
             {authError && <p className="text-xs text-rose-500 font-semibold">{authError}</p>}
           </div>
-          <button type="submit" className="w-full h-11 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand-hover">Iniciar Sesión</button>
+          <button type="submit" disabled={loggingIn}
+            className="w-full h-11 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand-hover disabled:opacity-60">
+            {loggingIn ? "Verificando..." : "Iniciar Sesión"}
+          </button>
         </form>
       </div>
     );
@@ -251,7 +291,7 @@ export default function AdminSettingsPage() {
             <input type="text" value={whatsappNumber}
               onChange={e => setWhatsappNumber(e.target.value)}
               className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
-              placeholder="584227894547" />
+              placeholder="584XXXXXXXXX" />
             <p className="text-[11px] text-slate-400 mt-1">Con código de país, sin símbolo + ni espacios.</p>
           </div>
 

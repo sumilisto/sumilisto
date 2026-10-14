@@ -47,7 +47,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     addItem(currentSku, step);
   };
 
-  const whatsappNum = theme.whatsappNumber || "584227894547";
+  const whatsappNum = theme.whatsappNumber || "";
   const whatsappInquiryUrl = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(
     `Hola Sumilisto, quisiera consultar disponibilidad y precio del producto: ${product.nombre} (SKU: ${currentSku})`
   )}`;

@@ -50,5 +50,8 @@ export interface CustomerOrderForm {
   modalidad: "entrega" | "retiro";
   zonaEntrega: string;
   metodoPago: string;
+  contactPerson: string;
+  contactPhone: string;
+  contactAddress: string;
   notas?: string;
 }

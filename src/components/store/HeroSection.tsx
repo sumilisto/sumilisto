@@ -17,7 +17,7 @@ export function HeroSection() {
   };
   const heightClass = heightMap[(theme.heroHeight as "sm"|"md"|"lg") || "sm"];
 
-  const whaNum = theme.whatsappNumber || "584227894547";
+  const whaNum = theme.whatsappNumber;
 
   return (
     <section
