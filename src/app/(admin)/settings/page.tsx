@@ -1,455 +1,559 @@
-'use client';
+"use client";
 
-import React, { useMemo, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Trash2, Plus, Minus, MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
-import { useCart } from '@/lib/cart/CartContext';
-import { useProducts } from '@/lib/products/ProductsContext';
-import { useTheme } from '@/lib/theme/ThemeContext';
-import { formatUsd } from '@/lib/currency/format';
+import React, { useState, useEffect } from "react";
+import { useTheme } from "@/lib/theme/ThemeContext";
+import { DEFAULT_SETTINGS, HeroSlide } from "@/lib/constants/settings";
+import { loginAdmin, logoutAdmin, isAdminAuthenticated } from "@/lib/actions/auth";
+import {
+  Save, RefreshCcw, Image as ImageIcon, Palette, Phone, Lock,
+  User, LogOut, CheckCircle2, Type, Layout, Truck, Plus, X, Link as LinkIcon,
+} from "lucide-react";
 
-const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=600&q=80';
+const COLOR_FIELDS = [
+  { key: "brandColor", label: "Color Principal (Header, botones)", desc: "Color dominante de la marca" },
+  { key: "navBgColor", label: "Fondo del Encabezado / Navegación", desc: "Fondo del header y nav inferior" },
+  { key: "bgColor", label: "Fondo General de la Página", desc: "Color de fondo base de toda la web" },
+  { key: "cardBgColor", label: "Fondo de Tarjetas de Producto", desc: "Fondo de cada tarjeta en el catálogo" },
+  { key: "textColor", label: "Color de Texto Principal", desc: "Color del texto más importante" },
+  { key: "accentColor", label: "Color de Acento / Destacado", desc: "Usado en badges y etiquetas especiales" },
+  { key: "softBgColor", label: "Color de Fondo Suave (Selección de producto y detalles)", desc: "Reemplaza el tono rosa/carne en las opciones activas del producto" },
+  { key: "topBarTextColor", label: "Color de Texto en Barra Superior (Tasa BCV y Banner)", desc: "Color de las letras en la barra superior y detalles del banner" },
+] as const;
 
-interface Line {
-  sku: string;
-  nombre: string;
-  presentacion: string;
-  foto: string;
-  cantidad: number; // unidades
-  step: number; // unidades que suben o bajan con + y -
-  maxStock: number;
-  precioPaquete: number; // precio de un paquete completo
-  unidadesPorPaquete: number;
-  subtotal: number;
-  nivel: 'mayor' | 'gran_mayor';
-}
+const HEIGHT_OPTIONS = [
+  { value: "sm", label: "Compacto / Delgado (Recomendado)" },
+  { value: "md", label: "Mediano" },
+  { value: "lg", label: "Amplio" },
+];
 
-export default function CartPage() {
-  const { items, updateQuantity, removeItem, clearCart, markAsSentWhatsApp } = useCart();
-  const { products, bcvRate } = useProducts();
-  const { theme } = useTheme();
+export default function AdminSettingsPage() {
+  const { theme, updateTheme, resetTheme } = useTheme();
 
-  // Formulario
-  const [nombre, setNombre] = useState('');
-  const [personaContacto, setPersonaContacto] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [direccion, setDireccion] = useState('');
-  const [zonaEntrega, setZonaEntrega] = useState('');
-  const [metodoPago, setMetodoPago] = useState('');
-  const [notas, setNotas] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [saved, setSaved] = useState(false);
 
-  // GPS y validación
-  const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [errorValidacion, setErrorValidacion] = useState('');
+  // Local state mirrors
+  const [colors, setColors] = useState<Record<string, string>>({});
+  const [logoUrl, setLogoUrl] = useState(theme.logoUrl || "");
+  const [whatsappNumber, setWhatsappNumber] = useState(theme.whatsappNumber || "");
+  const [heroTitle, setHeroTitle] = useState(theme.heroTitle || "");
+  const [heroSubtitle, setHeroSubtitle] = useState(theme.heroSubtitle || "");
+  const [heroHeight, setHeroHeight] = useState<"sm"|"md"|"lg"|"xl">(theme.heroHeight || "md");
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(theme.heroSlides || []);
+  const [despachoText, setDespachoText] = useState(theme.despachoText || "");
 
-  // Une el carrito (sku + cantidad en unidades) con los datos del producto
-  const lines: Line[] = useMemo(() => {
-    const result: Line[] = [];
-    for (const item of items) {
-      if (item.cantidad <= 0) continue;
+  // Footer settings state
+  const [footerDescription, setFooterDescription] = useState(theme.footerDescription || DEFAULT_SETTINGS.footerDescription);
+  const [footerSchedule, setFooterSchedule] = useState(theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule);
+  const [footerDeliveryText, setFooterDeliveryText] = useState(theme.footerDeliveryText || DEFAULT_SETTINGS.footerDeliveryText);
+  const [footerBgColor, setFooterBgColor] = useState(theme.footerBgColor || DEFAULT_SETTINGS.footerBgColor);
+  const [footerTextColor, setFooterTextColor] = useState(theme.footerTextColor || DEFAULT_SETTINGS.footerTextColor);
 
-      let product = products.find((p) => p.sku === item.sku);
-      let variant = product?.variantes?.find((v) => v.sku === item.sku);
+  // Barra Inferior Móvil settings state
+  const [bottomNavBgColor, setBottomNavBgColor] = useState(theme.bottomNavBgColor || DEFAULT_SETTINGS.bottomNavBgColor);
+  const [bottomNavTextColor, setBottomNavTextColor] = useState(theme.bottomNavTextColor || DEFAULT_SETTINGS.bottomNavTextColor);
+  const [bottomNavActiveColor, setBottomNavActiveColor] = useState(theme.bottomNavActiveColor || DEFAULT_SETTINGS.bottomNavActiveColor);
+  const [navLabelInicio, setNavLabelInicio] = useState(theme.navLabelInicio || DEFAULT_SETTINGS.navLabelInicio);
+  const [navLabelCategorias, setNavLabelCategorias] = useState(theme.navLabelCategorias || DEFAULT_SETTINGS.navLabelCategorias);
+  const [navLabelCarrito, setNavLabelCarrito] = useState(theme.navLabelCarrito || DEFAULT_SETTINGS.navLabelCarrito);
+  const [navLabelBuscar, setNavLabelBuscar] = useState(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
+  const [navLabelDespachos, setNavLabelDespachos] = useState(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
 
-      if (!product) {
-        product = products.find((p) => p.variantes?.some((v) => v.sku === item.sku));
-        variant = product?.variantes?.find((v) => v.sku === item.sku);
-      }
-      if (!product) continue;
+  useEffect(() => {
+    const c: Record<string, string> = {};
+    COLOR_FIELDS.forEach(f => { c[f.key] = (theme as any)[f.key] || (DEFAULT_SETTINGS as any)[f.key]; });
+    setColors(c);
+    setLogoUrl(theme.logoUrl || "");
+    setWhatsappNumber(theme.whatsappNumber || "");
+    setHeroTitle(theme.heroTitle || DEFAULT_SETTINGS.heroTitle);
+    setHeroSubtitle(theme.heroSubtitle || DEFAULT_SETTINGS.heroSubtitle);
+    setHeroHeight(theme.heroHeight || "md");
+    setHeroSlides(theme.heroSlides || []);
+    setDespachoText(theme.despachoText || DEFAULT_SETTINGS.despachoText);
 
-      const precioMayor = variant?.precioMayorUsd ?? product.precioMayorUsd ?? 0;
-      const precioGranMayor = variant?.precioGranMayorUsd ?? product.precioGranMayorUsd ?? 0;
-      const minMayor = variant?.minMayor || product.minMayor || 50;
-      const minGranMayor = variant?.minGranMayor || product.minGranMayor || 100;
-      const stock = variant?.stock ?? product.stock ?? 0;
+    setFooterDescription(theme.footerDescription || DEFAULT_SETTINGS.footerDescription);
+    setFooterSchedule(theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule);
+    setFooterDeliveryText(theme.footerDeliveryText || DEFAULT_SETTINGS.footerDeliveryText);
+    setFooterBgColor(theme.footerBgColor || DEFAULT_SETTINGS.footerBgColor);
+    setFooterTextColor(theme.footerTextColor || DEFAULT_SETTINGS.footerTextColor);
 
-      // Gran Mayor se aplica cuando la cantidad llega al mínimo establecido
-      const aplicaGranMayor =
-        precioGranMayor > 0 && minGranMayor > 0 && item.cantidad >= minGranMayor;
+    setBottomNavBgColor(theme.bottomNavBgColor || DEFAULT_SETTINGS.bottomNavBgColor);
+    setBottomNavTextColor(theme.bottomNavTextColor || DEFAULT_SETTINGS.bottomNavTextColor);
+    setBottomNavActiveColor(theme.bottomNavActiveColor || DEFAULT_SETTINGS.bottomNavActiveColor);
+    setNavLabelInicio(theme.navLabelInicio || DEFAULT_SETTINGS.navLabelInicio);
+    setNavLabelCategorias(theme.navLabelCategorias || DEFAULT_SETTINGS.navLabelCategorias);
+    setNavLabelCarrito(theme.navLabelCarrito || DEFAULT_SETTINGS.navLabelCarrito);
+    setNavLabelBuscar(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
+    setNavLabelDespachos(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
+  }, [theme]);
 
-      // El precio es por paquete: Mayor = minMayor unidades, Gran Mayor = minGranMayor unidades
-      const unidadesPorPaquete = aplicaGranMayor ? minGranMayor : minMayor;
-      const precioPaquete = aplicaGranMayor ? precioGranMayor : precioMayor;
-      const subtotal =
-        Math.round(precioPaquete * (item.cantidad / unidadesPorPaquete) * 100) / 100;
-
-      const presentacion = variant?.presentacion ?? product.presentacion ?? '';
-      const color = variant?.color ?? '';
-
-      result.push({
-        sku: item.sku,
-        nombre: product.nombre,
-        presentacion: [color, presentacion].filter(Boolean).join(' - '),
-        foto: variant?.fotos?.[0]?.url || product.fotos?.[0]?.url || FALLBACK_IMAGE,
-        cantidad: item.cantidad,
-        step: minMayor,
-        maxStock: stock > 0 ? stock : 999999,
-        precioPaquete,
-        unidadesPorPaquete,
-        subtotal,
-        nivel: aplicaGranMayor ? 'gran_mayor' : 'mayor',
+  // Verifica con el servidor si ya hay una sesión de administrador válida
+  useEffect(() => {
+    let active = true;
+    isAdminAuthenticated()
+      .then((ok) => {
+        if (active) {
+          setIsAuthenticated(ok);
+          setAuthChecked(true);
+        }
+      })
+      .catch(() => {
+        if (active) setAuthChecked(true);
       });
-    }
-    return result;
-  }, [items, products]);
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const totalUsd = Math.round(lines.reduce((acc, l) => acc + l.subtotal, 0) * 100) / 100;
-  const totalVes = totalUsd * (bcvRate || 0);
-
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Tu navegador no soporta geolocalización');
-      return;
-    }
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setGpsLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setGpsLoading(false);
-      },
-      (error) => {
-        console.error(error);
-        alert('No se pudo obtener la ubicación GPS. Verifica los permisos.');
-        setGpsLoading(false);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoggingIn(true);
+    setAuthError("");
+    try {
+      const res = await loginAdmin(usernameInput, passwordInput);
+      if (res.ok) {
+        setIsAuthenticated(true);
+        setPasswordInput("");
+      } else {
+        setAuthError(res.error || "Usuario o contraseña incorrectos");
       }
-    );
+    } catch {
+      setAuthError("No se pudo iniciar sesión. Intenta de nuevo.");
+    } finally {
+      setLoggingIn(false);
+    }
   };
 
-  const handleSendOrder = () => {
-    if (!nombre.trim() || !zonaEntrega || !metodoPago) {
-      setErrorValidacion(
-        'Por favor completa los campos obligatorios: Nombre, Zona de Entrega y Método de Pago.'
-      );
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+    } finally {
+      setIsAuthenticated(false);
     }
-    setErrorValidacion('');
-
-    let message = `🛒 *NUEVO PEDIDO MAYORISTA - SUMILISTO*\n\n`;
-    message += `👤 *Cliente:* ${nombre}\n`;
-    if (personaContacto) message += `🤝 *Persona de contacto:* ${personaContacto}\n`;
-    if (telefono) message += `📞 *Teléfono:* ${telefono}\n`;
-    message += `📍 *Zona de Entrega:* ${zonaEntrega}\n`;
-    if (direccion) message += `🏠 *Dirección Escrita:* ${direccion}\n`;
-    if (gpsLocation) {
-      message += `🗺️ *GPS:* https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}\n`;
-    }
-    message += `💳 *Método de Pago:* ${metodoPago}\n`;
-    if (notas) message += `📝 *Notas:* ${notas}\n`;
-
-    message += `\n📦 *DETALLE DEL PEDIDO:*\n`;
-    lines.forEach((l, index) => {
-      const detalle = l.presentacion ? ` (${l.presentacion})` : '';
-      const tarifa = l.nivel === 'gran_mayor' ? 'Gran Mayor' : 'Mayor';
-      message += `${index + 1}. ${l.nombre}${detalle} - ${l.cantidad} unds (${tarifa}) = ${formatUsd(
-        l.subtotal
-      )}\n`;
-    });
-
-    message += `\n💰 *TOTAL USD:* ${formatUsd(totalUsd)}`;
-    if (bcvRate) {
-      message += `\n💵 *TOTAL VES (BCV):* Bs. ${totalVes.toLocaleString('es-VE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
-    }
-
-    const whatsappNumber = theme.whatsappNumber;
-    if (!whatsappNumber) {
-      setErrorValidacion('El número de WhatsApp de la tienda no está configurado. Intenta más tarde.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-    window.open(whatsappUrl, '_blank');
-    markAsSentWhatsApp();
   };
 
-  if (lines.length === 0) {
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateTheme({
+      ...colors,
+      brandColor: colors.brandColor,
+      navBgColor: colors.navBgColor,
+      bgColor: colors.bgColor,
+      cardBgColor: colors.cardBgColor,
+      textColor: colors.textColor,
+      accentColor: colors.accentColor,
+      logoUrl: logoUrl.trim() === "" ? null : logoUrl.trim(),
+      whatsappNumber: whatsappNumber.trim().replace(/[^0-9]/g, ""),
+      heroTitle: heroTitle.trim(),
+      heroSubtitle: heroSubtitle.trim(),
+      heroHeight,
+      heroSlides,
+      despachoText: despachoText.trim(),
+      // Footer
+      footerDescription: footerDescription.trim(),
+      footerSchedule: footerSchedule.trim(),
+      footerDeliveryText: footerDeliveryText.trim(),
+      footerBgColor,
+      footerTextColor,
+      // Barra Inferior
+      bottomNavBgColor,
+      bottomNavTextColor,
+      bottomNavActiveColor,
+      navLabelInicio: navLabelInicio.trim(),
+      navLabelCategorias: navLabelCategorias.trim(),
+      navLabelCarrito: navLabelCarrito.trim(),
+      navLabelBuscar: navLabelBuscar.trim(),
+      navLabelDespachos: navLabelDespachos.trim(),
+    } as any);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => { if (typeof reader.result === "string") setLogoUrl(reader.result); };
+    reader.readAsDataURL(file);
+  };
+
+  const addSlide = () => setHeroSlides(prev => [...prev, { imageUrl: "", linkUrl: "" }]);
+  const removeSlide = (idx: number) => setHeroSlides(prev => prev.filter((_, i) => i !== idx));
+  const updateSlide = (idx: number, field: keyof HeroSlide, val: string) =>
+    setHeroSlides(prev => prev.map((s, i) => i === idx ? { ...s, [field]: val } : s));
+
+  // Mientras el servidor confirma la sesión, no se muestra nada
+  if (!authChecked) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Tu carrito está vacío</h2>
-        <p className="text-slate-500 mb-6">Aún no has agregado productos mayoristas a tu pedido.</p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:bg-[#20bd5a] transition-all"
-        >
-          <ArrowLeft className="w-5 h-5" /> Volver a la tienda
-        </Link>
+      <div className="max-w-md mx-auto px-4 py-24 text-center text-sm text-slate-400">
+        Verificando acceso...
       </div>
     );
   }
 
-  const inputClass =
-    'w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500';
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-extrabold text-slate-900 mb-6">Resumen de tu Pedido Mayorista</h1>
-
-      {errorValidacion && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-medium animate-pulse">
-          ⚠️ {errorValidacion}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* LISTA DE PRODUCTOS */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-            <span className="font-bold text-slate-700">
-              Artículos en el pedido ({lines.length})
-            </span>
-            <button
-              type="button"
-              onClick={clearCart}
-              className="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center gap-1 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" /> Vaciar pedido
-            </button>
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 sm:py-24">
+        <form onSubmit={handleLogin} className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 flex flex-col gap-5">
+          <div className="text-center">
+            <div className="w-14 h-14 bg-rose-50 text-brand rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <Lock className="w-7 h-7" />
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Acceso Administrador</h1>
+            <p className="text-xs text-slate-500 mt-1">Ingresa tus credenciales para configurar la tienda.</p>
           </div>
-
-          {lines.map((l) => (
-            <div
-              key={l.sku}
-              className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="relative w-20 h-20 flex-shrink-0 rounded-xl border border-slate-100 overflow-hidden bg-slate-50">
-                  <Image
-                    src={l.foto}
-                    alt={l.nombre}
-                    fill
-                    unoptimized={true}
-                    sizes="80px"
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm sm:text-base">{l.nombre}</h3>
-                  {l.presentacion && (
-                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-medium">
-                      {l.presentacion}
-                    </span>
-                  )}
-                  <p className="text-slate-500 text-sm mt-1">
-                    {formatUsd(l.precioPaquete)} por {l.unidadesPorPaquete} unds
-                  </p>
-                  {l.nivel === 'gran_mayor' && (
-                    <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded inline-block mt-1">
-                      Precio Gran Mayor aplicado
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50">
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(l.sku, l.cantidad - l.step)}
-                    className="p-2 text-slate-600 hover:bg-slate-200 rounded-l-xl transition-colors"
-                    aria-label="Disminuir cantidad"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="px-3 font-bold text-slate-800 text-sm min-w-[4.5rem] text-center">
-                    {l.cantidad}{' '}
-                    <span className="text-[10px] font-normal text-slate-500">unds</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (l.cantidad + l.step > l.maxStock) return;
-                      updateQuantity(l.sku, l.cantidad + l.step);
-                    }}
-                    className="p-2 text-slate-600 hover:bg-slate-200 rounded-r-xl transition-colors"
-                    aria-label="Aumentar cantidad"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="text-right">
-                  <p className="font-extrabold text-slate-900">{formatUsd(l.subtotal)}</p>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(l.sku)}
-                    className="text-red-500 hover:text-red-700 text-xs mt-1 flex items-center gap-0.5 ml-auto"
-                  >
-                    Quitar
-                  </button>
-                </div>
+          <div className="space-y-3 pt-2">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Usuario</label>
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input type="text" placeholder="Usuario" value={usernameInput}
+                  onChange={e => setUsernameInput(e.target.value)}
+                  autoComplete="username"
+                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20" required />
               </div>
             </div>
-          ))}
-
-          <div className="pt-2">
-            <Link
-              href="/"
-              className="text-emerald-600 hover:text-emerald-700 font-semibold text-sm inline-flex items-center gap-1"
-            >
-              ← Seguir agregando productos
-            </Link>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Contraseña</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input type="password" placeholder="••••••••" value={passwordInput}
+                  onChange={e => setPasswordInput(e.target.value)}
+                  autoComplete="current-password"
+                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20" required />
+              </div>
+            </div>
+            {authError && <p className="text-xs text-rose-500 font-semibold">{authError}</p>}
           </div>
-        </div>
+          <button type="submit" disabled={loggingIn}
+            className="w-full h-11 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand-hover disabled:opacity-60">
+            {loggingIn ? "Verificando..." : "Iniciar Sesión"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
-        {/* FORMULARIO DE DESPACHO */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit space-y-5">
-          <h2 className="text-lg font-bold text-slate-900 border-b pb-3 flex items-center gap-2">
-            📍 DATOS PARA EL DESPACHO
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+      <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-200">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Panel de Configuración</h1>
+          <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Personaliza todos los aspectos visuales de la tienda.</p>
+        </div>
+        <button type="button" onClick={handleLogout}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">
+          <LogOut className="w-3.5 h-3.5" /><span>Salir</span>
+        </button>
+      </div>
+
+      <form onSubmit={handleSave} className="space-y-8">
+
+        {/* ── PALETA DE COLORES ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6">
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 mb-4 uppercase tracking-wider">
+            <Palette className="w-4 h-4 text-brand" /> Paleta de Colores
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {COLOR_FIELDS.map(field => (
+              <div key={field.key}>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{field.label}</label>
+                <p className="text-[11px] text-slate-400 mb-2">{field.desc}</p>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                    <input type="color" value={colors[field.key] || "#590317"}
+                      onChange={e => setColors(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                  </div>
+                  <input type="text" value={colors[field.key] || ""}
+                    onChange={e => setColors(prev => ({ ...prev, [field.key]: e.target.value }))}
+                    className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 uppercase"
+                    placeholder="#590317" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── LOGO Y CONTACTO ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+            <ImageIcon className="w-4 h-4 text-brand" /> Logo y Contacto
           </h2>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Nombre o Empresa / Restaurante *
-            </label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Hamburguesería Caracas / Juan Pérez"
-              className={inputClass}
-            />
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Número de WhatsApp</label>
+            <input type="text" value={whatsappNumber}
+              onChange={e => setWhatsappNumber(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+              placeholder="584XXXXXXXXX" />
+            <p className="text-[11px] text-slate-400 mt-1">Con código de país, sin símbolo + ni espacios.</p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Persona de Contacto</label>
-            <input
-              type="text"
-              value={personaContacto}
-              onChange={(e) => setPersonaContacto(e.target.value)}
-              placeholder="Nombre de quien recibe"
-              className={inputClass}
-            />
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Logotipo</label>
+            {logoUrl && <img src={logoUrl} alt="Preview" className="h-12 mb-3 object-contain" />}
+            <input type="file" accept="image/*" onChange={handleLogoUpload}
+              className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 mb-2" />
+            <input type="url" value={logoUrl} onChange={e => setLogoUrl(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:ring-2 focus:ring-brand/20"
+              placeholder="https://i.imgur.com/tu-logo.png" />
+            <p className="text-[11px] text-slate-400 mt-1">O pega un enlace público (Imgur, Cloudinary…) — funcionará en todos los dispositivos.</p>
+          </div>
+        </section>
+
+        {/* ── HERO SECTION ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+            <Layout className="w-4 h-4 text-brand" /> Sección Principal (Banner/Hero)
+          </h2>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Título principal</label>
+            <input type="text" value={heroTitle} onChange={e => setHeroTitle(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20" />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Número de Teléfono</label>
-            <input
-              type="tel"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              placeholder="Ej: 0412-1234567"
-              className={inputClass}
-            />
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Subtítulo / descripción</label>
+            <textarea value={heroSubtitle} onChange={e => setHeroSubtitle(e.target.value)} rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand/20" />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Zona de Entrega *</label>
-            <select
-              value={zonaEntrega}
-              onChange={(e) => setZonaEntrega(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">Selecciona una zona...</option>
-              <option value="Caracas">Caracas</option>
-              <option value="Guarenas">Guarenas</option>
-              <option value="Guatire">Guatire</option>
-              <option value="Envío Nacional">Envío Nacional</option>
-            </select>
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Texto de Despachos (info rápida)</label>
+            <input type="text" value={despachoText} onChange={e => setDespachoText(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+              placeholder="Despacho Caracas / Guarenas / Guatire" />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Dirección Escrita / Referencia
-            </label>
-            <textarea
-              value={direccion}
-              onChange={(e) => setDireccion(e.target.value)}
-              rows={2}
-              placeholder="Calle, edificio, local o punto de referencia exacto"
-              className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-            />
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Altura del banner</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {HEIGHT_OPTIONS.map(opt => (
+                <button key={opt.value} type="button"
+                  onClick={() => setHeroHeight(opt.value as any)}
+                  className={`h-10 rounded-xl text-xs font-bold border transition-all ${heroHeight === opt.value ? "bg-brand text-white border-brand" : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"}`}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {zonaEntrega && zonaEntrega !== 'Envío Nacional' && (
-            <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl space-y-2">
-              <span className="block text-xs font-bold text-emerald-900">Ubicación GPS (Opcional)</span>
-              <button
-                type="button"
-                onClick={handleGetLocation}
-                disabled={gpsLoading}
-                className="w-full py-2 px-3 bg-white border border-emerald-300 text-emerald-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm"
-              >
-                <MapPin className="w-4 h-4 text-emerald-600" />
-                {gpsLoading
-                  ? 'Obteniendo GPS...'
-                  : gpsLocation
-                  ? '✅ Ubicación GPS Capturada'
-                  : 'Compartir ubicación GPS actual'}
+          {/* Carrusel de multimedia */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block">Multimedia del Carrusel</label>
+                <p className="text-[11px] text-slate-400">Soporta Imágenes (JPG, PNG), GIFs animados y Videos (.mp4, .webm).</p>
+              </div>
+              <button type="button" onClick={addSlide}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-xs font-bold hover:bg-brand/20">
+                <Plus className="w-3.5 h-3.5" /> Agregar slide
               </button>
             </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Método de Pago *</label>
-            <select
-              value={metodoPago}
-              onChange={(e) => setMetodoPago(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">Selecciona método de pago...</option>
-              <option value="Pago Móvil / Transferencia Bs (Tasa BCV)">
-                Pago Móvil / Transferencia Bs (Tasa BCV)
-              </option>
-              <option value="Dólares en Efectivo">Dólares en Efectivo</option>
-              <option value="Binance USDT">Binance USDT</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Notas u Observaciones</label>
-            <input
-              type="text"
-              value={notas}
-              onChange={(e) => setNotas(e.target.value)}
-              placeholder="Instrucciones especiales para el pedido"
-              className={inputClass}
-            />
-          </div>
-
-          <div className="border-t pt-4 space-y-2">
-            <div className="flex justify-between items-center text-slate-600 text-sm">
-              <span>Total en Dólares:</span>
-              <span className="font-extrabold text-slate-900 text-lg">{formatUsd(totalUsd)}</span>
-            </div>
-            {bcvRate > 0 && (
-              <div className="flex justify-between items-center text-slate-600 text-sm">
-                <span>Ref. Bolívares (BCV):</span>
-                <span className="font-bold text-slate-700">
-                  Bs.{' '}
-                  {totalVes.toLocaleString('es-VE', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
+            {heroSlides.length === 0 && (
+              <p className="text-xs text-slate-400 bg-slate-50 rounded-xl p-4 text-center">
+                Sin multimedia — el banner mostrará el degradado con el color de marca.
+              </p>
             )}
+            <div className="space-y-3">
+              {heroSlides.map((slide, idx) => (
+                <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-600">Slide {idx + 1} (Imagen, GIF o Video)</span>
+                    <button type="button" onClick={() => removeSlide(idx)} className="text-slate-400 hover:text-rose-500">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <input type="url" value={slide.imageUrl}
+                    onChange={e => updateSlide(idx, "imageUrl", e.target.value)}
+                    className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs mb-2 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    placeholder="https://... URL de la Imagen, GIF o Video (.mp4)" />
+                  <div className="flex items-center gap-2">
+                    <LinkIcon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <input type="text" value={slide.linkUrl || ""}
+                      onChange={e => updateSlide(idx, "linkUrl", e.target.value)}
+                      className="flex-1 h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-brand/20"
+                      placeholder="Link al hacer clic (opcional, ej: /categoria/envases)" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── PIE DE PÁGINA (FOOTER) ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+            <Layout className="w-4 h-4 text-brand" /> Pie de Página (Footer)
+          </h2>
+          <p className="text-xs text-slate-500">
+            Personaliza el texto informativo, horarios, cobertura y colores del final de la página.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color de Fondo del Footer</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={footerBgColor}
+                    onChange={e => setFooterBgColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={footerBgColor}
+                  onChange={e => setFooterBgColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color del Texto del Footer</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={footerTextColor}
+                    onChange={e => setFooterTextColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={footerTextColor}
+                  onChange={e => setFooterTextColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleSendOrder}
-            className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
-          >
-            <MessageCircle className="w-5 h-5" />
-            Enviar Pedido por WhatsApp
-          </button>
+          <div>
+            <label className="text-xs font-bold text-slate-700 mb-1 block">Descripción / Mensaje de la Empresa</label>
+            <textarea value={footerDescription} onChange={e => setFooterDescription(e.target.value)} rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand/20"
+              placeholder="Descripción que aparece debajo del logo en el pie de página..." />
+          </div>
 
-          <p className="text-[11px] text-slate-400 text-center leading-tight">
-            Al enviar tu pedido, nuestro asesor confirmará existencias y coordinará el despacho contigo
-            inmediatamente.
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1 block">Horario de Atención (Multilínea)</label>
+              <textarea value={footerSchedule} onChange={e => setFooterSchedule(e.target.value)} rows={2}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand/20"
+                placeholder={"Lunes a Viernes: 8:00 AM - 5:00 PM\nSábados: 8:00 AM - 1:00 PM"} />
+              <p className="text-[11px] text-slate-400 mt-1">Presiona Enter para saltar de línea.</p>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1 block">Texto de Zonas de Entrega</label>
+              <input type="text" value={footerDeliveryText} onChange={e => setFooterDeliveryText(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+                placeholder="Despachos en Caracas, Guarenas y Guatire..." />
+            </div>
+          </div>
+        </section>
+
+        {/* ── BARRA INFERIOR MÓVIL ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+            <Layout className="w-4 h-4 text-brand" /> Barra Inferior Móvil (Navegación)
+          </h2>
+          <p className="text-xs text-slate-500">
+            Personaliza los títulos y colores de los botones que ven los clientes en su celular.
           </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color de Fondo</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={bottomNavBgColor}
+                    onChange={e => setBottomNavBgColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={bottomNavBgColor}
+                  onChange={e => setBottomNavBgColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color Texto / Íconos Inactivos</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={bottomNavTextColor}
+                    onChange={e => setBottomNavTextColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={bottomNavTextColor}
+                  onChange={e => setBottomNavTextColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Color Ícono Activo</label>
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
+                  <input type="color" value={bottomNavActiveColor}
+                    onChange={e => setBottomNavActiveColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                </div>
+                <input type="text" value={bottomNavActiveColor}
+                  onChange={e => setBottomNavActiveColor(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-brand/20" />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 1 (Inicio)</label>
+              <input type="text" value={navLabelInicio} onChange={e => setNavLabelInicio(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 2 (Categorías)</label>
+              <input type="text" value={navLabelCategorias} onChange={e => setNavLabelCategorias(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 3 (Carrito)</label>
+              <input type="text" value={navLabelCarrito} onChange={e => setNavLabelCarrito(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 4 (Buscar)</label>
+              <input type="text" value={navLabelBuscar} onChange={e => setNavLabelBuscar(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+
+            <div className="col-span-2 sm:col-span-1">
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">Botón 5 (Despachos)</label>
+              <input type="text" value={navLabelDespachos} onChange={e => setNavLabelDespachos(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20" />
+            </div>
+          </div>
+        </section>
+
+        {/* ── BOTONES ── */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+          <button type="button" onClick={resetTheme}
+            className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+            <RefreshCcw className="w-3.5 h-3.5" /> Restaurar Valores por Defecto
+          </button>
+          <button type="submit"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-brand text-white font-black text-sm shadow-sm hover:bg-brand-hover active:bg-brand-active transition-all">
+            {saved ? (
+              <><CheckCircle2 className="w-4 h-4" /><span>¡Guardado!</span></>
+            ) : (
+              <><Save className="w-4 h-4" /><span>Guardar Cambios</span></>
+            )}
+          </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
