@@ -1,23 +1,17 @@
 "use server";
 
-import fs from "fs";
-import path from "path";
 import { StoreSettings, DEFAULT_SETTINGS } from "@/lib/constants/settings";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
-
-const SETTINGS_FILE = path.join(process.cwd(), "data", "settings.json");
+import { getSettings, updateSettings } from "@/lib/supabase/queries";
 
 export async function getStoreSettings(): Promise<StoreSettings> {
   try {
-    if (!fs.existsSync(path.join(process.cwd(), "data"))) {
-      fs.mkdirSync(path.join(process.cwd(), "data"), { recursive: true });
-    }
-    if (fs.existsSync(SETTINGS_FILE)) {
-      const data = fs.readFileSync(SETTINGS_FILE, "utf-8");
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
+    const data = await getSettings();
+    if (data && Object.keys(data).length > 0) {
+      return { ...DEFAULT_SETTINGS, ...data };
     }
   } catch (error) {
-    console.error("Error reading settings", error);
+    console.error("Error reading settings from Supabase:", error);
   }
   return DEFAULT_SETTINGS;
 }
@@ -31,13 +25,10 @@ export async function saveStoreSettings(settings: StoreSettings): Promise<boolea
   }
 
   try {
-    if (!fs.existsSync(path.join(process.cwd(), "data"))) {
-      fs.mkdirSync(path.join(process.cwd(), "data"), { recursive: true });
-    }
-    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), "utf-8");
-    return true;
+    const ok = await updateSettings(settings as any);
+    return ok;
   } catch (error) {
-    console.error("Error saving settings", error);
+    console.error("Error saving settings to Supabase:", error);
     return false;
   }
 }

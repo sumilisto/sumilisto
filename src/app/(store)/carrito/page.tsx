@@ -33,7 +33,6 @@ export default function CartPage() {
 
   // Formulario
   const [nombre, setNombre] = useState('');
-  const [personaContacto, setPersonaContacto] = useState('');
   const [telefono, setTelefono] = useState('');
   const [direccion, setDireccion] = useState('');
   const [zonaEntrega, setZonaEntrega] = useState('');
@@ -133,7 +132,6 @@ export default function CartPage() {
 
     let message = `🛒 *NUEVO PEDIDO MAYORISTA - SUMILISTO*\n\n`;
     message += `👤 *Cliente:* ${nombre}\n`;
-    if (personaContacto) message += `🤝 *Persona de contacto:* ${personaContacto}\n`;
     if (telefono) message += `📞 *Teléfono:* ${telefono}\n`;
     message += `📍 *Zona de Entrega:* ${zonaEntrega}\n`;
     if (direccion) message += `🏠 *Dirección Escrita:* ${direccion}\n`;
@@ -309,24 +307,13 @@ export default function CartPage() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Nombre o Empresa / Restaurante *
+              Nombre o Empresa / Restaurante <span className="text-red-600 font-bold">*</span>
             </label>
             <input
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: Hamburguesería Caracas / Juan Pérez"
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Persona de Contacto</label>
-            <input
-              type="text"
-              value={personaContacto}
-              onChange={(e) => setPersonaContacto(e.target.value)}
-              placeholder="Nombre de quien recibe"
               className={inputClass}
             />
           </div>
@@ -343,7 +330,9 @@ export default function CartPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Zona de Entrega *</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Zona de Entrega <span className="text-red-600 font-bold">*</span>
+            </label>
             <select
               value={zonaEntrega}
               onChange={(e) => setZonaEntrega(e.target.value)}
@@ -390,7 +379,9 @@ export default function CartPage() {
           )}
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Método de Pago *</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Método de Pago <span className="text-red-600 font-bold">*</span>
+            </label>
             <select
               value={metodoPago}
               onChange={(e) => setMetodoPago(e.target.value)}
