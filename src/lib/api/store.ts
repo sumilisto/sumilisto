@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { getProducts as getSupabaseProducts, getBcvRate as getSupabaseBcvRate } from "@/lib/supabase/queries";
+import { getResolvedBcvRate, DEFAULT_BCV_RATE } from "@/lib/currency/bcv";
 import { Product } from "@/types/product";
 
 // 1. OBTENER PRODUCTOS (Caché de 30 segundos)
@@ -22,14 +23,18 @@ export const getProducts = unstable_cache(
   { revalidate: 30, tags: ["products"] }
 );
 
-// 2. OBTENER TASA BCV (Caché de 5 minutos)
+// 2. OBTENER TASA BCV (Caché de 5 minutos con revalidación y sincronización automática)
 export const getBcvRate = unstable_cache(
   async (): Promise<number> => {
     try {
-      return await getSupabaseBcvRate();
+      return await getResolvedBcvRate();
     } catch (error) {
-      console.error("Error leyendo tasa BCV:", error);
-      return 42.50;
+      console.error("Error resolviendo tasa BCV en vivo, usando respaldo:", error);
+      try {
+        return await getSupabaseBcvRate();
+      } catch (dbErr) {
+        return DEFAULT_BCV_RATE;
+      }
     }
   },
   ["supabase-bcv"],

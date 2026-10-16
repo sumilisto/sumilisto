@@ -14,7 +14,7 @@ interface MobileBottomNavProps {
   bcvRate?: number;
 }
 
-export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ bcvRate = 42.50 }) => {
+export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ bcvRate = 880.12 }) => {
   const pathname = usePathname();
   const { itemCount } = useCart();
   const { theme } = useTheme();

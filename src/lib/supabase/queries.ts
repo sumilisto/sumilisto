@@ -51,8 +51,8 @@ export async function getBcvRate(): Promise<number> {
     .eq("id", 1)
     .single();
 
-  if (error || !data) return 42.50;
-  return Number(data.tasa_bcv) || 42.50;
+  if (error || !data) return 880.12;
+  return Number(data.tasa_bcv) || 880.12;
 }
 
 // ─────────────────────────────────────────────────────────
@@ -66,7 +66,7 @@ export async function getSettings(): Promise<Record<string, any>> {
     .single();
 
   if (error || !data) return {};
-  return { ...data.data, tasaBcv: Number(data.tasa_bcv) || 42.50 };
+  return { ...data.data, tasaBcv: Number(data.tasa_bcv) || 880.12 };
 }
 
 // ─────────────────────────────────────────────────────────

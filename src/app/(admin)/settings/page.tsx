@@ -8,6 +8,7 @@ import { loginAdmin, logoutAdmin, isAdminAuthenticated } from "@/lib/actions/aut
 import {
   Save, RefreshCcw, Image as ImageIcon, Palette, Phone, Lock,
   User, LogOut, CheckCircle2, Type, Layout, Truck, Plus, X, Link as LinkIcon,
+  Coins, ExternalLink, TrendingUp,
 } from "lucide-react";
 
 
@@ -55,6 +56,72 @@ export default function AdminSettingsPage() {
   const [navLabelCarrito, setNavLabelCarrito] = useState(theme.navLabelCarrito || DEFAULT_SETTINGS.navLabelCarrito);
   const [navLabelBuscar, setNavLabelBuscar] = useState(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
   const [navLabelDespachos, setNavLabelDespachos] = useState(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
+
+  // Estado para Tasa BCV
+  const [bcvRate, setBcvRate] = useState<number>(880.12);
+  const [bcvManualInput, setBcvManualInput] = useState<string>("880.12");
+  const [syncingBcv, setSyncingBcv] = useState(false);
+  const [bcvStatusMsg, setBcvStatusMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/bcv")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && data.rate) {
+          setBcvRate(data.rate);
+          setBcvManualInput(String(data.rate));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSyncBcv = async () => {
+    setSyncingBcv(true);
+    setBcvStatusMsg("");
+    try {
+      const res = await fetch("/api/bcv?refresh=true");
+      const data = await res.json();
+      if (data.ok && data.rate) {
+        setBcvRate(data.rate);
+        setBcvManualInput(String(data.rate));
+        setBcvStatusMsg(`¡Sincronizado! Tasa oficial: Bs. ${data.rate.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} (${data.source || 'BCV'})`);
+      } else {
+        setBcvStatusMsg("No se pudo conectar con el BCV en este instante. Se mantiene la tasa actual.");
+      }
+    } catch {
+      setBcvStatusMsg("Error de red intentando sincronizar.");
+    } finally {
+      setSyncingBcv(false);
+    }
+  };
+
+  const handleManualBcvSave = async () => {
+    const num = parseFloat(bcvManualInput.replace(",", "."));
+    if (isNaN(num) || num <= 0) {
+      alert("Por favor ingresa un número válido para la tasa.");
+      return;
+    }
+    setSyncingBcv(true);
+    setBcvStatusMsg("");
+    try {
+      const res = await fetch("/api/bcv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rate: num }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setBcvRate(num);
+        setBcvStatusMsg(`Tasa manual guardada correctamente: Bs. ${num.toFixed(2)}`);
+      } else {
+        alert(data.error || "Error guardando la tasa.");
+      }
+    } catch {
+      alert("Error de conexión guardando la tasa.");
+    } finally {
+      setSyncingBcv(false);
+    }
+  };
 
   useEffect(() => {
     setLogoUrl(theme.logoUrl || "");
@@ -246,6 +313,79 @@ export default function AdminSettingsPage() {
       <form onSubmit={handleSave} className="space-y-8">
 
 
+
+        {/* ── TASA OFICIAL BCV ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+                <Coins className="w-4 h-4 text-brand" /> Tasa Oficial del Dólar BCV
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                La tienda sincroniza automáticamente la tasa con el portal oficial del Banco Central de Venezuela (<a href="https://www.bcv.org.ve/" target="_blank" rel="noopener noreferrer" className="text-brand font-semibold underline inline-flex items-center gap-0.5">bcv.org.ve <ExternalLink className="w-3 h-3" /></a>) cada 5 minutos.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={syncingBcv}
+              onClick={handleSyncBcv}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white text-xs font-bold hover:bg-brand-hover active:scale-95 transition-all shadow-sm disabled:opacity-50"
+            >
+              <RefreshCcw className={`w-3.5 h-3.5 ${syncingBcv ? "animate-spin" : ""}`} />
+              <span>{syncingBcv ? "Sincronizando..." : "Sincronizar con BCV ahora"}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Tasa Activa en Tienda</span>
+                <div className="text-2xl font-black text-slate-900 mt-0.5 flex items-baseline gap-1">
+                  <span>Bs.</span>
+                  <span>{bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                </div>
+                <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sincronizada automáticamente
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                  Ajuste o Sobreescritura Manual
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Bs.</span>
+                    <input
+                      type="text"
+                      value={bcvManualInput}
+                      onChange={(e) => setBcvManualInput(e.target.value)}
+                      placeholder="880.12"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={syncingBcv}
+                    onClick={handleManualBcvSave}
+                    className="h-10 px-4 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    Fijar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {bcvStatusMsg && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>{bcvStatusMsg}</span>
+            </div>
+          )}
+        </section>
 
         {/* ── LOGO Y CONTACTO ── */}
         <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">

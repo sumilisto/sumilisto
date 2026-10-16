@@ -10,7 +10,7 @@ interface ProductsContextValue {
 
 const ProductsContext = createContext<ProductsContextValue>({
   products: [],
-  bcvRate: 42.50,
+  bcvRate: 880.12,
 });
 
 export function ProductsProvider({

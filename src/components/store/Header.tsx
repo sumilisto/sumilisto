@@ -13,7 +13,7 @@ interface HeaderProps {
   bcvRate?: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({ bcvRate = 42.50 }) => {
+export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
   const { itemCount } = useCart();
   const { theme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);

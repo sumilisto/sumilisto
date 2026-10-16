@@ -17,7 +17,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  bcvRate = 42.50,
+  bcvRate = 880.12,
 }) => {
   const { getItemQuantity, addItem } = useCart();
   const { theme } = useTheme();

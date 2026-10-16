@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProducts } from "@/lib/api/store";
+import { getProducts, getBcvRate } from "@/lib/api/store";
 import { STORE_CATEGORIES } from "@/lib/constants/brand";
 import { ProductCard } from "@/components/store/ProductCard";
 import { CategoryChips } from "@/components/store/CategoryChips";
@@ -36,12 +36,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const allProducts = await getProducts();
+  const [allProducts, bcvRate] = await Promise.all([
+    getProducts(),
+    getBcvRate(),
+  ]);
   const products = allProducts.filter(
     (p) => p.categoria.toLowerCase() === category.nombre.toLowerCase()
   );
-
-  const bcvRate = 42.50; // We can leave this, or fetch it if needed inside the component or get from context
 
   // Extraer subcategorías únicas
   const subcategories = Array.from(
