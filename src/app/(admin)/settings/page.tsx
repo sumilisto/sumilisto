@@ -9,16 +9,7 @@ import {
   User, LogOut, CheckCircle2, Type, Layout, Truck, Plus, X, Link as LinkIcon,
 } from "lucide-react";
 
-const COLOR_FIELDS = [
-  { key: "brandColor", label: "Color Principal (Header, botones)", desc: "Color dominante de la marca" },
-  { key: "navBgColor", label: "Fondo del Encabezado / Navegación", desc: "Fondo del header y nav inferior" },
-  { key: "bgColor", label: "Fondo General de la Página", desc: "Color de fondo base de toda la web" },
-  { key: "cardBgColor", label: "Fondo de Tarjetas de Producto", desc: "Fondo de cada tarjeta en el catálogo" },
-  { key: "textColor", label: "Color de Texto Principal", desc: "Color del texto más importante" },
-  { key: "accentColor", label: "Color de Acento / Destacado", desc: "Usado en badges y etiquetas especiales" },
-  { key: "softBgColor", label: "Color de Fondo Suave (Selección de producto y detalles)", desc: "Reemplaza el tono rosa/carne en las opciones activas del producto" },
-  { key: "topBarTextColor", label: "Color de Texto en Barra Superior (Tasa BCV y Banner)", desc: "Color de las letras en la barra superior y detalles del banner" },
-] as const;
+
 
 const HEIGHT_OPTIONS = [
   { value: "sm", label: "Compacto / Delgado (Recomendado)" },
@@ -140,13 +131,6 @@ export default function AdminSettingsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateTheme({
-      ...colors,
-      brandColor: colors.brandColor,
-      navBgColor: colors.navBgColor,
-      bgColor: colors.bgColor,
-      cardBgColor: colors.cardBgColor,
-      textColor: colors.textColor,
-      accentColor: colors.accentColor,
       logoUrl: logoUrl.trim() === "" ? null : logoUrl.trim(),
       whatsappNumber: whatsappNumber.trim().replace(/[^0-9]/g, ""),
       heroTitle: heroTitle.trim(),
@@ -246,39 +230,24 @@ export default function AdminSettingsPage() {
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Panel de Configuración</h1>
           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Personaliza todos los aspectos visuales de la tienda.</p>
         </div>
-        <button type="button" onClick={handleLogout}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">
-          <LogOut className="w-3.5 h-3.5" /><span>Salir</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/carritos"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm transition-all"
+          >
+            <Truck className="w-3.5 h-3.5" />
+            <span>Ver Carritos Abandonados</span>
+          </Link>
+          <button type="button" onClick={handleLogout}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">
+            <LogOut className="w-3.5 h-3.5" /><span>Salir</span>
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-8">
 
-        {/* ── PALETA DE COLORES ── */}
-        <section className="bg-white rounded-3xl border border-slate-200 p-6">
-          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 mb-4 uppercase tracking-wider">
-            <Palette className="w-4 h-4 text-brand" /> Paleta de Colores
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {COLOR_FIELDS.map(field => (
-              <div key={field.key}>
-                <label className="text-xs font-bold text-slate-700 block mb-1">{field.label}</label>
-                <p className="text-[11px] text-slate-400 mb-2">{field.desc}</p>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer flex-shrink-0">
-                    <input type="color" value={colors[field.key] || "#590317"}
-                      onChange={e => setColors(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
-                  </div>
-                  <input type="text" value={colors[field.key] || ""}
-                    onChange={e => setColors(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 uppercase"
-                    placeholder="#590317" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+
 
         {/* ── LOGO Y CONTACTO ── */}
         <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">

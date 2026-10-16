@@ -7,12 +7,18 @@
      TOKENS DE DISEÑO DE MARCA - SUMILISTO
      Modifica estos valores para cambiar la paleta en toda la aplicación
      ========================================================================== */
-  --color-primary: #590317;           /* Vino tinto / Borgoña principal */
-  --color-primary-hover: #73041e;     /* Hover para botones primarios */
-  --color-primary-active: #400210;    /* Estado activo / presionado */
-  --color-primary-light: #fdf2f4;     /* Fondo suave para badges y estados activos */
+  --theme-brand: #166534;             /* Verde Bosque / Esmeralda profundo */
+  --theme-brand-hover: #15803d;       /* Hover verde vibrante */
+  --theme-brand-active: #14532d;      /* Verde oscuro activo */
+  --theme-soft-bg: #f0fdf4;           /* Fondo suave verde menta para selecciones */
+  --theme-topbar-text: #f0fdf4;       /* Texto claro en barra superior */
+
+  --color-primary: #166534;
+  --color-primary-hover: #15803d;
+  --color-primary-active: #14532d;
+  --color-primary-light: #f0fdf4;
   
-  --color-accent: #d97706;            /* Ámbar de acento (alertas, ofertas) */
+  --color-accent: #d97706;            /* Canela / Ámbar tostado */
   --color-accent-light: #fef3c7;
   
   --color-surface: #ffffff;           /* Fondo principal de tarjetas y sheets */

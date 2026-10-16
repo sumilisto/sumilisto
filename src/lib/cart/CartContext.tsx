@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { CartStorageData, CartStorageItem, CartStatus } from "@/types/cart";
 
-const CART_STORAGE_KEY = "sumilisto_cart_v1";
+const CART_STORAGE_KEY = "sumilisto_cart_v2";
 const CART_EXPIRATION_MS = 48 * 60 * 60 * 1000; // 48 horas en milisegundos
 
 interface CartContextType {

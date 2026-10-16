@@ -43,6 +43,18 @@ export default function CartPage() {
   const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [errorValidacion, setErrorValidacion] = useState('');
+  const [sessionId, setSessionId] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let currentSession = localStorage.getItem('sumilisto_cart_session_id');
+      if (!currentSession) {
+        currentSession = 'cart_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        localStorage.setItem('sumilisto_cart_session_id', currentSession);
+      }
+      setSessionId(currentSession);
+    }
+  }, []);
 
   // Une el carrito (sku + cantidad en unidades) con los datos del producto
   const lines: Line[] = useMemo(() => {
@@ -98,6 +110,38 @@ export default function CartPage() {
   const totalUsd = Math.round(lines.reduce((acc, l) => acc + l.subtotal, 0) * 100) / 100;
   const totalVes = totalUsd * (bcvRate || 0);
 
+  // Auto-guardado en segundo plano de carrito para recuperación de abandonados
+  useEffect(() => {
+    if (!sessionId || lines.length === 0) return;
+    if (!telefono.trim() && !nombre.trim()) return;
+
+    const timer = setTimeout(() => {
+      fetch('/api/cart/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          nombre,
+          telefono,
+          zonaEntrega,
+          direccion,
+          metodoPago,
+          items: lines.map((l) => ({
+            sku: l.sku,
+            nombre: l.nombre,
+            presentacion: l.presentacion,
+            cantidad: l.cantidad,
+            subtotal: l.subtotal,
+            nivel: l.nivel,
+          })),
+          totalUsd,
+        }),
+      }).catch((e) => console.error('Error auto-guardando carrito:', e));
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [sessionId, nombre, telefono, zonaEntrega, direccion, metodoPago, lines, totalUsd]);
+
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       alert('Tu navegador no soporta geolocalización');
@@ -121,9 +165,9 @@ export default function CartPage() {
   };
 
   const handleSendOrder = () => {
-    if (!nombre.trim() || !zonaEntrega || !metodoPago) {
+    if (!nombre.trim() || !telefono.trim() || !zonaEntrega || !direccion.trim() || !metodoPago) {
       setErrorValidacion(
-        'Por favor completa los campos obligatorios: Nombre, Zona de Entrega y Método de Pago.'
+        'Por favor completa todos los campos obligatorios (*): Nombre, Teléfono, Zona de Entrega, Dirección y Método de Pago.'
       );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -131,10 +175,10 @@ export default function CartPage() {
     setErrorValidacion('');
 
     let message = `🛒 *NUEVO PEDIDO MAYORISTA - SUMILISTO*\n\n`;
-    message += `👤 *Cliente:* ${nombre}\n`;
-    if (telefono) message += `📞 *Teléfono:* ${telefono}\n`;
+    message += `👤 *Cliente:* ${nombre.trim()}\n`;
+    message += `📞 *Teléfono:* ${telefono.trim()}\n`;
     message += `📍 *Zona de Entrega:* ${zonaEntrega}\n`;
-    if (direccion) message += `🏠 *Dirección Escrita:* ${direccion}\n`;
+    message += `🏠 *Dirección:* ${direccion.trim()}\n`;
     if (gpsLocation) {
       message += `🗺️ *GPS:* https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}\n`;
     }
@@ -165,6 +209,15 @@ export default function CartPage() {
       return;
     }
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    // Marcar como completado en segundo plano
+    if (sessionId) {
+      fetch('/api/cart/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      }).catch(() => {});
+    }
 
     window.open(whatsappUrl, '_blank');
     markAsSentWhatsApp();
@@ -319,13 +372,16 @@ export default function CartPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Número de Teléfono</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Número de Teléfono <span className="text-red-600 font-bold">*</span>
+            </label>
             <input
               type="tel"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
               placeholder="Ej: 0412-1234567"
               className={inputClass}
+              required
             />
           </div>
 
@@ -337,6 +393,7 @@ export default function CartPage() {
               value={zonaEntrega}
               onChange={(e) => setZonaEntrega(e.target.value)}
               className={inputClass}
+              required
             >
               <option value="">Selecciona una zona...</option>
               <option value="Caracas">Caracas</option>
@@ -348,7 +405,7 @@ export default function CartPage() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Dirección Escrita / Referencia
+              Dirección Escrita / Referencia <span className="text-red-600 font-bold">*</span>
             </label>
             <textarea
               value={direccion}
@@ -356,6 +413,7 @@ export default function CartPage() {
               rows={2}
               placeholder="Calle, edificio, local o punto de referencia exacto"
               className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              required
             />
           </div>
 

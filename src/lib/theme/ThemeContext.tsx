@@ -32,31 +32,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
 
   useEffect(() => {
     setMounted(true);
+    // Limpieza de cualquier residuo previo en localStorage para mantener colores fijos
     if (typeof window !== "undefined") {
-      const local = localStorage.getItem("sumilisto_theme");
-      if (local) {
-        try {
-          const parsed = JSON.parse(local);
-          setTheme((prev) => ({ ...prev, ...parsed }));
-        } catch {}
-      }
+      try {
+        localStorage.removeItem("sumilisto_theme");
+      } catch {}
     }
   }, []);
 
   const updateTheme = async (newTheme: Partial<StoreSettings>) => {
     const updated = { ...theme, ...newTheme };
     setTheme(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sumilisto_theme", JSON.stringify(updated));
-    }
     try { await saveStoreSettings(updated); } catch {}
   };
 
   const resetTheme = async () => {
     setTheme(DEFAULT_SETTINGS);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("sumilisto_theme");
-    }
     try { await saveStoreSettings(DEFAULT_SETTINGS); } catch {}
   };
 
@@ -65,11 +56,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode, initialSetting
       {mounted && (
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
-            --theme-brand: ${theme.brandColor};
-            --theme-brand-hover: ${adjustColorBrightness(theme.brandColor, 15)};
-            --theme-brand-active: ${adjustColorBrightness(theme.brandColor, -15)};
-            --theme-soft-bg: ${theme.softBgColor || "#f0fdf4"};
-            --theme-topbar-text: ${theme.topBarTextColor || "#f0fdf4"};
+            --theme-brand: #166534;
+            --theme-brand-hover: #15803d;
+            --theme-brand-active: #14532d;
+            --theme-soft-bg: #f0fdf4;
+            --theme-topbar-text: #f0fdf4;
           }
         `}} />
       )}
