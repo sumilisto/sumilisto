@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Trash2, Plus, Minus, MessageCircle, MapPin, ArrowLeft } from 'lucide-react';

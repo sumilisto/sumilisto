@@ -53,12 +53,12 @@ export default function AdminCarritosPage() {
     setLoggingIn(true);
     setAuthError("");
     try {
-      const ok = await loginAdmin(usernameInput, passwordInput);
-      if (ok) {
+      const res = await loginAdmin(usernameInput, passwordInput);
+      if (res.ok) {
         setIsAuthenticated(true);
         loadCarritos();
       } else {
-        setAuthError("Credenciales incorrectas.");
+        setAuthError(res.error || "Credenciales incorrectas.");
       }
     } finally {
       setLoggingIn(false);

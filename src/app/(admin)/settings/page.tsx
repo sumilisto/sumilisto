@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { DEFAULT_SETTINGS, HeroSlide } from "@/lib/constants/settings";
 import { loginAdmin, logoutAdmin, isAdminAuthenticated } from "@/lib/actions/auth";
@@ -56,9 +57,6 @@ export default function AdminSettingsPage() {
   const [navLabelDespachos, setNavLabelDespachos] = useState(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
 
   useEffect(() => {
-    const c: Record<string, string> = {};
-    COLOR_FIELDS.forEach(f => { c[f.key] = (theme as any)[f.key] || (DEFAULT_SETTINGS as any)[f.key]; });
-    setColors(c);
     setLogoUrl(theme.logoUrl || "");
     setWhatsappNumber(theme.whatsappNumber || "");
     setHeroTitle(theme.heroTitle || DEFAULT_SETTINGS.heroTitle);
