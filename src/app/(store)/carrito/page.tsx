@@ -548,16 +548,6 @@ export default function CartPage() {
                       <span>Verificar</span>
                       <ExternalLink className="w-3 h-3 text-slate-400" />
                     </a>
-
-                    <button
-                      type="button"
-                      onClick={handleGetLocation}
-                      disabled={gpsLoading}
-                      title="Volver a solicitar ubicación GPS actual"
-                      className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
-                    >
-                      {gpsLoading ? '...' : 'Actualizar'}
-                    </button>
                   </div>
                 </div>
               )}
