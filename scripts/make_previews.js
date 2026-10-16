@@ -39,11 +39,10 @@ async function generatePreviews() {
     .png()
     .toBuffer();
     
-  // 512x512 Favicon
+  // 512x512 Favicon (Solid Verde Bosque, no white border)
   const faviconSvg = Buffer.from(`
     <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-      <rect width="512" height="512" rx="100" fill="#166534" />
-      <rect x="24" y="24" width="464" height="464" rx="76" fill="none" stroke="#ffffff" stroke-width="26" />
+      <rect width="512" height="512" rx="112" fill="#166534" />
     </svg>
   `);
   

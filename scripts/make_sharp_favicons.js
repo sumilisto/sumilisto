@@ -41,12 +41,10 @@ async function makeFavicons() {
     .toBuffer();
     
   // Rounded square badge:
-  // Background: Verde Bosque #166534
-  // Frame: White stroke-width=36 (gives a solid 2.25px line when downscaled to 32x32!)
+  // Background: Solid Verde Bosque #166534 (no white border)
   const faviconSvg = Buffer.from(`
     <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
       <rect width="512" height="512" rx="112" fill="#166534" />
-      <rect x="28" y="28" width="456" height="456" rx="84" fill="none" stroke="#ffffff" stroke-width="36" />
     </svg>
   `);
   
