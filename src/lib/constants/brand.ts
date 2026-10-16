@@ -1,9 +1,9 @@
 import { CategoryInfo, StoreConfig } from "@/types/store";
 
 export const BRAND_COLORS = {
-  primary: "#590317",
-  primaryHover: "#73041e",
-  primaryLight: "#fdf2f4",
+  primary: "#166534",
+  primaryHover: "#14532D",
+  primaryLight: "#f0fdf4",
   accent: "#d97706",
   white: "#ffffff",
   surface: "#ffffff",

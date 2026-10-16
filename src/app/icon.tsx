@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-// Image metadata
+// Metadata para favicon dinámico de Next.js
 export const size = {
   width: 32,
   height: 32,
@@ -12,21 +12,39 @@ export default function Icon() {
     (
       <div
         style={{
-          fontSize: 24,
-          background: "transparent",
           width: "100%",
           height: "100%",
           display: "flex",
+          position: "relative",
           alignItems: "center",
           justifyContent: "center",
-          color: "#590317",
-          fontWeight: "bold",
-          border: "2px solid #590317",
-          borderRadius: "50%",
+          backgroundColor: "#166534",
+          borderRadius: 7,
           fontFamily: "sans-serif",
         }}
       >
-        S
+        <span
+          style={{
+            fontSize: 21,
+            fontWeight: 900,
+            color: "#ffffff",
+            lineHeight: 1,
+            marginTop: -1,
+          }}
+        >
+          S
+        </span>
+        <div
+          style={{
+            position: "absolute",
+            top: 3,
+            right: 3,
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            backgroundColor: "#D97706",
+          }}
+        />
       </div>
     ),
     {
