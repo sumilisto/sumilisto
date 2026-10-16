@@ -7,15 +7,14 @@ export const SplashScreen: React.FC = () => {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    // Mostrar la pantalla de presentación por 1.6 segundos al abrir o actualizar
+    // Total 1.5 segundos: 1.1s visible + 0.4s de desvanecimiento suave (fade out)
     const timer = setTimeout(() => {
       setIsFading(true);
-      // Tras 500ms de desvanecimiento suave (fade out), retirar del DOM
       const hideTimer = setTimeout(() => {
         setIsVisible(false);
-      }, 500);
+      }, 400);
       return () => clearTimeout(hideTimer);
-    }, 1600);
+    }, 1100);
 
     return () => clearTimeout(timer);
   }, []);
@@ -26,16 +25,32 @@ export const SplashScreen: React.FC = () => {
     <aside
       id="app-splash-screen"
       aria-label="Cargando Sumilisto"
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#166534] transition-opacity duration-500 ease-out select-none ${
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#166534] transition-opacity duration-400 ease-out select-none ${
         isFading ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
       style={{
         backgroundColor: "#166534",
       }}
     >
-      <div className="flex flex-col items-center justify-center px-6 text-center animate-in fade-in zoom-in-95 duration-500">
-        {/* Logotipo oficial Sumi en blanco puro */}
-        <div className="relative w-56 sm:w-72 max-w-[80vw] h-28 sm:h-36 flex items-center justify-center">
+      <style>{`
+        @keyframes splashLogoPulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.35;
+            transform: scale(0.96);
+          }
+        }
+        .splash-pulsing-logo {
+          animation: splashLogoPulse 0.9s ease-in-out infinite;
+        }
+      `}</style>
+
+      <div className="flex flex-col items-center justify-center px-6 text-center">
+        {/* Logotipo oficial Sumi en blanco puro con animación de parpadeo/carga */}
+        <div className="relative w-56 sm:w-72 max-w-[80vw] h-28 sm:h-36 flex items-center justify-center splash-pulsing-logo">
           <img
             src="/logo.png"
             alt="Sumi"
