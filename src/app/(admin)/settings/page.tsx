@@ -8,7 +8,7 @@ import { loginAdmin, logoutAdmin, isAdminAuthenticated } from "@/lib/actions/aut
 import {
   Save, RefreshCcw, Image as ImageIcon, Palette, Phone, Lock,
   User, LogOut, CheckCircle2, Type, Layout, Truck, Plus, X, Link as LinkIcon,
-  Coins, ExternalLink, TrendingUp,
+  Coins, ExternalLink, TrendingUp, AlertTriangle,
 } from "lucide-react";
 
 
@@ -57,11 +57,14 @@ export default function AdminSettingsPage() {
   const [navLabelBuscar, setNavLabelBuscar] = useState(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
   const [navLabelDespachos, setNavLabelDespachos] = useState(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
 
-  // Estado para Tasa BCV
+  // Estado para Tasa BCV (Exclusivamente de https://www.bcv.org.ve/)
   const [bcvRate, setBcvRate] = useState<number>(880.12);
   const [bcvManualInput, setBcvManualInput] = useState<string>("880.12");
+  const [bcvFechaValor, setBcvFechaValor] = useState<string | null>(null);
+  const [isOfficialOnline, setIsOfficialOnline] = useState<boolean>(true);
   const [syncingBcv, setSyncingBcv] = useState(false);
   const [bcvStatusMsg, setBcvStatusMsg] = useState("");
+  const [bcvErrorMsg, setBcvErrorMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/bcv")
@@ -70,6 +73,11 @@ export default function AdminSettingsPage() {
         if (data.ok && data.rate) {
           setBcvRate(data.rate);
           setBcvManualInput(String(data.rate));
+          if (data.fechaValor) setBcvFechaValor(data.fechaValor);
+          setIsOfficialOnline(data.isOfficialOnline ?? true);
+          if (data.notice && !data.isOfficialOnline) {
+            setBcvErrorMsg(data.notice);
+          }
         }
       })
       .catch(() => {});
@@ -78,18 +86,26 @@ export default function AdminSettingsPage() {
   const handleSyncBcv = async () => {
     setSyncingBcv(true);
     setBcvStatusMsg("");
+    setBcvErrorMsg("");
     try {
       const res = await fetch("/api/bcv?refresh=true");
       const data = await res.json();
       if (data.ok && data.rate) {
         setBcvRate(data.rate);
         setBcvManualInput(String(data.rate));
-        setBcvStatusMsg(`¡Sincronizado! Tasa oficial: Bs. ${data.rate.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} (${data.source || 'BCV'})`);
+        if (data.fechaValor) setBcvFechaValor(data.fechaValor);
+        setIsOfficialOnline(data.isOfficialOnline ?? true);
+
+        if (data.isOfficialOnline) {
+          setBcvStatusMsg(`¡Sincronizado exitosamente desde bcv.org.ve! Tasa oficial: Bs. ${data.rate.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} (${data.fechaValor || 'Hoy'})`);
+        } else {
+          setBcvErrorMsg(data.notice || "⚠️ La página oficial https://www.bcv.org.ve/ está caída o inaccesible. Se mantiene la última actualización guardada.");
+        }
       } else {
-        setBcvStatusMsg("No se pudo conectar con el BCV en este instante. Se mantiene la tasa actual.");
+        setBcvErrorMsg("⚠️ No se pudo obtener respuesta del portal oficial. Se mantiene la última tasa registrada.");
       }
     } catch {
-      setBcvStatusMsg("Error de red intentando sincronizar.");
+      setBcvErrorMsg("⚠️ Error de conexión intentando alcanzar la página oficial del BCV.");
     } finally {
       setSyncingBcv(false);
     }
@@ -103,6 +119,7 @@ export default function AdminSettingsPage() {
     }
     setSyncingBcv(true);
     setBcvStatusMsg("");
+    setBcvErrorMsg("");
     try {
       const res = await fetch("/api/bcv", {
         method: "POST",
@@ -112,6 +129,7 @@ export default function AdminSettingsPage() {
       const data = await res.json();
       if (data.ok) {
         setBcvRate(num);
+        setBcvFechaValor("Fijada manualmente");
         setBcvStatusMsg(`Tasa manual guardada correctamente: Bs. ${num.toFixed(2)}`);
       } else {
         alert(data.error || "Error guardando la tasa.");
@@ -344,9 +362,24 @@ export default function AdminSettingsPage() {
                   <span>Bs.</span>
                   <span>{bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
                 </div>
-                <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sincronizada automáticamente
-                </span>
+                {bcvFechaValor && (
+                  <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                    Fecha Valor: <strong className="text-slate-700">{bcvFechaValor}</strong>
+                  </span>
+                )}
+                <div className="mt-2">
+                  {isOfficialOnline ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Conectado a bcv.org.ve
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">
+                      <AlertTriangle className="w-3 h-3 text-amber-600" />
+                      Página oficial caída — Última actualización en uso
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -375,9 +408,20 @@ export default function AdminSettingsPage() {
                     Fijar
                   </button>
                 </div>
+                <p className="text-[11px] text-slate-400 mt-1">Usa esta opción solo si deseas congelar un valor específico.</p>
               </div>
             </div>
           </div>
+
+          {bcvErrorMsg && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900 flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold block">Notificación del sistema BCV:</span>
+                <span>{bcvErrorMsg}</span>
+              </div>
+            </div>
+          )}
 
           {bcvStatusMsg && (
             <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800 flex items-center gap-2">

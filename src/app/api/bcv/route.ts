@@ -1,48 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getResolvedBcvRate, updateSupabaseBcv, fetchBcvDirect, fetchDolarApiMirror } from "@/lib/currency/bcv";
+import {
+  getResolvedBcvDetails,
+  fetchBcvOfficialDirect,
+  saveBcvToSupabase,
+} from "@/lib/currency/bcv";
 import { revalidateTag } from "next/cache";
 
-// GET /api/bcv — Obtiene o fuerza actualización de la tasa BCV oficial
+// GET /api/bcv — Consulta la tasa oficial directamente de bcv.org.ve
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get("refresh") === "true";
 
     if (forceRefresh) {
-      // Intentar refrescar en vivo
-      let liveRate = await fetchBcvDirect();
-      let source = "bcv.org.ve";
+      const direct = await fetchBcvOfficialDirect();
 
-      if (!liveRate) {
-        liveRate = await fetchDolarApiMirror();
-        source = "ve.dolarapi.com";
-      }
-
-      if (liveRate) {
-        await updateSupabaseBcv(liveRate);
+      if (direct.rate && direct.rate > 0) {
+        await saveBcvToSupabase(direct.rate, direct.fechaValor, true, null);
         revalidateTag("bcv");
+
         return NextResponse.json({
           ok: true,
-          rate: liveRate,
-          source,
-          updated_at: new Date().toISOString(),
-          message: "Tasa BCV sincronizada con éxito",
+          rate: direct.rate,
+          isOfficialOnline: true,
+          fechaValor: direct.fechaValor,
+          source: "https://www.bcv.org.ve/",
+          message: `Sincronizado con éxito directamente de bcv.org.ve (${direct.fechaValor || "Hoy"})`,
+        });
+      } else {
+        // La página oficial está caída o no respondió
+        const fallbackDetails = await getResolvedBcvDetails();
+        return NextResponse.json({
+          ok: true,
+          rate: fallbackDetails.rate,
+          isOfficialOnline: false,
+          fechaValor: fallbackDetails.fechaValor,
+          source: "database_last_update",
+          notice: `⚠️ El portal oficial https://www.bcv.org.ve/ no respondió. Se mantiene la última actualización generada (${fallbackDetails.fechaValor || fallbackDetails.lastSyncAt}).`,
+          error: direct.error || "No se pudo conectar con bcv.org.ve",
         });
       }
     }
 
-    const rate = await getResolvedBcvRate();
+    const details = await getResolvedBcvDetails();
     return NextResponse.json({
       ok: true,
-      rate,
-      updated_at: new Date().toISOString(),
+      ...details,
+      source: details.isOfficialOnline ? "https://www.bcv.org.ve/" : "database_last_update",
     });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }
 
-// POST /api/bcv — Permite ajustar manualmente la tasa desde el panel
+// POST /api/bcv — Permite ajustar manualmente la tasa si se requiere
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -52,13 +63,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: "Tasa inválida" }, { status: 400 });
     }
 
-    const ok = await updateSupabaseBcv(rate);
+    const ok = await saveBcvToSupabase(rate, "Ajuste manual", false, "Sobreescrito manualmente");
     if (!ok) {
-      return NextResponse.json({ ok: false, error: "Error guardando en Supabase" }, { status: 500 });
+      return NextResponse.json({ ok: false, error: "Error guardando en base de datos" }, { status: 500 });
     }
 
     revalidateTag("bcv");
-    return NextResponse.json({ ok: true, rate, message: "Tasa BCV actualizada" });
+    return NextResponse.json({ ok: true, rate, message: "Tasa BCV guardada correctamente" });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
