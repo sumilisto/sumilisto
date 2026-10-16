@@ -17,18 +17,18 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#ffffff",
+          backgroundColor: "#166534",
           borderRadius: 7,
-          border: "2.5px solid #166534",
+          border: "2px solid #ffffff",
           fontFamily: "system-ui, -apple-system, sans-serif",
           boxSizing: "border-box",
         }}
       >
         <span
           style={{
-            fontSize: 23,
+            fontSize: 22,
             fontWeight: 900,
-            color: "#166534",
+            color: "#ffffff",
             lineHeight: 1,
             marginTop: -1,
           }}
