@@ -144,32 +144,36 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
       }
     };
 
-    const onPosFallback = () => {
+    const onHighAccuracyRefinement = () => {
       navigator.geolocation.getCurrentPosition(
         onPosSuccess,
-        (err) => {
-          setIsGpsLoading(false);
-          let msg = "No se pudo sincronizar la señal GPS del dispositivo.";
-          if (err.code === err.PERMISSION_DENIED) {
-            msg = "Permiso de ubicación denegado en tu navegador. Puedes mover el mapa manualmente al punto deseado.";
-          }
-          setGpsError(msg);
-        },
-        { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 }
+        () => {}, // si falla el refinamiento de alta precisión, mantener la ubicación ya obtenida
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     };
 
+    // Intento 1: Precisión estándar para desplegar el diálogo nativo de permisos de Android/iOS
     navigator.geolocation.getCurrentPosition(
-      onPosSuccess,
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) {
-          setIsGpsLoading(false);
-          setGpsError("Has denegado el permiso de ubicación en tu navegador. Puedes concederlo en ajustes del navegador o mover el mapa manualmente.");
-          return;
-        }
-        onPosFallback();
+      (pos) => {
+        onPosSuccess(pos);
+        // Intentar refinar con alta precisión una vez otorgado el permiso
+        onHighAccuracyRefinement();
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      (err) => {
+        setIsGpsLoading(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setGpsError(
+            "El permiso de ubicación está desactivado o denegado. Enciende la 'Ubicación' en tu teléfono o mueve el mapa manualmente."
+          );
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setGpsError(
+            "Señal GPS no disponible en este momento. Puedes arrastrar el mapa y colocar el pin manualmente."
+          );
+        } else {
+          setGpsError("No se pudo obtener la señal GPS. Puedes mover el mapa manualmente hasta tu dirección.");
+        }
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
     );
   };
 

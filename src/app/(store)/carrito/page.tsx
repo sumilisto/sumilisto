@@ -50,6 +50,7 @@ export default function CartPage() {
   const [gpsError, setGpsError] = useState('');
   const [customMapsUrl, setCustomMapsUrl] = useState('');
   const [showManualMapsInput, setShowManualMapsInput] = useState(false);
+  const [showPermissionGuide, setShowPermissionGuide] = useState(false);
   const [errorValidacion, setErrorValidacion] = useState('');
   const [sessionId, setSessionId] = useState<string>('');
 
@@ -152,6 +153,7 @@ export default function CartPage() {
 
   const handleGetLocation = () => {
     setGpsError('');
+    setShowPermissionGuide(false);
 
     if (typeof window === 'undefined' || !navigator.geolocation) {
       setGpsError('Tu navegador o dispositivo no tiene activada la función de geolocalización. Puedes ubicar tu dirección en el mapa interactivo.');
@@ -168,51 +170,64 @@ export default function CartPage() {
       setCustomMapsUrl(`https://maps.google.com/?q=${lat},${lng}`);
       setGpsLoading(false);
       setGpsError('');
+      setShowPermissionGuide(false);
+
+      // Una vez concedido el permiso, intentar refinar con alta precisión en segundo plano
+      try {
+        navigator.geolocation.getCurrentPosition(
+          (precisePos) => {
+            const pLat = precisePos.coords.latitude;
+            const pLng = precisePos.coords.longitude;
+            setGpsLocation({ lat: pLat, lng: pLng });
+            setCustomMapsUrl(`https://maps.google.com/?q=${pLat},${pLng}`);
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+      } catch {}
     };
 
-    const onStandardAccuracyFallback = () => {
-      // Intento 2: Precisión estándar (red WiFi/móvil)
-      navigator.geolocation.getCurrentPosition(
-        onSuccess,
-        (error) => {
-          setGpsLoading(false);
-          let message = 'No se pudo obtener la ubicación GPS.';
-          if (error.code === error.PERMISSION_DENIED) {
-            message = 'Has denegado el permiso de ubicación. Para activarlo, pulsa en el icono de candado o ajustes de tu navegador y cambia la Ubicación a "Permitir", o selecciona tu punto directamente en el mapa.';
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            message = 'Señal de ubicación no disponible en tu dispositivo en este momento. Puedes marcar tu dirección directamente en el mapa interactivo.';
-          } else if (error.code === error.TIMEOUT) {
-            message = 'Tiempo de espera agotado al conectar con el GPS. Puedes reintentar o marcar tu punto en el mapa interactivo.';
-          }
-          setGpsError(message);
-          setShowManualMapsInput(true);
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 12000,
-          maximumAge: 60000,
-        }
-      );
+    const onError = (error: GeolocationPositionError) => {
+      setGpsLoading(false);
+      if (error.code === error.PERMISSION_DENIED) {
+        setShowPermissionGuide(true);
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        setGpsError(
+          'Señal de ubicación no disponible en tu dispositivo en este momento. Asegúrate de encender la "Ubicación" (GPS) en tu teléfono o marca tu punto en el mapa interactivo.'
+        );
+      } else if (error.code === error.TIMEOUT) {
+        setGpsError(
+          'Tiempo de espera agotado buscando tu señal GPS. Puedes reintentar o marcar tu punto en el mapa interactivo.'
+        );
+      } else {
+        setGpsError('No se pudo obtener la ubicación. Puedes marcar tu punto en el mapa interactivo.');
+      }
+      setShowManualMapsInput(true);
     };
 
-    // Intento 1: Solicitar permiso de ubicación al navegador
+    // Intento 1: Precisión estándar primero para activar el diálogo nativo de permisos de Android/iOS
     navigator.geolocation.getCurrentPosition(
       onSuccess,
-      (error) => {
-        // Si el usuario denegó el permiso en el diálogo emergente del navegador
-        if (error.code === error.PERMISSION_DENIED) {
-          setGpsLoading(false);
-          setGpsError('Has denegado el permiso de ubicación. Para activarlo, pulsa en el icono de candado o ajustes de tu navegador y cambia la Ubicación a "Permitir", o selecciona tu punto directamente en el mapa.');
-          setShowManualMapsInput(true);
+      (firstError) => {
+        if (firstError.code === firstError.PERMISSION_DENIED) {
+          onError(firstError);
           return;
         }
-        // Si falló por timeout o hardware GPS, intentar con red estándar
-        onStandardAccuracyFallback();
+        // Si no fue denegación de permiso sino problema de red, intentar con alta precisión
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          onError,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          }
+        );
       },
       {
-        enableHighAccuracy: true,
-        timeout: 8000,
-        maximumAge: 0,
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 60000,
       }
     );
   };
@@ -221,6 +236,7 @@ export default function CartPage() {
     setGpsLocation(null);
     setCustomMapsUrl('');
     setGpsError('');
+    setShowPermissionGuide(false);
   };
 
   const handleSendOrder = () => {
@@ -590,8 +606,67 @@ export default function CartPage() {
                 </div>
               )}
 
-              {/* Mensaje de aviso/permiso si el usuario lo rechazó o falló la señal */}
-              {gpsError && (
+              {/* Guía interactiva de permiso si el navegador/dispositivo bloqueó la solicitud */}
+              {showPermissionGuide && (
+                <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-2xl space-y-3 animate-in fade-in">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                        <AlertCircle className="w-4 h-4" />
+                      </div>
+                      <h5 className="text-xs font-black text-amber-950">
+                        Para activar la solicitud de ubicación:
+                      </h5>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPermissionGuide(false)}
+                      className="text-amber-500 hover:text-amber-800 text-sm font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="text-[11px] text-amber-900 space-y-2 bg-white/80 p-3 rounded-xl border border-amber-200/90 leading-relaxed">
+                    <div className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded-full bg-amber-200 text-amber-900 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                      <p>
+                        <strong>Activa el GPS en tu teléfono:</strong> Desliza hacia abajo la barra superior de tu celular y enciende el icono de <strong>Ubicación</strong> 📍.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded-full bg-amber-200 text-amber-900 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                      <p>
+                        <strong>Si tu navegador lo tiene bloqueado:</strong> Abre los ajustes de tu navegador o app ➔ <em>Configuración de sitios</em> ➔ <em>Ubicación</em> y elige <strong>Permitir</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      disabled={gpsLoading}
+                      className="flex-1 py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-all"
+                    >
+                      <Navigation className={`w-3.5 h-3.5 ${gpsLoading ? 'animate-spin' : ''}`} />
+                      <span>{gpsLoading ? 'Solicitando...' : 'Reintentar solicitud de permiso'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      className="flex-1 py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-all"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Elegir en el mapa</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Mensaje de error general de señal GPS */}
+              {gpsError && !showPermissionGuide && (
                 <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1.5">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
