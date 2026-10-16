@@ -1,4 +1,4 @@
-export type BcvRateSource = "sheets_importxml" | "bcv_scraper" | "database_fallback" | "admin_override";
+export type BcvRateSource = "bcv_scraper" | "database_fallback" | "admin_override";
 
 export interface BcvRateData {
   rate: number;                   // Valor numérico de la tasa (ej: 42.50)

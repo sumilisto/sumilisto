@@ -454,7 +454,7 @@ export default function AdminSettingsPage() {
             <input type="url" value={logoUrl} onChange={e => setLogoUrl(e.target.value)}
               className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:ring-2 focus:ring-brand/20"
               placeholder="https://i.imgur.com/tu-logo.png" />
-            <p className="text-[11px] text-slate-400 mt-1">O pega un enlace público (Imgur, Cloudinary…) — funcionará en todos los dispositivos.</p>
+            <p className="text-[11px] text-slate-400 mt-1">O pega un enlace público de imagen (Supabase Storage, Imgur…) — funcionará en todos los dispositivos.</p>
           </div>
         </section>
 

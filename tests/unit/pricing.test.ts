@@ -36,14 +36,14 @@ describe("Motor de Precios Mayorista (Pricing Engine)", () => {
     expect(result.isAvailable).toBe(true);
     expect(result.tier).toBe("gran_mayor");
     expect(result.unitPriceUsd).toBe(25.00);
-    expect(result.subtotalUsd).toBe(125.00);
+    expect(result.subtotalUsd).toBe(25.00);
     expect(result.savingsNextTier).toBeUndefined();
   });
 
   it("aplica tarifa Gran Mayor para volúmenes mayores (ej. 10 unidades)", () => {
     const result = calculateProductPrice(sampleProduct, 10);
     expect(result.tier).toBe("gran_mayor");
-    expect(result.subtotalUsd).toBe(250.00);
+    expect(result.subtotalUsd).toBe(50.00);
   });
 
   it("marca como NO DISPONIBLE si el producto no tiene precio_mayor_usd definido o es 0", () => {

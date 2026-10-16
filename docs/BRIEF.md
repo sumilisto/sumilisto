@@ -20,9 +20,9 @@
 ## 2. STACK Y ARQUITECTURA (todo en la nube)
 - Next.js (App Router) en su última versión estable y parcheada, TypeScript estricto y Tailwind CSS. Componentes accesibles y ligeros; ninguna librería pesada sin justificarla en el plan.
 - Hosting: Vercel (plan Pro, por ser uso comercial) conectado a GitHub, con previews por rama y CI. Región de las funciones y de la base de datos lo más cercana posible a Venezuela (p. ej. costa este de EE. UU. o São Paulo).
-- Inventario: Google Sheets (libro INVENTARIO), leído SOLO desde el servidor con la API de Google Sheets y una cuenta de servicio con permiso de SOLO LECTURA.
-- Fotos: Cloudinary. Solo el administrador sube o vincula fotos.
-- Administración y datos propios: Supabase (Postgres con RLS + Auth con 2FA). Allí viven la configuración (número de WhatsApp, etc.), los vínculos de fotos por SKU, los campos SEO, los banners, los pedidos iniciados y la auditoría. Si ves una alternativa más simple con la misma seguridad, preséntala en el plan como "Opción B", pero implementa la A salvo que yo apruebe el cambio.
+- Inventario: Supabase (PostgreSQL con RLS). *(Nota de ajuste aprobado: Google Sheets fue completamente descartado; todo el inventario vive en Supabase).*
+- Fotos: Supabase Storage (bucket público `productos`). *(Nota de ajuste aprobado: Cloudinary fue completamente descartado; todas las fotos se suben y gestionan en Supabase Storage).*
+- Administración y datos propios: Supabase (Postgres con RLS + Auth con 2FA). Allí viven la configuración (número de WhatsApp, etc.), los vínculos de fotos por SKU, los campos SEO, los banners, los pedidos iniciados y la auditoría.
 - Antiabuso: rate limiting con Upstash Redis (o el Firewall de Vercel) y Cloudflare Turnstile en el login del admin.
 - Caché: ISR/caché de Next.js + CDN de Vercel + Service Worker (sección 11).
 - Entornos dev / preview / producción. Todas las claves en variables de entorno de Vercel; entrega un .env.example sin valores.

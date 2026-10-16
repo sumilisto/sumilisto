@@ -9,7 +9,7 @@ export async function GET() {
     revalidatePath("/(store)", "layout");
     return NextResponse.json({
       revalidated: true,
-      message: "Caché de Google Sheets y BCV limpiado exitosamente",
+      message: "Caché de catálogo Supabase y BCV limpiado exitosamente",
       now: new Date().toISOString(),
     });
   } catch (err) {

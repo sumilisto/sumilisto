@@ -1,37 +1,24 @@
-# REGISTRO DE PENDIENTES Y MODO MOCK: SUMILISTO
+# REGISTRO DE PENDIENTES: SUMILISTO
 
-Este documento registra las tareas pendientes, datos en modo MOCK activos y credenciales de servicios que el propietario del negocio deberá suministrar a medida que avancen las fases.
-
----
-
-## 1. MODO MOCK ACTIVO (Fase 1)
-- [x] **Catálogo MOCK inicial**: 30 productos representativos de suministros para restaurantes en Venezuela divididos en las 4 categorías insignia:
-  - **Envases**: Contenedores térmicos de anime/icopor, envases de aluminio con tapa cartón, salseros con tapa hermética, envases plásticos para microondas, ensaladeras transparentes PET.
-  - **Bolsas**: Bolsas kraft con asa y sin asa para delivery, bolsas plásticas tipo camiseta de alta densidad, bolsas transparentes de polietileno, bolsas para hielo y granos.
-  - **Cubiertos**: Tenedores, cucharas y cuchillos plásticos pesados, kits individuales envueltos (cubiertos + servilleta + palillo), cubiertos biodegradables de madera.
-  - **Papel**: Servilletas cuadradas para dispensador, papel para envolver hamburguesas encerado/antigrasa, papel aluminio profesional en rollo, papel film stretch.
-- [x] **Tasa BCV Mock**: Tasa referencial temporal inicial fijada para visualización y pruebas hasta la conexión con la API en Fase 2.
+Este documento registra las tareas pendientes, estado de servicios y credenciales requeridas.
+*Nota de arquitectura aprobada: Se eliminó Google Sheets y Cloudinary. Supabase gestiona la Base de Datos (PostgreSQL con RLS) y el Almacenamiento de Fotos (Supabase Storage).*
 
 ---
 
-## 2. CREDENCIALES Y CUENTAS PENDIENTES (Para Fase 2 y posteriores)
-*Se generarán guías paso a paso en `docs/SETUP.md` para cada una de estas:*
+## 1. ESTADO DE SERVICIOS Y DATOS
+- [x] **Base de Datos y Catálogo en Supabase**: Tablas `productos`, `variantes`, `producto_fotos` y `configuracion` creadas y activas en Supabase con RLS habilitado.
+- [x] **Almacenamiento de Fotos (Supabase Storage)**: Bucket público `productos` creado en Supabase con endpoints de subida (`/api/upload`) y eliminación directa.
+- [x] **Tasa Oficial BCV**: Sincronización en vivo directamente desde `bcv.org.ve` con respaldo en la base de datos de Supabase.
+- [x] **Carrito Persistente y Pedidos por WhatsApp**: Carrito de 48h con selección de zonas de entrega, selector de mapa interactivo y generación de enlace directo.
 
-- [ ] **Google Sheets & Google Cloud**:
-  - Crear proyecto en Google Cloud Console.
-  - Activar Google Sheets API.
-  - Crear cuenta de servicio con rol de sólo lectura y descargar credenciales JSON.
-  - Compartir la hoja de Google Sheets con el correo de la cuenta de servicio (`...iam.gserviceaccount.com`).
-  - Proporcionar el ID de la hoja de Google Sheets.
-- [ ] **Supabase**:
-  - Crear proyecto en Supabase (región Este de EE.UU. o São Paulo).
-  - Copiar URL del proyecto, `anon key` y `service_role key`.
-  - Crear usuario administrador con el correo del propietario en el panel de Supabase.
-  - Habilitar autenticación de 2 factores (TOTP/Authenticator app).
-- [ ] **Cloudinary**:
-  - Crear cuenta gratuita en Cloudinary.
-  - Copiar `Cloud Name`, `API Key` y `API Secret`.
-  - Activar "Strict Transformations" en la configuración de seguridad.
+---
+
+## 2. CREDENCIALES Y CUENTAS PENDIENTES
+*Guías y pasos para el propietario:*
+
+- [x] **Supabase**:
+  - Proyecto en Supabase configurado en `.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+  - Habilitar autenticación de 2 factores (TOTP/Authenticator app) para la cuenta administradora.
 - [ ] **Upstash Redis**:
   - Crear base de datos Serverless Redis gratuita en Upstash (región US East).
   - Copiar `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
