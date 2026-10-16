@@ -11,6 +11,7 @@ import { useCart } from '@/lib/cart/CartContext';
 import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { formatUsd } from '@/lib/currency/format';
+import { LocationPickerModal } from '@/components/cart/LocationPickerModal';
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=600&q=80';
@@ -42,8 +43,9 @@ export default function CartPage() {
   const [metodoPago, setMetodoPago] = useState('');
   const [notas, setNotas] = useState('');
 
-  // GPS y validación
+  // GPS, Mapa estilo OlaClick y validación
   const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState('');
   const [customMapsUrl, setCustomMapsUrl] = useState('');
@@ -479,27 +481,30 @@ export default function CartPage() {
           </div>
 
           {zonaEntrega && zonaEntrega !== 'Envío Nacional' && (
-            <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl space-y-2.5">
+            <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/90 rounded-2xl space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-emerald-700" />
-                  Ubicación GPS para el Delivery (Opcional)
+                  Ubicación de Entrega en el Mapa
                 </span>
-                <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-full">
-                  Para el motorizado
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  Estilo OlaClick
                 </span>
               </div>
 
               {!gpsLocation && !customMapsUrl ? (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
+                  <p className="text-[11px] text-slate-600">
+                    Fija el punto exacto en el mapa interactivo para que el repartidor llegue directo a tu local o negocio.
+                  </p>
+
                   <button
                     type="button"
-                    onClick={handleGetLocation}
-                    disabled={gpsLoading}
-                    className="w-full py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-95 disabled:opacity-60"
+                    onClick={() => setIsMapModalOpen(true)}
+                    className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
                   >
-                    <Navigation className={`w-4 h-4 ${gpsLoading ? 'animate-spin' : ''}`} />
-                    {gpsLoading ? 'Obteniendo señal GPS...' : 'Compartir ubicación GPS actual'}
+                    <MapPin className="w-4 h-4 text-emerald-200" />
+                    <span>Seleccionar en el mapa interactivo</span>
                   </button>
 
                   <div className="text-center pt-0.5">
@@ -508,15 +513,15 @@ export default function CartPage() {
                       onClick={() => setShowManualMapsInput(!showManualMapsInput)}
                       className="text-[11px] font-semibold text-emerald-800 underline hover:text-emerald-950 transition-colors"
                     >
-                      {showManualMapsInput ? 'Ocultar opción manual' : '¿O pegar enlace de Google Maps / WhatsApp?'}
+                      {showManualMapsInput ? 'Ocultar opción manual' : '¿O prefieres pegar un enlace de Google Maps?'}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-white border border-emerald-200 rounded-xl space-y-2">
+                <div className="p-3.5 bg-white border border-emerald-300 rounded-xl space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-850 flex items-center gap-1.5 text-emerald-900">
-                      <Check className="w-4 h-4 text-emerald-600" /> Ubicación Lista para el Despacho
+                    <span className="font-bold text-emerald-900 flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-600" /> Ubicación fijada en el mapa
                     </span>
                     <button
                       type="button"
@@ -528,12 +533,21 @@ export default function CartPage() {
                   </div>
 
                   {gpsLocation && (
-                    <p className="text-[11px] text-slate-500 font-mono">
-                      📍 Lat: {gpsLocation.lat.toFixed(5)}, Lng: {gpsLocation.lng.toFixed(5)}
+                    <p className="text-[11px] text-slate-600 font-mono">
+                      📍 Coordenadas: <strong>{gpsLocation.lat.toFixed(5)}, {gpsLocation.lng.toFixed(5)}</strong>
                     </p>
                   )}
 
-                  <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
+                  <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      className="flex-1 py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>Cambiar en el mapa</span>
+                    </button>
+
                     <a
                       href={
                         gpsLocation
@@ -542,19 +556,11 @@ export default function CartPage() {
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-bold text-emerald-700 hover:underline inline-flex items-center gap-1"
+                      className="py-2 px-3 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors"
                     >
-                      <span>Verificar en Google Maps</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <span>Verificar</span>
+                      <ExternalLink className="w-3 h-3 text-slate-400" />
                     </a>
-                    <button
-                      type="button"
-                      onClick={handleGetLocation}
-                      disabled={gpsLoading}
-                      className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline ml-auto"
-                    >
-                      {gpsLoading ? 'Actualizando...' : 'Actualizar GPS'}
-                    </button>
                   </div>
                 </div>
               )}
@@ -575,19 +581,6 @@ export default function CartPage() {
                   <p className="text-[10px] text-slate-500">
                     Abre Google Maps en tu móvil o PC, mantén presionado el punto de tu local y dale &quot;Compartir enlace&quot;.
                   </p>
-                </div>
-              )}
-
-              {/* Mensaje de ayuda si el dispositivo o navegador presenta dificultad con GPS */}
-              {gpsError && (
-                <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-medium text-amber-900 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <span>{gpsError}</span>
-                    <p className="text-[10px] text-amber-800">
-                      💡 <strong>Tip:</strong> Si estás en el teléfono, asegúrate de tener la Ubicación (GPS) encendida en los ajustes de tu celular y pulsar &quot;Permitir&quot; cuando el navegador te lo pregunte.
-                    </p>
-                  </div>
                 </div>
               )}
             </div>
@@ -656,6 +649,19 @@ export default function CartPage() {
           </p>
         </div>
       </div>
+
+      {/* Modal interactivo de selección de ubicación estilo OlaClick */}
+      <LocationPickerModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        initialLat={gpsLocation?.lat}
+        initialLng={gpsLocation?.lng}
+        initialZone={zonaEntrega}
+        onConfirm={({ lat, lng }) => {
+          setGpsLocation({ lat, lng });
+          setCustomMapsUrl(`https://maps.google.com/?q=${lat},${lng}`);
+        }}
+      />
     </div>
   );
 }
