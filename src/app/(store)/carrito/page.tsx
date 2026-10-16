@@ -3,7 +3,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Trash2, Plus, Minus, MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
+import {
+  Trash2, Plus, Minus, MessageCircle, MapPin, ArrowLeft,
+  Navigation, ExternalLink, AlertCircle, Check, X,
+} from 'lucide-react';
 import { useCart } from '@/lib/cart/CartContext';
 import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
@@ -42,6 +45,9 @@ export default function CartPage() {
   // GPS y validación
   const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsError, setGpsError] = useState('');
+  const [customMapsUrl, setCustomMapsUrl] = useState('');
+  const [showManualMapsInput, setShowManualMapsInput] = useState(false);
   const [errorValidacion, setErrorValidacion] = useState('');
   const [sessionId, setSessionId] = useState<string>('');
 
@@ -143,25 +149,75 @@ export default function CartPage() {
   }, [sessionId, nombre, telefono, zonaEntrega, direccion, metodoPago, lines, totalUsd]);
 
   const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Tu navegador no soporta geolocalización');
+    setGpsError('');
+
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setGpsError('Tu navegador o dispositivo no tiene activada la función de geolocalización.');
+      setShowManualMapsInput(true);
       return;
     }
+
+    if (window.isSecureContext === false) {
+      setGpsError('La geolocalización requiere una conexión segura (HTTPS). Puedes ingresar tu enlace de Google Maps abajo.');
+      setShowManualMapsInput(true);
+      return;
+    }
+
     setGpsLoading(true);
+
+    const onSuccess = (position: GeolocationPosition) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      setGpsLocation({ lat, lng });
+      setCustomMapsUrl(`https://maps.google.com/?q=${lat},${lng}`);
+      setGpsLoading(false);
+      setGpsError('');
+    };
+
+    const onStandardAccuracyFallback = () => {
+      // Intento 2: Precisión estándar (red WiFi/móvil) con margen de tiempo generoso
+      navigator.geolocation.getCurrentPosition(
+        onSuccess,
+        (error) => {
+          setGpsLoading(false);
+          let message = 'No se pudo obtener la ubicación GPS.';
+          if (error.code === error.PERMISSION_DENIED) {
+            message = 'Permiso denegado. Para compartir tu ubicación, activa los permisos de ubicación para este sitio en tu navegador o ajustes del teléfono.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            message = 'Señal de ubicación no disponible en tu dispositivo. Puedes pegar un enlace de Google Maps o WhatsApp abajo.';
+          } else if (error.code === error.TIMEOUT) {
+            message = 'Tiempo de espera agotado al conectar con el GPS de tu equipo. Puedes reintentar o ingresar tu enlace de Google Maps.';
+          }
+          setGpsError(message);
+          setShowManualMapsInput(true);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 12000,
+          maximumAge: 60000,
+        }
+      );
+    };
+
+    // Intento 1: Alta precisión con timeout de 6 segundos
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setGpsLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setGpsLoading(false);
+      onSuccess,
+      () => {
+        // Si alta precisión falla o tarda, pasar de inmediato a precisión estándar
+        onStandardAccuracyFallback();
       },
-      (error) => {
-        console.error(error);
-        alert('No se pudo obtener la ubicación GPS. Verifica los permisos.');
-        setGpsLoading(false);
+      {
+        enableHighAccuracy: true,
+        timeout: 6000,
+        maximumAge: 0,
       }
     );
+  };
+
+  const handleClearLocation = () => {
+    setGpsLocation(null);
+    setCustomMapsUrl('');
+    setGpsError('');
   };
 
   const handleSendOrder = () => {
@@ -179,8 +235,13 @@ export default function CartPage() {
     message += `📞 *Teléfono:* ${telefono.trim()}\n`;
     message += `📍 *Zona de Entrega:* ${zonaEntrega}\n`;
     message += `🏠 *Dirección:* ${direccion.trim()}\n`;
-    if (gpsLocation) {
-      message += `🗺️ *GPS:* https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}\n`;
+
+    const mapsLink = gpsLocation
+      ? `https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}`
+      : customMapsUrl.trim() || null;
+
+    if (mapsLink) {
+      message += `🗺️ *Ubicación GPS:* ${mapsLink}\n`;
     }
     message += `💳 *Método de Pago:* ${metodoPago}\n`;
     if (notas) message += `📝 *Notas:* ${notas}\n`;
@@ -418,21 +479,117 @@ export default function CartPage() {
           </div>
 
           {zonaEntrega && zonaEntrega !== 'Envío Nacional' && (
-            <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl space-y-2">
-              <span className="block text-xs font-bold text-emerald-900">Ubicación GPS (Opcional)</span>
-              <button
-                type="button"
-                onClick={handleGetLocation}
-                disabled={gpsLoading}
-                className="w-full py-2 px-3 bg-white border border-emerald-300 text-emerald-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-sm"
-              >
-                <MapPin className="w-4 h-4 text-emerald-600" />
-                {gpsLoading
-                  ? 'Obteniendo GPS...'
-                  : gpsLocation
-                  ? '✅ Ubicación GPS Capturada'
-                  : 'Compartir ubicación GPS actual'}
-              </button>
+            <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-emerald-700" />
+                  Ubicación GPS para el Delivery (Opcional)
+                </span>
+                <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                  Para el motorizado
+                </span>
+              </div>
+
+              {!gpsLocation && !customMapsUrl ? (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={gpsLoading}
+                    className="w-full py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-95 disabled:opacity-60"
+                  >
+                    <Navigation className={`w-4 h-4 ${gpsLoading ? 'animate-spin' : ''}`} />
+                    {gpsLoading ? 'Obteniendo señal GPS...' : 'Compartir ubicación GPS actual'}
+                  </button>
+
+                  <div className="text-center pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowManualMapsInput(!showManualMapsInput)}
+                      className="text-[11px] font-semibold text-emerald-800 underline hover:text-emerald-950 transition-colors"
+                    >
+                      {showManualMapsInput ? 'Ocultar opción manual' : '¿O pegar enlace de Google Maps / WhatsApp?'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-white border border-emerald-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-850 flex items-center gap-1.5 text-emerald-900">
+                      <Check className="w-4 h-4 text-emerald-600" /> Ubicación Lista para el Despacho
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleClearLocation}
+                      className="text-[11px] font-bold text-slate-400 hover:text-red-600 transition-colors"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+
+                  {gpsLocation && (
+                    <p className="text-[11px] text-slate-500 font-mono">
+                      📍 Lat: {gpsLocation.lat.toFixed(5)}, Lng: {gpsLocation.lng.toFixed(5)}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
+                    <a
+                      href={
+                        gpsLocation
+                          ? `https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}`
+                          : customMapsUrl
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-emerald-700 hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>Verificar en Google Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      disabled={gpsLoading}
+                      className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline ml-auto"
+                    >
+                      {gpsLoading ? 'Actualizando...' : 'Actualizar GPS'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Input manual de enlace de Google Maps */}
+              {showManualMapsInput && !gpsLocation && (
+                <div className="p-3 bg-white border border-emerald-200 rounded-xl space-y-2">
+                  <label className="block text-[11px] font-bold text-slate-700">
+                    Pega aquí el enlace de Google Maps o pin compartido:
+                  </label>
+                  <input
+                    type="url"
+                    value={customMapsUrl}
+                    onChange={(e) => setCustomMapsUrl(e.target.value)}
+                    placeholder="https://maps.app.goo.gl/... o https://maps.google.com/?q=..."
+                    className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                  <p className="text-[10px] text-slate-500">
+                    Abre Google Maps en tu móvil o PC, mantén presionado el punto de tu local y dale &quot;Compartir enlace&quot;.
+                  </p>
+                </div>
+              )}
+
+              {/* Mensaje de ayuda si el dispositivo o navegador presenta dificultad con GPS */}
+              {gpsError && (
+                <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-medium text-amber-900 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <span>{gpsError}</span>
+                    <p className="text-[10px] text-amber-800">
+                      💡 <strong>Tip:</strong> Si estás en el teléfono, asegúrate de tener la Ubicación (GPS) encendida en los ajustes de tu celular y pulsar &quot;Permitir&quot; cuando el navegador te lo pregunte.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
