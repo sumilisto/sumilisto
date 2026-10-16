@@ -1,6 +1,9 @@
 export interface HeroSlide {
   imageUrl: string;
   linkUrl?: string;
+  buttonText?: string;
+  title?: string;
+  subtitle?: string;
 }
 
 export interface StoreSettings {

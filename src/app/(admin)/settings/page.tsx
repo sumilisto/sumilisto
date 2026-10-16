@@ -249,10 +249,22 @@ export default function AdminSettingsPage() {
     reader.readAsDataURL(file);
   };
 
-  const addSlide = () => setHeroSlides(prev => [...prev, { imageUrl: "", linkUrl: "" }]);
+  const addSlide = () => setHeroSlides(prev => [...prev, { imageUrl: "", linkUrl: "", buttonText: "VER OFERTAS" }]);
   const removeSlide = (idx: number) => setHeroSlides(prev => prev.filter((_, i) => i !== idx));
   const updateSlide = (idx: number, field: keyof HeroSlide, val: string) =>
     setHeroSlides(prev => prev.map((s, i) => i === idx ? { ...s, [field]: val } : s));
+
+  const handleSlideFileUpload = (idx: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        updateSlide(idx, "imageUrl", reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Mientras el servidor confirma la sesión, no se muestra nada
   if (!authChecked) {
@@ -513,28 +525,105 @@ export default function AdminSettingsPage() {
                 Sin multimedia — el banner mostrará el degradado con el color de marca.
               </p>
             )}
-            <div className="space-y-3">
-              {heroSlides.map((slide, idx) => (
-                <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-600">Slide {idx + 1} (Imagen, GIF o Video)</span>
-                    <button type="button" onClick={() => removeSlide(idx)} className="text-slate-400 hover:text-rose-500">
-                      <X className="w-4 h-4" />
-                    </button>
+            <div className="space-y-4">
+              {heroSlides.map((slide, idx) => {
+                const isVideo = slide.imageUrl && slide.imageUrl.match(/\.(mp4|webm|ogg)($|\?)/i);
+                return (
+                  <div key={idx} className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                        Slide {idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeSlide(idx)}
+                        className="text-slate-400 hover:text-rose-500 text-xs font-bold flex items-center gap-1"
+                      >
+                        <X className="w-4 h-4" /> Eliminar
+                      </button>
+                    </div>
+
+                    {/* Previsualización multimedia */}
+                    {slide.imageUrl && (
+                      <div className="relative w-full h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 flex items-center justify-center">
+                        {isVideo ? (
+                          <video
+                            src={slide.imageUrl}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={slide.imageUrl}
+                            alt={`Preview ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold">
+                          {isVideo ? "Video" : "Imagen / GIF"}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Archivo o URL */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 mb-1 block">
+                        Subir archivo (Imagen, GIF o Video)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*,video/mp4,video/webm"
+                        onChange={(e) => handleSlideFileUpload(idx, e)}
+                        className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 mb-2"
+                      />
+                      <label className="text-[11px] font-bold text-slate-600 mb-1 block">
+                        O pega la URL directa del archivo
+                      </label>
+                      <input
+                        type="url"
+                        value={slide.imageUrl}
+                        onChange={(e) => updateSlide(idx, "imageUrl", e.target.value)}
+                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        placeholder="https://... URL de Imagen, GIF animado o Video .mp4"
+                      />
+                    </div>
+
+                    {/* Botón de acción y Redirección */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 mb-1 block">
+                          Texto del Botón de la Oferta
+                        </label>
+                        <input
+                          type="text"
+                          value={slide.buttonText ?? "VER OFERTAS"}
+                          onChange={(e) => updateSlide(idx, "buttonText", e.target.value)}
+                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand/20"
+                          placeholder="Ej: VER OFERTAS, COMPRAR AHORA"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 mb-1 block">
+                          Enlace de Redirección
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <LinkIcon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                          <input
+                            type="text"
+                            value={slide.linkUrl || ""}
+                            onChange={(e) => updateSlide(idx, "linkUrl", e.target.value)}
+                            className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-brand/20"
+                            placeholder="Ej: /categoria/envases o link"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <input type="url" value={slide.imageUrl}
-                    onChange={e => updateSlide(idx, "imageUrl", e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs mb-2 focus:outline-none focus:ring-2 focus:ring-brand/20"
-                    placeholder="https://... URL de la Imagen, GIF o Video (.mp4)" />
-                  <div className="flex items-center gap-2">
-                    <LinkIcon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                    <input type="text" value={slide.linkUrl || ""}
-                      onChange={e => updateSlide(idx, "linkUrl", e.target.value)}
-                      className="flex-1 h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-brand/20"
-                      placeholder="Link al hacer clic (opcional, ej: /categoria/envases)" />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
