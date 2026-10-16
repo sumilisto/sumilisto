@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "@/lib/theme/ThemeContext";
-import { ArrowRight, Sparkles, ShieldCheck, Truck, Percent, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function HeroSection() {
   const { theme } = useTheme();
@@ -103,13 +103,6 @@ export function HeroSection() {
         )}
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="#catalogo"
-            className="h-10 sm:h-11 px-5 rounded-xl bg-white text-brand hover:opacity-95 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-all"
-          >
-            <span>Explorar Catálogo</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
           <a
             href={`https://wa.me/${whaNum}?text=Hola%20Sumilisto,%20deseo%20asesor%C3%ADa%20sobre%20suministros%20para%20mi%20negocio`}
             target="_blank"

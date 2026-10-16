@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useProducts } from "@/lib/products/ProductsContext";
 import { Product } from "@/types/product";
 import { normalizeSearchString } from "@/lib/utils";
@@ -21,11 +22,40 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
   onClose,
   bcvRate,
 }) => {
+  const router = useRouter();
   const { products } = useProducts();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isPushedRef = useRef(false);
+  const isBackdropTarget = useRef(false);
 
+  // Manejo del botón Atrás (móvil y navegador) para cerrar el buscador
+  useEffect(() => {
+    if (!isOpen) return;
+
+    window.history.pushState({ isSearchModalOpen: true }, "");
+    isPushedRef.current = true;
+
+    const handlePopState = () => {
+      // El usuario presionó Atrás en el navegador o teléfono
+      isPushedRef.current = false;
+      onClose();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      // Si se cerró por botón cerrar, escape o clic fuera, revertir la entrada del historial
+      if (isPushedRef.current && window.history.state?.isSearchModalOpen) {
+        isPushedRef.current = false;
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
+
+  // Manejo de foco y scroll del body
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
@@ -63,7 +93,7 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
     });
 
     setResults(filtered.slice(0, 8)); // Top 8 resultados rápidos
-  }, [query]);
+  }, [query, products]);
 
   // Cerrar con Escape
   useEffect(() => {
@@ -74,11 +104,61 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  // Clic/Tap fuera del contenedor para cerrar el buscador
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    isBackdropTarget.current = e.target === e.currentTarget;
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isBackdropTarget.current && e.target === e.currentTarget) {
+      onClose();
+    }
+    isBackdropTarget.current = false;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    isBackdropTarget.current = e.target === e.currentTarget;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isBackdropTarget.current && e.target === e.currentTarget) {
+      onClose();
+    }
+    isBackdropTarget.current = false;
+  };
+
+  const handleProductSelect = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    productSlug: string
+  ) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    isPushedRef.current = false;
+    onClose();
+    router.replace(`/producto/${productSlug}`);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-16 px-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Buscador de suministros"
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-16 px-4 bg-slate-900/60 backdrop-blur-sm transition-opacity cursor-pointer"
+    >
+      <div
+        onMouseDown={(e) => e.stopPropagation()}
+        onMouseUp={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh] cursor-default"
+      >
         {/* Barra de Entrada de Búsqueda */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200 bg-slate-50/50">
           <Search className="w-5 h-5 text-slate-400 flex-shrink-0" />
@@ -135,7 +215,7 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
                 <Link
                   key={product.sku}
                   href={`/producto/${product.slug}`}
-                  onClick={onClose}
+                  onClick={(e) => handleProductSelect(e, product.slug)}
                   className="flex items-center gap-3.5 py-3 hover:bg-slate-50 rounded-xl px-2 transition-colors group"
                 >
                   <div className="relative w-14 h-14 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
