@@ -16,7 +16,7 @@ interface LocationPickerModalProps {
   onConfirm: (location: { lat: number; lng: number; addressHint?: string }) => void;
 }
 
-// Zonas predefinidas para navegación rápida (OlaClick style)
+// Zonas predefinidas para navegación rápida
 const ZONES = [
   { name: "Caracas", lat: 10.4880, lng: -66.8792, zoom: 14 },
   { name: "Guarenas", lat: 10.4631, lng: -66.6172, zoom: 15 },
@@ -84,7 +84,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
       // Botones de zoom en esquina inferior derecha
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
-      // Evento al mover el mapa (OlaClick Pin en el centro)
+      // Evento al mover el mapa (Pin en el centro)
       map.on("movestart", () => {
         setIsDragging(true);
       });
@@ -155,16 +155,21 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
           }
           setGpsError(msg);
         },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 }
       );
     };
 
     navigator.geolocation.getCurrentPosition(
       onPosSuccess,
-      () => {
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          setIsGpsLoading(false);
+          setGpsError("Has denegado el permiso de ubicación en tu navegador. Puedes concederlo en ajustes del navegador o mover el mapa manualmente.");
+          return;
+        }
         onPosFallback();
       },
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   };
 
@@ -188,7 +193,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
       <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col h-[90vh] max-h-[720px]">
-        {/* Cabecera modal estilo OlaClick */}
+        {/* Cabecera del modal */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white z-20">
           <div>
             <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
@@ -225,11 +230,11 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
           ))}
         </div>
 
-        {/* Contenedor del Mapa Interactivo con PIN central (Firma OlaClick) */}
+        {/* Contenedor del Mapa Interactivo con PIN central */}
         <div className="relative flex-1 w-full bg-slate-100 overflow-hidden">
           <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-          {/* PIN Central Flotante con animación de elevación al arrastrar (Igual a OlaClick) */}
+          {/* PIN Central Flotante con animación de elevación al arrastrar */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-10 flex flex-col items-center">
             {/* Indicador con etiqueta */}
             <div
@@ -240,7 +245,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
               {isDragging ? "Soltar para fijar punto" : "Entregar aquí"}
             </div>
 
-            {/* Ícono de Pin OlaClick rojo/verde brillante */}
+            {/* Ícono de Pin interactivo */}
             <div
               className={`transition-transform duration-150 ${
                 isDragging ? "-translate-y-3 scale-110" : "translate-y-0 scale-100"
@@ -297,7 +302,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
           )}
         </div>
 
-        {/* Barra inferior de confirmación estilo OlaClick */}
+        {/* Barra inferior de confirmación */}
         <div className="p-4 sm:p-5 bg-white border-t border-slate-100 space-y-3 z-20">
           <div className="flex items-center justify-between text-xs text-slate-500 font-mono">
             <span>
