@@ -10,6 +10,7 @@ import { MobileBottomNav } from "@/components/store/MobileBottomNav";
 import { FloatingCartBar } from "@/components/store/FloatingCartBar";
 import { getProducts, getBcvRate } from "@/lib/api/store";
 import { getStoreSettings } from "@/lib/actions/settings";
+import { SplashScreen } from "@/components/common/SplashScreen";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -73,6 +74,7 @@ export default async function RootLayout({
   return (
     <html lang="es-VE" className={inter.variable}>
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col selection:bg-brand selection:text-white">
+        <SplashScreen />
         <ThemeProvider initialSettings={settings}>
           <CartProvider>
             <ProductsProvider products={products} bcvRate={bcvRate}>
