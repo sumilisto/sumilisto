@@ -24,17 +24,18 @@ import {
 
 // ──── Galería multimedia (hasta 10 fotos y 1 video) ────
 interface GalleryProps {
-  photos: { url: string; alt?: string }[];
+  photos: { url: string; alt?: string; varianteColor?: string }[];
   videoUrl?: string;
+  selectedColor?: string;
   productName: string;
   status: import("@/types/product").ProductStockStatus;
 }
 
 type MediaItem =
-  | { type: "photo"; url: string; alt: string }
-  | { type: "video"; url: string; alt: string };
+  | { type: "photo"; url: string; alt: string; varianteColor?: string }
+  | { type: "video"; url: string; alt: string; varianteColor?: string };
 
-function ProductGallery({ photos, videoUrl, productName, status }: GalleryProps) {
+function ProductGallery({ photos, videoUrl, selectedColor, productName, status }: GalleryProps) {
   const safePhotos = (photos || []).slice(0, 10);
 
   // Lista unificada de items multimedia: hasta 10 fotos y 1 video
@@ -43,6 +44,7 @@ function ProductGallery({ photos, videoUrl, productName, status }: GalleryProps)
       type: "photo",
       url: p.url,
       alt: p.alt || productName,
+      varianteColor: p.varianteColor,
     }));
     if (videoUrl) {
       items.push({
@@ -63,10 +65,16 @@ function ProductGallery({ photos, videoUrl, productName, status }: GalleryProps)
 
   const [activeIdx, setActiveIdx] = useState(0);
 
-  // Garantizar que siempre inicie en la 1era foto cuando cambian las fotos o variante
+  // Cuando cambia el color de variante seleccionado, saltar automáticamente a la foto correspondiente
   React.useEffect(() => {
-    setActiveIdx(0);
-  }, [photos, videoUrl]);
+    if (!selectedColor) return;
+    const matchIdx = mediaItems.findIndex(
+      (item) => item.type === "photo" && item.varianteColor?.trim().toLowerCase() === selectedColor.trim().toLowerCase()
+    );
+    if (matchIdx >= 0) {
+      setActiveIdx(matchIdx);
+    }
+  }, [selectedColor, mediaItems]);
 
   const activeItem = mediaItems[activeIdx] || mediaItems[0];
 
@@ -94,12 +102,14 @@ function ProductGallery({ photos, videoUrl, productName, status }: GalleryProps)
           />
         )}
 
-        {/* Badge de disponibilidad */}
-        <div className="absolute top-3 left-3 z-10">
-          <Badge status={status} />
-        </div>
+        {/* Badge de disponibilidad: Solo si está AGOTADO para no restar visualización de la foto */}
+        {(status === "agotado" || status === "no_disponible") && (
+          <div className="absolute top-3 left-3 z-10">
+            <Badge status={status} />
+          </div>
+        )}
 
-        {/* Contador / Indicador de tipo */}
+        {/* Contador / Indicador de tipo y variante */}
         {mediaItems.length > 1 && (
           <div className="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm">
             {activeItem.type === "video" ? (
@@ -108,7 +118,10 @@ function ProductGallery({ photos, videoUrl, productName, status }: GalleryProps)
                 <span>Video</span>
               </>
             ) : (
-              <span>{activeIdx + 1} / {mediaItems.length}</span>
+              <span>
+                {activeItem.varianteColor ? `${activeItem.varianteColor} · ` : ""}
+                {activeIdx + 1} / {mediaItems.length}
+              </span>
             )}
           </div>
         )}
@@ -158,12 +171,19 @@ function ProductGallery({ photos, videoUrl, productName, status }: GalleryProps)
                 }`}
               >
                 {item.type === "photo" ? (
-                  <img
-                    src={item.url}
-                    alt={item.alt}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                  <>
+                    <img
+                      src={item.url}
+                      alt={item.alt}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    {item.varianteColor && (
+                      <span className="absolute bottom-0 inset-x-0 bg-slate-900/80 text-white text-[8px] font-black uppercase tracking-wider text-center py-0.5 truncate">
+                        {item.varianteColor}
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center text-white">
                     <div className="w-7 h-7 rounded-full bg-brand flex items-center justify-center mb-0.5 shadow-xs">
@@ -342,8 +362,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         {/* Columna Izquierda: Galería */}
         <div className="flex flex-col gap-4">
           <ProductGallery
-            photos={activeVariant.fotos && activeVariant.fotos.length > 0 ? activeVariant.fotos : product.fotos}
+            photos={product.fotos}
             videoUrl={product.videoUrl}
+            selectedColor={activeVariant.color}
             productName={product.nombre}
             status={activeVariant.status}
           />

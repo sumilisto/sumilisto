@@ -17,17 +17,7 @@ export const Badge: React.FC<BadgeProps> = ({
   if (status) {
     switch (status) {
       case "disponible":
-        return (
-          <span
-            className={cn(
-              "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200",
-              className
-            )}
-            {...props}
-          >
-            Disponible
-          </span>
-        );
+        return null;
       case "ultimas_unidades":
         return (
           <span

@@ -7,6 +7,7 @@ export interface ProductPhoto {
   publicId?: string;
   alt: string;
   isPrimary?: boolean;
+  varianteColor?: string; // Color de la variante a la que corresponde (o undefined si es general)
 }
 
 export interface ProductVariant {

@@ -194,7 +194,7 @@ export async function uploadProductPhoto(
   productoId: string,
   file: File | Buffer,
   fileName: string,
-  options?: { alt?: string; orden?: number; isPrimary?: boolean }
+  options?: { alt?: string; orden?: number; isPrimary?: boolean; varianteColor?: string }
 ) {
   // 0. Validar límite de 10 fotos por producto
   const { count } = await supabaseAdmin
@@ -206,18 +206,24 @@ export async function uploadProductPhoto(
     throw new Error("Este producto ya alcanzó el límite máximo de 10 fotos.");
   }
 
-  // 1. Subir archivo a Storage
-  const filePath = `${productoId}/${Date.now()}-${fileName}`;
-  const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+  // 1. Sanitizar nombre de archivo y convertir a Buffer para evitar errores de streaming en Node.js
+  const cleanFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const filePath = `${productoId}/${Date.now()}-${cleanFileName}`;
+
+  const arrayBuffer = file instanceof File ? await file.arrayBuffer() : file;
+  const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
+
+  const { error: uploadError } = await supabaseAdmin.storage
     .from("productos")
-    .upload(filePath, file, {
+    .upload(filePath, buffer, {
       cacheControl: "3600",
-      upsert: false,
+      contentType: file instanceof File ? (file.type || "image/jpeg") : "image/jpeg",
+      upsert: true,
     });
 
   if (uploadError) throw new Error(uploadError.message);
 
-// 2. Obtener URL pública
+  // 2. Obtener URL pública
   const { data: urlData } = supabaseAdmin.storage
     .from("productos")
     .getPublicUrl(filePath);
@@ -232,7 +238,7 @@ export async function uploadProductPhoto(
       .eq("producto_id", productoId);
   }
 
-  // 4. Registrar en la tabla producto_fotos
+  // 4. Registrar en la tabla producto_fotos con su variante asignada si aplica
   const { data: fotoData, error: fotoError } = await supabaseAdmin
     .from("producto_fotos")
     .insert({
@@ -241,12 +247,25 @@ export async function uploadProductPhoto(
       alt: options?.alt || fileName,
       orden: options?.orden || 0,
       is_primary: options?.isPrimary ?? false,
+      variante_color: options?.varianteColor || null,
     })
     .select()
     .single();
 
   if (fotoError) throw new Error(fotoError.message);
   return fotoData;
+}
+
+export async function setPhotoVariant(fotoId: string, varianteColor?: string | null) {
+  const { data, error } = await supabaseAdmin
+    .from("producto_fotos")
+    .update({ variante_color: varianteColor ? varianteColor.trim() : null })
+    .eq("id", fotoId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export async function setPrimaryPhoto(productoId: string, fotoId: string) {
@@ -396,6 +415,7 @@ function mapDbToProduct(row: any): Product {
       publicId: f.id,
       alt: f.alt || row.nombre,
       isPrimary: f.is_primary || false,
+      varianteColor: f.variante_color || undefined,
     }));
 
   // Si no hay fotos, usar placeholder

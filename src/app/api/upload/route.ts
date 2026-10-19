@@ -5,6 +5,7 @@ import {
   uploadProductVideo,
   deleteProductVideo,
   setPrimaryPhoto,
+  setPhotoVariant,
 } from "@/lib/supabase/queries";
 import { revalidateTag } from "next/cache";
 
@@ -22,6 +23,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Falta producto_id o foto_id" }, { status: 400 });
       }
       const updated = await setPrimaryPhoto(productoId, fotoId);
+      revalidateTag("products");
+      return NextResponse.json(updated);
+    }
+
+    // Acción para asociar foto a una variante de color específica (o dejarla general)
+    if (action === "set-variant") {
+      const fotoId = formData.get("foto_id") as string;
+      const varianteColor = (formData.get("variante_color") as string) || null;
+      if (!fotoId) {
+        return NextResponse.json({ error: "Falta foto_id" }, { status: 400 });
+      }
+      const updated = await setPhotoVariant(fotoId, varianteColor);
       revalidateTag("products");
       return NextResponse.json(updated);
     }
@@ -48,11 +61,13 @@ export async function POST(request: NextRequest) {
     const alt = (formData.get("alt") as string) || "";
     const orden = parseInt((formData.get("orden") as string) || "0", 10);
     const isPrimary = formData.get("is_primary") === "true";
+    const varianteColor = (formData.get("variante_color") as string) || undefined;
 
     const foto = await uploadProductPhoto(productoId, file, file.name, {
       alt,
       orden,
       isPrimary,
+      varianteColor,
     });
 
     revalidateTag("products");

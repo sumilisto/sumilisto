@@ -161,13 +161,25 @@ export default function AdminProductosPage() {
         const originalFile = filesToUpload[i];
         setMediaStatusText(`Optimizando foto ${i + 1} de ${filesToUpload.length}...`);
 
-        // Comprimir en cliente manteniendo nitidez
-        const opt = await optimizeImage(originalFile, 1280, 0.85);
+        // Comprimir en cliente manteniendo nitidez (con fallback al archivo original si el formato o navegador no lo soporta)
+        let fileToSend: File = originalFile;
+        let savingsPercent = 0;
+        try {
+          const opt = await optimizeImage(originalFile, 1280, 0.85);
+          fileToSend = opt.file;
+          savingsPercent = opt.savingsPercent;
+        } catch {
+          fileToSend = originalFile;
+        }
 
-        setMediaStatusText(`Subiendo foto ${i + 1} (${formatFileSize(opt.optimizedSize)}, ahorro ${opt.savingsPercent}%)...`);
+        setMediaStatusText(
+          savingsPercent > 0
+            ? `Subiendo foto ${i + 1} (${formatFileSize(fileToSend.size)}, ahorro ${savingsPercent}%)...`
+            : `Subiendo foto ${i + 1} (${formatFileSize(fileToSend.size)})...`
+        );
 
         const formData = new FormData();
-        formData.append("file", opt.file);
+        formData.append("file", fileToSend);
         formData.append("producto_id", productId);
         formData.append("alt", prod?.nombre || "Producto");
         formData.append("is_primary", existingCount === 0 && i === 0 ? "true" : "false");
@@ -178,12 +190,12 @@ export default function AdminProductosPage() {
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Error al subir foto");
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Error al subir foto ${i + 1}`);
         }
       }
 
-      showToast(`¡${filesToUpload.length} foto(s) optimizada(s) y agregada(s) con éxito!`);
+      showToast(`¡${filesToUpload.length} foto(s) subida(s) con éxito!`);
       await loadProducts();
     } catch (err: any) {
       showToast(err.message || "Error al procesar fotos", "error");
@@ -191,6 +203,33 @@ export default function AdminProductosPage() {
       setIsProcessingMedia(false);
       setMediaStatusText("");
       if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
+
+  // Asignar variante de color a una foto (o marcar como General)
+  const handleSetPhotoVariant = async (productId: string, fotoId: string, varianteColor: string) => {
+    setIsProcessingMedia(true);
+    setMediaStatusText("Guardando variante de la foto...");
+    try {
+      const formData = new FormData();
+      formData.append("action", "set-variant");
+      formData.append("foto_id", fotoId);
+      formData.append("variante_color", varianteColor);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("No se pudo asignar la variante");
+
+      showToast(varianteColor ? `Foto asignada a variante "${varianteColor}"` : "Foto marcada como General");
+      await loadProducts();
+    } catch (err: any) {
+      showToast(err.message || "Error al asignar variante", "error");
+    } finally {
+      setIsProcessingMedia(false);
+      setMediaStatusText("");
     }
   };
 
@@ -1048,45 +1087,71 @@ export default function AdminProductosPage() {
               </div>
 
               {/* Grid de Fotos Actuales */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                 {(mediaProduct.fotos || [])
                   .filter((f) => !f.url.includes("placehold.co"))
                   .map((foto, idx) => (
                     <div
                       key={foto.publicId || foto.url}
-                      className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square bg-slate-50"
+                      className="bg-white rounded-2xl border border-slate-200 p-2 shadow-2xs space-y-1.5 flex flex-col justify-between"
                     >
-                      <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
+                      <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-50 border border-slate-100">
+                        <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
 
-                      {/* Badge de Portada Principal */}
-                      {foto.isPrimary ? (
-                        <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center gap-0.5 shadow-sm">
-                          <Star className="w-2.5 h-2.5 fill-white" /> Portada
-                        </span>
-                      ) : (
+                        {/* Badge de Portada Principal */}
+                        {foto.isPrimary ? (
+                          <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center gap-0.5 shadow-sm">
+                            <Star className="w-2.5 h-2.5 fill-white" /> Portada
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, foto.publicId!)}
+                            title="Hacer foto principal de portada"
+                            className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 hover:bg-emerald-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Hacer Portada
+                          </button>
+                        )}
+
+                        {/* Botón Eliminar Foto */}
                         <button
                           type="button"
-                          onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, foto.publicId!)}
-                          title="Hacer foto principal de portada"
-                          className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 hover:bg-emerald-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeletePhoto(mediaProduct.id!, foto.publicId!, foto.url)}
+                          title="Eliminar foto"
+                          className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          Hacer Portada
+                          <Trash2 className="w-3 h-3" />
                         </button>
-                      )}
 
-                      {/* Botón Eliminar Foto */}
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePhoto(mediaProduct.id!, foto.publicId!, foto.url)}
-                        title="Eliminar foto"
-                        className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                        <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-white bg-black/50 px-1 rounded">
+                          #{idx + 1}
+                        </span>
+                      </div>
 
-                      <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-white bg-black/50 px-1 rounded">
-                        #{idx + 1}
-                      </span>
+                      {/* Selector de Variante / Color Asociado */}
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Variante:
+                        </span>
+                        <select
+                          value={foto.varianteColor || ""}
+                          disabled={isProcessingMedia}
+                          onChange={(e) => handleSetPhotoVariant(mediaProduct.id!, foto.publicId!, e.target.value)}
+                          className={`w-full text-[10px] font-bold py-1 px-1.5 rounded-lg border transition-colors ${
+                            foto.varianteColor
+                              ? "bg-brand/10 text-brand border-brand/30"
+                              : "bg-slate-50 text-slate-600 border-slate-200"
+                          }`}
+                        >
+                          <option value="">🌐 General (Todas)</option>
+                          {(mediaProduct.variantes || []).map((v) => (
+                            <option key={v.sku} value={v.color}>
+                              🎨 {v.color}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   ))}
 
