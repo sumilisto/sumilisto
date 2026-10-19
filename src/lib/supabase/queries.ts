@@ -214,7 +214,15 @@ export async function uploadProductPhoto(
 
   const publicUrl = urlData.publicUrl;
 
-  // 3. Registrar en la tabla producto_fotos
+  // 3. Si es primaria, desmarcar fotos anteriores del producto
+  if (options?.isPrimary) {
+    await supabaseAdmin
+      .from("producto_fotos")
+      .update({ is_primary: false })
+      .eq("producto_id", productoId);
+  }
+
+  // 4. Registrar en la tabla producto_fotos
   const { data: fotoData, error: fotoError } = await supabaseAdmin
     .from("producto_fotos")
     .insert({
@@ -222,7 +230,7 @@ export async function uploadProductPhoto(
       url: publicUrl,
       alt: options?.alt || fileName,
       orden: options?.orden || 0,
-      is_primary: options?.isPrimary || false,
+      is_primary: options?.isPrimary ?? true,
     })
     .select()
     .single();
@@ -321,6 +329,7 @@ function mapDbToProduct(row: any): Product {
   const totalStock = variantes.reduce((sum, v) => sum + v.stock, 0);
 
   return {
+    id: row.id,
     sku: primaryVariant?.sku || row.sku,
     nombre: row.nombre,
     slug: row.slug,

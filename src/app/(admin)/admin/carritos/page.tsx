@@ -216,9 +216,13 @@ export default function AdminCarritosPage() {
       {/* Barra superior con navegación */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-3 mb-1">
             <Link href="/admin/settings" className="text-xs font-bold text-slate-500 hover:text-brand flex items-center gap-1">
               <ArrowLeft className="w-3.5 h-3.5" /> Volver a Ajustes
+            </Link>
+            <span className="text-slate-300">•</span>
+            <Link href="/admin/productos" className="text-xs font-bold text-slate-500 hover:text-brand flex items-center gap-1">
+              <Package className="w-3.5 h-3.5 text-brand" /> Productos y Fotos
             </Link>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">

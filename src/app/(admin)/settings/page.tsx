@@ -8,7 +8,7 @@ import { loginAdmin, logoutAdmin, isAdminAuthenticated } from "@/lib/actions/aut
 import {
   Save, RefreshCcw, Image as ImageIcon, Palette, Phone, Lock,
   User, LogOut, CheckCircle2, Type, Layout, Truck, Plus, X, Link as LinkIcon,
-  Coins, ExternalLink, TrendingUp, AlertTriangle,
+  Coins, ExternalLink, TrendingUp, AlertTriangle, Package,
 } from "lucide-react";
 
 
@@ -326,6 +326,13 @@ export default function AdminSettingsPage() {
           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Personaliza todos los aspectos visuales de la tienda.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/admin/productos"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-sm transition-all"
+          >
+            <Package className="w-3.5 h-3.5 text-brand" />
+            <span>Productos y Fotos</span>
+          </Link>
           <Link
             href="/admin/carritos"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm transition-all"
