@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "@/styles/globals.css";
 import { CartProvider } from "@/lib/cart/CartContext";
 import { ProductsProvider } from "@/lib/products/ProductsContext";
@@ -12,7 +12,8 @@ import { getProducts, getBcvRate } from "@/lib/api/store";
 import { getStoreSettings } from "@/lib/actions/settings";
 import { SplashScreen } from "@/components/common/SplashScreen";
 
-const inter = Inter({
+const roboto = Roboto({
+  weight: ["300", "400", "500", "700", "900"],
   subsets: ["latin"],
   display: "swap",
   variable: "--font-sans",
@@ -72,7 +73,7 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html lang="es-VE" className={inter.variable}>
+    <html lang="es-VE" className={roboto.variable}>
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col selection:bg-brand selection:text-white">
         <SplashScreen />
         <ThemeProvider initialSettings={settings}>

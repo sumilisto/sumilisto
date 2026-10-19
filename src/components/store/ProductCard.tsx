@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
-import { formatUsd } from "@/lib/currency/format";
+import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { Plus, MessageCircle, AlertCircle } from "lucide-react";
@@ -106,33 +106,61 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
       </div>
 
-      {/* Información limpia del producto (sin categoría, sin SKU, sin botones de variantes) */}
-      <div className="flex flex-col flex-1 p-3 sm:p-4 justify-between">
+      {/* Información del producto según diseño de imagen */}
+      <div className="flex flex-col flex-1 p-3 sm:p-3.5 justify-between">
         <div>
+          {/* 1. Categoría */}
+          {product.categoria && (
+            <p className="text-xs font-bold text-slate-900 leading-tight">
+              {product.categoria}
+            </p>
+          )}
+
+          {/* 2. Nombre del producto */}
           <Link href={`/producto/${product.slug}`}>
-            <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-brand transition-colors">
+            <h3 className="text-xs sm:text-sm font-normal text-slate-900 leading-snug line-clamp-2 hover:text-brand transition-colors mt-0.5">
               {product.nombre}
             </h3>
           </Link>
         </div>
 
         {/* Bloque de Precios y Escala */}
-        <div className="mt-2.5 pt-2 border-t border-slate-100">
+        <div className="mt-1.5 pt-1.5 border-t border-slate-100">
           {activeVariant.isAvailable && priceMayor > 0 ? (
-            <div>
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-base sm:text-lg font-black text-slate-900">
-                  {formatUsd(priceMayor)}
+            <div className="space-y-1.5">
+              {/* 3. Sección Mayor */}
+              <div>
+                <span className="text-xs font-medium text-slate-500 block leading-tight">
+                  Mayor: {minMayor}Und
                 </span>
-                <span className="text-xs font-semibold text-slate-500">
-                  {product.unidadVenta}
-                </span>
+                <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
+                  <span className="text-sm sm:text-base font-bold text-brand leading-tight">
+                    {formatUsd(priceMayor)}
+                  </span>
+                  {bcvRate > 0 && (
+                    <span className="text-xs font-normal text-slate-900 leading-tight">
+                      / {formatVes(calculateVesTotal(priceMayor, bcvRate))}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Escala Gran Mayor */}
+              {/* 4. Sección Gran Mayor con fondo verde */}
               {priceGranMayor > 0 && minGranMayor > 0 && (
-                <div className="mt-1 text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded inline-block">
-                  Gran Mayor: {formatUsd(priceGranMayor)} (desde {minGranMayor} Unidades)
+                <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80">
+                  <span className="text-xs font-medium text-slate-600 block leading-tight">
+                    Gran Mayor: {minGranMayor}Und
+                  </span>
+                  <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
+                    <span className="text-sm sm:text-base font-bold text-brand leading-tight">
+                      {formatUsd(priceGranMayor)}
+                    </span>
+                    {bcvRate > 0 && (
+                      <span className="text-xs font-normal text-emerald-800 leading-tight">
+                        / {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
