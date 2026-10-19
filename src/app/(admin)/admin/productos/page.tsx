@@ -1072,6 +1072,7 @@ export default function AdminProductosPage() {
                   onChange={(e) => {
                     if (e.target.files && mediaProduct.id) {
                       handleUploadPhotos(mediaProduct.id, e.target.files);
+                      e.target.value = "";
                     }
                   }}
                   className="hidden"

@@ -26,7 +26,8 @@ import {
 interface GalleryProps {
   photos: { url: string; alt?: string; varianteColor?: string }[];
   videoUrl?: string;
-  selectedColor?: string;
+  activeIdx: number;
+  onSelectIndex: (idx: number) => void;
   productName: string;
   status: import("@/types/product").ProductStockStatus;
 }
@@ -35,11 +36,17 @@ type MediaItem =
   | { type: "photo"; url: string; alt: string; varianteColor?: string }
   | { type: "video"; url: string; alt: string; varianteColor?: string };
 
-function ProductGallery({ photos, videoUrl, selectedColor, productName, status }: GalleryProps) {
-  const safePhotos = (photos || []).slice(0, 10);
-
+function ProductGallery({
+  photos,
+  videoUrl,
+  activeIdx,
+  onSelectIndex,
+  productName,
+  status,
+}: GalleryProps) {
   // Lista unificada de items multimedia: hasta 10 fotos y 1 video
   const mediaItems: MediaItem[] = React.useMemo(() => {
+    const safePhotos = (photos || []).slice(0, 10);
     const items: MediaItem[] = safePhotos.map((p) => ({
       type: "photo",
       url: p.url,
@@ -61,36 +68,52 @@ function ProductGallery({ photos, videoUrl, selectedColor, productName, status }
       });
     }
     return items;
-  }, [safePhotos, videoUrl, productName]);
+  }, [photos, videoUrl, productName]);
 
-  const [activeIdx, setActiveIdx] = useState(0);
+  const safeIdx = Math.max(0, Math.min(activeIdx, mediaItems.length - 1));
+  const activeItem = mediaItems[safeIdx] || mediaItems[0];
 
-  // Cuando cambia el color de variante seleccionado, saltar automáticamente a la foto correspondiente
-  React.useEffect(() => {
-    if (!selectedColor) return;
-    const matchIdx = mediaItems.findIndex(
-      (item) => item.type === "photo" && item.varianteColor?.trim().toLowerCase() === selectedColor.trim().toLowerCase()
-    );
-    if (matchIdx >= 0) {
-      setActiveIdx(matchIdx);
+  // Soporte táctil / swipe para dispositivos móviles
+  const touchStartX = React.useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    touchStartX.current = null;
+
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        // Deslizar izquierda -> siguiente
+        onSelectIndex(safeIdx < mediaItems.length - 1 ? safeIdx + 1 : 0);
+      } else {
+        // Deslizar derecha -> anterior
+        onSelectIndex(safeIdx > 0 ? safeIdx - 1 : mediaItems.length - 1);
+      }
     }
-  }, [selectedColor, mediaItems]);
-
-  const activeItem = mediaItems[activeIdx] || mediaItems[0];
+  };
 
   return (
     <div className="space-y-3 w-full">
       {/* Visor Principal */}
-      <div className="relative aspect-square sm:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-inner flex items-center justify-center">
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative aspect-square sm:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-200/80 shadow-xs flex items-center justify-center select-none"
+      >
         {activeItem.type === "photo" ? (
           <Image
             src={activeItem.url}
             alt={activeItem.alt}
             fill
-            priority={activeIdx === 0}
+            priority={safeIdx === 0}
             unoptimized={true}
             sizes="(max-width: 768px) 100vw, 512px"
-            className="object-cover object-center bg-slate-50"
+            className="object-contain object-center"
           />
         ) : (
           <video
@@ -120,7 +143,7 @@ function ProductGallery({ photos, videoUrl, selectedColor, productName, status }
             ) : (
               <span>
                 {activeItem.varianteColor ? `${activeItem.varianteColor} · ` : ""}
-                {activeIdx + 1} / {mediaItems.length}
+                {safeIdx + 1} / {mediaItems.length}
               </span>
             )}
           </div>
@@ -131,9 +154,9 @@ function ProductGallery({ photos, videoUrl, selectedColor, productName, status }
           <>
             <button
               type="button"
-              onClick={() => setActiveIdx((i) => (i > 0 ? i - 1 : mediaItems.length - 1))}
+              onClick={() => onSelectIndex(safeIdx > 0 ? safeIdx - 1 : mediaItems.length - 1)}
               aria-label="Anterior"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 backdrop-blur-xs shadow-md transition-all active:scale-90"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 backdrop-blur-xs shadow-md transition-all active:scale-90 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -141,9 +164,9 @@ function ProductGallery({ photos, videoUrl, selectedColor, productName, status }
             </button>
             <button
               type="button"
-              onClick={() => setActiveIdx((i) => (i < mediaItems.length - 1 ? i + 1 : 0))}
+              onClick={() => onSelectIndex(safeIdx < mediaItems.length - 1 ? safeIdx + 1 : 0)}
               aria-label="Siguiente"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 backdrop-blur-xs shadow-md transition-all active:scale-90"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 backdrop-blur-xs shadow-md transition-all active:scale-90 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -157,14 +180,14 @@ function ProductGallery({ photos, videoUrl, selectedColor, productName, status }
       {mediaItems.length > 1 && (
         <div className="flex gap-2.5 overflow-x-auto pb-1.5 pt-1 px-1 justify-start sm:justify-center scrollbar-thin">
           {mediaItems.map((item, idx) => {
-            const isSelected = idx === activeIdx;
+            const isSelected = idx === safeIdx;
             return (
               <button
                 key={idx}
                 type="button"
-                onClick={() => setActiveIdx(idx)}
+                onClick={() => onSelectIndex(idx)}
                 aria-label={`Ver item ${idx + 1}`}
-                className={`relative flex-shrink-0 w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden border-2 transition-all ${
+                className={`relative flex-shrink-0 w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                   isSelected
                     ? "border-brand shadow-md scale-105 ring-2 ring-brand/20 opacity-100"
                     : "border-slate-200 opacity-60 hover:opacity-100 bg-slate-100"
@@ -241,6 +264,53 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const minGranMayor = activeVariant.minGranMayor || 100;
   const priceMayor = activeVariant.precioMayorUsd ?? 0;
   const priceGranMayor = activeVariant.precioGranMayorUsd ?? 0;
+
+  // Índice de foto/video activa en la galería
+  const [activeMediaIdx, setActiveMediaIdx] = useState<number>(() => {
+    const initialVariant = variants.find((v) => v.isAvailable) || variants[0];
+    if (initialVariant?.color && product.fotos && product.fotos.length > 0) {
+      const matchIdx = product.fotos.findIndex(
+        (f) => f.varianteColor?.trim().toLowerCase() === initialVariant.color?.trim().toLowerCase()
+      );
+      if (matchIdx >= 0) return matchIdx;
+    }
+    return 0;
+  });
+
+  // Manejar selección de variante por botón
+  const handleSelectVariant = (variant: ProductVariant) => {
+    setSelectedSku(variant.sku);
+    setPackCount(1);
+    setStockAlertMessage(null);
+
+    // Si la variante tiene una foto asignada, saltar a ella en el carrusel
+    if (variant.color && product.fotos && product.fotos.length > 0) {
+      const matchIdx = product.fotos.findIndex(
+        (f) => f.varianteColor?.trim().toLowerCase() === variant.color?.trim().toLowerCase()
+      );
+      if (matchIdx >= 0) {
+        setActiveMediaIdx(matchIdx);
+      }
+    }
+  };
+
+  // Manejar selección de foto/video desde miniaturas o flechas del carrusel
+  const handleSelectMedia = (idx: number) => {
+    setActiveMediaIdx(idx);
+
+    // Si la foto seleccionada tiene una variante de color asociada, sincronizar también la variante
+    const photo = product.fotos?.[idx];
+    if (photo?.varianteColor) {
+      const matchingVariant = variants.find(
+        (v) => v.color?.trim().toLowerCase() === photo.varianteColor?.trim().toLowerCase()
+      );
+      if (matchingVariant && matchingVariant.sku !== selectedSku) {
+        setSelectedSku(matchingVariant.sku);
+        setPackCount(1);
+        setStockAlertMessage(null);
+      }
+    }
+  };
 
   // Selección de Tarifa: "mayor" | "gran_mayor"
   const [selectedTier, setSelectedTier] = useState<"mayor" | "gran_mayor">("mayor");
@@ -364,7 +434,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           <ProductGallery
             photos={product.fotos}
             videoUrl={product.videoUrl}
-            selectedColor={activeVariant.color}
+            activeIdx={activeMediaIdx}
+            onSelectIndex={handleSelectMedia}
             productName={product.nombre}
             status={activeVariant.status}
           />
@@ -402,12 +473,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     <button
                       key={v.sku}
                       type="button"
-                      onClick={() => {
-                        setSelectedSku(v.sku);
-                        setPackCount(1);
-                        setStockAlertMessage(null);
-                      }}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border touch-target ${
+                      onClick={() => handleSelectVariant(v)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border touch-target cursor-pointer ${
                         isSelected
                           ? "bg-brand text-white border-brand shadow-sm scale-105"
                           : "bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-white"
