@@ -16,6 +16,14 @@ export interface StoreSettings {
   navBgColor: string;
   // Tipografía
   fontScale: "sm" | "base" | "lg";
+  // Tipografía y Márgenes de Tarjetas de Producto
+  cardCategoryFontSize?: string;
+  cardTitleFontSize?: string;
+  cardMayorFontSize?: string;
+  cardGranMayorFontSize?: string;
+  cardPaddingY?: string;
+  cardPaddingX?: string;
+  cardLineSpacing?: string;
   // Logo y WhatsApp
   logoUrl: string | null;
   whatsappNumber: string;
@@ -57,6 +65,13 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   softBgColor: "#f0fdf4",
   topBarTextColor: "#f0fdf4",
   fontScale: "base",
+  cardCategoryFontSize: "11px",
+  cardTitleFontSize: "13px",
+  cardMayorFontSize: "15px",
+  cardGranMayorFontSize: "14px",
+  cardPaddingY: "4px",
+  cardPaddingX: "10px",
+  cardLineSpacing: "3px",
   logoUrl: null,
   whatsappNumber: "584227864547",
   heroTitle: "Suministros y Empaques al Mayor para tu Restaurante",

@@ -52,6 +52,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     `Hola Sumilisto, quisiera consultar disponibilidad y precio del producto: ${product.nombre} (SKU: ${currentSku})`
   )}`;
 
+  const categorySize = theme.cardCategoryFontSize || "11px";
+  const titleSize = theme.cardTitleFontSize || "13px";
+  const mayorSize = theme.cardMayorFontSize || "15px";
+  const granMayorSize = theme.cardGranMayorFontSize || "14px";
+  const padY = theme.cardPaddingY || "4px";
+  const padX = theme.cardPaddingX || "10px";
+  const lineSpacing = theme.cardLineSpacing || "3px";
+
   return (
     <div className="group relative flex flex-col bg-white rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-card transition-all duration-200 overflow-hidden">
       {/* Contenedor de la Imagen con Botón '+' en esquina inferior derecha */}
@@ -106,35 +114,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
       </div>
 
-      {/* Información del producto según diseño de imagen */}
-      <div className="flex flex-col flex-1 p-3 sm:p-3.5 justify-between">
+      {/* Información del producto según diseño de imagen y configuración de theme */}
+      <div
+        style={{
+          paddingTop: padY,
+          paddingBottom: padY,
+          paddingLeft: padX,
+          paddingRight: padX,
+        }}
+        className="flex flex-col flex-1 justify-between"
+      >
         <div>
           {/* 1. Categoría */}
           {product.categoria && (
-            <p className="text-xs font-bold text-slate-900 leading-tight">
+            <p
+              style={{ fontSize: categorySize }}
+              className="font-bold text-slate-900 leading-tight"
+            >
               {product.categoria}
             </p>
           )}
 
           {/* 2. Nombre del producto */}
           <Link href={`/producto/${product.slug}`}>
-            <h3 className="text-xs sm:text-sm font-normal text-slate-900 leading-snug line-clamp-2 hover:text-brand transition-colors mt-0.5">
+            <h3
+              style={{ fontSize: titleSize, marginTop: lineSpacing }}
+              className="font-normal text-slate-900 leading-snug line-clamp-2 hover:text-brand transition-colors"
+            >
               {product.nombre}
             </h3>
           </Link>
         </div>
 
         {/* Bloque de Precios y Escala */}
-        <div className="mt-1.5 pt-1.5 border-t border-slate-100">
+        <div
+          style={{ marginTop: lineSpacing, paddingTop: lineSpacing }}
+          className="border-t border-slate-100"
+        >
           {activeVariant.isAvailable && priceMayor > 0 ? (
-            <div className="space-y-1.5">
+            <div style={{ gap: lineSpacing }} className="flex flex-col">
               {/* 3. Sección Mayor */}
               <div>
-                <span className="text-xs font-medium text-slate-500 block leading-tight">
+                <span className="text-[11px] font-medium text-slate-500 block leading-tight">
                   Mayor: {minMayor}Und
                 </span>
                 <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
-                  <span className="text-sm sm:text-base font-bold text-brand leading-tight">
+                  <span
+                    style={{ fontSize: mayorSize }}
+                    className="font-bold text-brand leading-tight"
+                  >
                     {formatUsd(priceMayor)}
                   </span>
                   {bcvRate > 0 && (
@@ -148,11 +176,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {/* 4. Sección Gran Mayor con fondo verde */}
               {priceGranMayor > 0 && minGranMayor > 0 && (
                 <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80">
-                  <span className="text-xs font-medium text-slate-600 block leading-tight">
+                  <span className="text-[11px] font-medium text-slate-600 block leading-tight">
                     Gran Mayor: {minGranMayor}Und
                   </span>
                   <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
-                    <span className="text-sm sm:text-base font-bold text-brand leading-tight">
+                    <span
+                      style={{ fontSize: granMayorSize }}
+                      className="font-bold text-brand leading-tight"
+                    >
                       {formatUsd(priceGranMayor)}
                     </span>
                     {bcvRate > 0 && (

@@ -57,6 +57,15 @@ export default function AdminSettingsPage() {
   const [navLabelBuscar, setNavLabelBuscar] = useState(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
   const [navLabelDespachos, setNavLabelDespachos] = useState(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
 
+  // Tipografía y Márgenes de Tarjetas de Producto
+  const [cardCategoryFontSize, setCardCategoryFontSize] = useState(theme.cardCategoryFontSize || DEFAULT_SETTINGS.cardCategoryFontSize || "11px");
+  const [cardTitleFontSize, setCardTitleFontSize] = useState(theme.cardTitleFontSize || DEFAULT_SETTINGS.cardTitleFontSize || "13px");
+  const [cardMayorFontSize, setCardMayorFontSize] = useState(theme.cardMayorFontSize || DEFAULT_SETTINGS.cardMayorFontSize || "15px");
+  const [cardGranMayorFontSize, setCardGranMayorFontSize] = useState(theme.cardGranMayorFontSize || DEFAULT_SETTINGS.cardGranMayorFontSize || "14px");
+  const [cardPaddingY, setCardPaddingY] = useState(theme.cardPaddingY || DEFAULT_SETTINGS.cardPaddingY || "4px");
+  const [cardPaddingX, setCardPaddingX] = useState(theme.cardPaddingX || DEFAULT_SETTINGS.cardPaddingX || "10px");
+  const [cardLineSpacing, setCardLineSpacing] = useState(theme.cardLineSpacing || DEFAULT_SETTINGS.cardLineSpacing || "3px");
+
   // Estado para Tasa BCV (Exclusivamente de https://www.bcv.org.ve/)
   const [bcvRate, setBcvRate] = useState<number>(880.12);
   const [bcvManualInput, setBcvManualInput] = useState<string>("880.12");
@@ -164,6 +173,14 @@ export default function AdminSettingsPage() {
     setNavLabelCarrito(theme.navLabelCarrito || DEFAULT_SETTINGS.navLabelCarrito);
     setNavLabelBuscar(theme.navLabelBuscar || DEFAULT_SETTINGS.navLabelBuscar);
     setNavLabelDespachos(theme.navLabelDespachos || DEFAULT_SETTINGS.navLabelDespachos);
+
+    setCardCategoryFontSize(theme.cardCategoryFontSize || DEFAULT_SETTINGS.cardCategoryFontSize || "11px");
+    setCardTitleFontSize(theme.cardTitleFontSize || DEFAULT_SETTINGS.cardTitleFontSize || "13px");
+    setCardMayorFontSize(theme.cardMayorFontSize || DEFAULT_SETTINGS.cardMayorFontSize || "15px");
+    setCardGranMayorFontSize(theme.cardGranMayorFontSize || DEFAULT_SETTINGS.cardGranMayorFontSize || "14px");
+    setCardPaddingY(theme.cardPaddingY || DEFAULT_SETTINGS.cardPaddingY || "4px");
+    setCardPaddingX(theme.cardPaddingX || DEFAULT_SETTINGS.cardPaddingX || "10px");
+    setCardLineSpacing(theme.cardLineSpacing || DEFAULT_SETTINGS.cardLineSpacing || "3px");
   }, [theme]);
 
   // Verifica con el servidor si ya hay una sesión de administrador válida
@@ -236,6 +253,14 @@ export default function AdminSettingsPage() {
       navLabelCarrito: navLabelCarrito.trim(),
       navLabelBuscar: navLabelBuscar.trim(),
       navLabelDespachos: navLabelDespachos.trim(),
+      // Tipografía y Márgenes de Tarjetas
+      cardCategoryFontSize: cardCategoryFontSize.trim(),
+      cardTitleFontSize: cardTitleFontSize.trim(),
+      cardMayorFontSize: cardMayorFontSize.trim(),
+      cardGranMayorFontSize: cardGranMayorFontSize.trim(),
+      cardPaddingY: cardPaddingY.trim(),
+      cardPaddingX: cardPaddingX.trim(),
+      cardLineSpacing: cardLineSpacing.trim(),
     } as any);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
@@ -631,6 +656,314 @@ export default function AdminSettingsPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── TIPOGRAFÍA Y MÁRGENES DE TARJETAS ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider">
+                <Type className="w-4 h-4 text-brand" /> Tipografía y Márgenes de Tarjetas
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Ajusta manualmente el tamaño de cada texto y los márgenes verticales para eliminar espacios innecesarios y optimizar la visibilidad.
+              </p>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand/10 text-brand self-start sm:self-auto">
+              Tipografía: Roboto
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Controles de ajuste */}
+            <div className="lg:col-span-7 space-y-5">
+              {/* Márgenes y Relleno Vertical */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Layout className="w-3.5 h-3.5 text-brand" /> Márgenes y Espaciado (Eliminar Espacio Perdido)
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Margen Superior e Inferior (Arriba y Abajo)
+                    </label>
+                    <input
+                      type="text"
+                      value={cardPaddingY}
+                      onChange={(e) => setCardPaddingY(e.target.value)}
+                      placeholder="4px"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    />
+                    <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                      {["2px", "4px", "6px", "8px", "12px"].map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setCardPaddingY(p)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${cardPaddingY === p ? "bg-brand text-white border-brand" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"}`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      Espacio entre Líneas / Bloques
+                    </label>
+                    <input
+                      type="text"
+                      value={cardLineSpacing}
+                      onChange={(e) => setCardLineSpacing(e.target.value)}
+                      placeholder="3px"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    />
+                    <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                      {["2px", "3px", "4px", "6px"].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setCardLineSpacing(s)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${cardLineSpacing === s ? "bg-brand text-white border-brand" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    Margen Lateral (Izquierda y Derecha)
+                  </label>
+                  <input
+                    type="text"
+                    value={cardPaddingX}
+                    onChange={(e) => setCardPaddingX(e.target.value)}
+                    placeholder="10px"
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                  />
+                  <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                    {["6px", "8px", "10px", "12px", "14px"].map((pxVal) => (
+                      <button
+                        key={pxVal}
+                        type="button"
+                        onClick={() => setCardPaddingX(pxVal)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${cardPaddingX === pxVal ? "bg-brand text-white border-brand" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"}`}
+                      >
+                        {pxVal}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tamaños de Tipografía */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Type className="w-3.5 h-3.5 text-brand" /> Tamaños de Tipografía (en píxeles px)
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      1. Tamaño de Categoría (Negrita)
+                    </label>
+                    <input
+                      type="text"
+                      value={cardCategoryFontSize}
+                      onChange={(e) => setCardCategoryFontSize(e.target.value)}
+                      placeholder="11px"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    />
+                    <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                      {["9px", "10px", "11px", "12px", "13px"].map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setCardCategoryFontSize(sz)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${cardCategoryFontSize === sz ? "bg-brand text-white border-brand" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"}`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      2. Tamaño Nombre de Producto (Normal)
+                    </label>
+                    <input
+                      type="text"
+                      value={cardTitleFontSize}
+                      onChange={(e) => setCardTitleFontSize(e.target.value)}
+                      placeholder="13px"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    />
+                    <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                      {["11px", "12px", "13px", "14px", "15px"].map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setCardTitleFontSize(sz)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${cardTitleFontSize === sz ? "bg-brand text-white border-brand" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"}`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      3. Tamaño Precio Mayor ($ / Bs)
+                    </label>
+                    <input
+                      type="text"
+                      value={cardMayorFontSize}
+                      onChange={(e) => setCardMayorFontSize(e.target.value)}
+                      placeholder="15px"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    />
+                    <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                      {["13px", "14px", "15px", "16px", "18px"].map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setCardMayorFontSize(sz)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${cardMayorFontSize === sz ? "bg-brand text-white border-brand" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"}`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      4. Tamaño Precio Gran Mayor (Recuadro Verde)
+                    </label>
+                    <input
+                      type="text"
+                      value={cardGranMayorFontSize}
+                      onChange={(e) => setCardGranMayorFontSize(e.target.value)}
+                      placeholder="14px"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    />
+                    <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                      {["12px", "13px", "14px", "15px", "16px"].map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setCardGranMayorFontSize(sz)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${cardGranMayorFontSize === sz ? "bg-brand text-white border-brand" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"}`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Vista Previa en Vivo */}
+            <div className="lg:col-span-5 bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col items-center">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
+                Vista Previa en Vivo
+              </span>
+              
+              <div className="w-full max-w-[240px] bg-white rounded-2xl border border-slate-200/80 shadow-card overflow-hidden">
+                {/* Mock Imagen */}
+                <div className="relative aspect-square w-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                  <img
+                    src="https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=400&q=80"
+                    alt="Muestra de producto"
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Botón '+' en esquina */}
+                  <div className="absolute bottom-2.5 right-2.5 w-9 h-9 rounded-xl bg-brand text-white shadow-md flex items-center justify-center">
+                    <Plus className="w-5 h-5 stroke-[2.5]" />
+                  </div>
+                </div>
+
+                {/* Info con estilos en vivo */}
+                <div
+                  style={{
+                    paddingTop: cardPaddingY,
+                    paddingBottom: cardPaddingY,
+                    paddingLeft: cardPaddingX,
+                    paddingRight: cardPaddingX,
+                  }}
+                  className="flex flex-col"
+                >
+                  <div>
+                    <p
+                      style={{ fontSize: cardCategoryFontSize }}
+                      className="font-bold text-slate-900 leading-tight"
+                    >
+                      Bolsas para Café
+                    </p>
+                    <p
+                      style={{ fontSize: cardTitleFontSize, marginTop: cardLineSpacing }}
+                      className="font-normal text-slate-900 leading-snug line-clamp-2"
+                    >
+                      Bolsa Kraft 250gr con Válvula Desgasificadora
+                    </p>
+                  </div>
+
+                  <div
+                    style={{ marginTop: cardLineSpacing, paddingTop: cardLineSpacing }}
+                    className="border-t border-slate-100"
+                  >
+                    <div style={{ gap: cardLineSpacing }} className="flex flex-col">
+                      <div>
+                        <span className="text-[11px] font-medium text-slate-500 block leading-tight">
+                          Mayor: 50Und
+                        </span>
+                        <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
+                          <span
+                            style={{ fontSize: cardMayorFontSize }}
+                            className="font-bold text-brand leading-tight"
+                          >
+                            $0.45
+                          </span>
+                          <span className="text-xs font-normal text-slate-900 leading-tight">
+                            / Bs. 396,05
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-1.5 rounded-lg bg-emerald-50 border border-emerald-100/80">
+                        <span className="text-[11px] font-medium text-slate-600 block leading-tight">
+                          Gran Mayor: 500Und
+                        </span>
+                        <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
+                          <span
+                            style={{ fontSize: cardGranMayorFontSize }}
+                            className="font-bold text-brand leading-tight"
+                          >
+                            $0.38
+                          </span>
+                          <span className="text-xs font-normal text-emerald-800 leading-tight">
+                            / Bs. 334,45
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-500 text-center mt-3">
+                Los cambios se previsualizan aquí en tiempo real y se aplicarán al catálogo al pulsar <strong>Guardar Cambios</strong>.
+              </p>
             </div>
           </div>
         </section>
