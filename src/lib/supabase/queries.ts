@@ -187,8 +187,39 @@ export async function deleteVariant(id: string) {
 }
 
 // ─────────────────────────────────────────────────────────
-// FOTOS: SUBIR Y ELIMINAR
+// FOTOS: SUBIR Y ELIMINAR (Con Renombrado SEO Automático)
 // ─────────────────────────────────────────────────────────
+
+function generateSeoImageName(
+  fileName: string,
+  productName?: string,
+  variantColor?: string
+): string {
+  const ext = fileName.split(".").pop()?.toLowerCase() || "jpg";
+  const safeExt = ext === "jpeg" ? "jpg" : ext.replace(/[^a-z0-9]/g, "");
+
+  if (productName && productName.trim().length > 0 && productName !== "Producto") {
+    const slug = productName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    const variantPart = variantColor && variantColor.trim() !== ""
+      ? `-${variantColor.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`
+      : "";
+
+    return `${slug}${variantPart}-${Date.now()}.${safeExt}`;
+  }
+
+  // Fallback si no hay nombre de producto
+  const cleanBase = fileName
+    .split(".")[0]
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .toLowerCase();
+  return `${cleanBase}-${Date.now()}.${safeExt}`;
+}
 
 export async function uploadProductPhoto(
   productoId: string,
@@ -206,9 +237,22 @@ export async function uploadProductPhoto(
     throw new Error("Este producto ya alcanzó el límite máximo de 10 fotos.");
   }
 
-  // 1. Sanitizar nombre de archivo y convertir a Buffer para evitar errores de streaming en Node.js
-  const cleanFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const filePath = `${productoId}/${Date.now()}-${cleanFileName}`;
+  // 1. Obtener nombre del producto para SEO si no viene en options.alt
+  let resolvedProductName = options?.alt;
+  if (!resolvedProductName || resolvedProductName.trim() === "" || resolvedProductName === "Producto") {
+    const { data: prodData } = await supabaseAdmin
+      .from("productos")
+      .select("nombre")
+      .eq("id", productoId)
+      .single();
+    if (prodData?.nombre) {
+      resolvedProductName = prodData.nombre;
+    }
+  }
+
+  // 2. Renombrar automáticamente para SEO perfecto
+  const cleanFileName = generateSeoImageName(fileName, resolvedProductName, options?.varianteColor);
+  const filePath = `${productoId}/${cleanFileName}`;
 
   const arrayBuffer = file instanceof File ? await file.arrayBuffer() : file;
   const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
@@ -223,14 +267,14 @@ export async function uploadProductPhoto(
 
   if (uploadError) throw new Error(uploadError.message);
 
-  // 2. Obtener URL pública
+  // 3. Obtener URL pública
   const { data: urlData } = supabaseAdmin.storage
     .from("productos")
     .getPublicUrl(filePath);
 
   const publicUrl = urlData.publicUrl;
 
-  // 3. Si es primaria, desmarcar fotos anteriores del producto
+  // 4. Si es primaria, desmarcar fotos anteriores del producto
   if (options?.isPrimary) {
     await supabaseAdmin
       .from("producto_fotos")
@@ -238,13 +282,14 @@ export async function uploadProductPhoto(
       .eq("producto_id", productoId);
   }
 
-  // 4. Registrar en la tabla producto_fotos con su variante asignada si aplica
+  // 5. Registrar en la tabla producto_fotos con alt y variante asignada
+  const finalAlt = resolvedProductName || fileName;
   const { data: fotoData, error: fotoError } = await supabaseAdmin
     .from("producto_fotos")
     .insert({
       producto_id: productoId,
       url: publicUrl,
-      alt: options?.alt || fileName,
+      alt: finalAlt,
       orden: options?.orden || 0,
       is_primary: options?.isPrimary ?? false,
       variante_color: options?.varianteColor || null,
