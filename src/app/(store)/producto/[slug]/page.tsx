@@ -14,7 +14,10 @@ interface ProductPageProps {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   const allProducts = await getProducts();
-  const product = allProducts.find((p) => p.slug === slug);
+  const decoded = decodeURIComponent(slug).toLowerCase();
+  const product = allProducts.find(
+    (p) => p.slug.toLowerCase() === decoded || decodeURIComponent(p.slug).toLowerCase() === decoded
+  );
 
   if (!product) {
     return { title: "Producto no encontrado" };
@@ -39,7 +42,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const [allProducts, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
-  const product = allProducts.find((p) => p.slug === slug);
+  const decoded = decodeURIComponent(slug).toLowerCase();
+  const product = allProducts.find(
+    (p) => p.slug.toLowerCase() === decoded || decodeURIComponent(p.slug).toLowerCase() === decoded
+  );
 
   if (!product) {
     notFound();

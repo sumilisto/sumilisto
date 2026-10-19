@@ -10,6 +10,7 @@ export interface ProductPhoto {
 }
 
 export interface ProductVariant {
+  id?: string;
   sku: string;
   color?: string;
   presentacion: string;
@@ -43,6 +44,7 @@ export interface Product {
   destacado?: boolean;
   etiquetas?: string[];
   fotos: ProductPhoto[];
+  videoUrl?: string;              // URL del video de demostración (hasta 1 video)
   descripcionLarga?: string;
   // Campos calculados para UI
   status: ProductStockStatus;

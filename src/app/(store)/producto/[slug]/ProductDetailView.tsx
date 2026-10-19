@@ -18,62 +18,163 @@ import {
   Plus,
   Minus,
   AlertTriangle,
+  Play,
+  Video,
 } from "lucide-react";
 
-// ──── Galería de imágenes (hasta 10 fotos) ────
+// ──── Galería multimedia (hasta 10 fotos y 1 video) ────
 interface GalleryProps {
   photos: { url: string; alt?: string }[];
+  videoUrl?: string;
   productName: string;
   status: import("@/types/product").ProductStockStatus;
 }
-function ProductGallery({ photos, productName, status }: GalleryProps) {
-  const safePhotos = photos.slice(0, 10);
+
+type MediaItem =
+  | { type: "photo"; url: string; alt: string }
+  | { type: "video"; url: string; alt: string };
+
+function ProductGallery({ photos, videoUrl, productName, status }: GalleryProps) {
+  const safePhotos = (photos || []).slice(0, 10);
+
+  // Lista unificada de items multimedia: hasta 10 fotos y 1 video
+  const mediaItems: MediaItem[] = React.useMemo(() => {
+    const items: MediaItem[] = safePhotos.map((p) => ({
+      type: "photo",
+      url: p.url,
+      alt: p.alt || productName,
+    }));
+    if (videoUrl) {
+      items.push({
+        type: "video",
+        url: videoUrl,
+        alt: `Video demostración de ${productName}`,
+      });
+    }
+    if (items.length === 0) {
+      items.push({
+        type: "photo",
+        url: "https://placehold.co/600x600/f1f5f9/94a3b8?text=Sin+Foto",
+        alt: productName,
+      });
+    }
+    return items;
+  }, [safePhotos, videoUrl, productName]);
+
   const [activeIdx, setActiveIdx] = useState(0);
 
   // Garantizar que siempre inicie en la 1era foto cuando cambian las fotos o variante
   React.useEffect(() => {
     setActiveIdx(0);
-  }, [photos]);
+  }, [photos, videoUrl]);
 
-  const mainUrl = safePhotos[activeIdx]?.url ||
-    "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=1000&q=80";
+  const activeItem = mediaItems[activeIdx] || mediaItems[0];
 
   return (
     <div className="space-y-3 w-full">
-      <div className="relative aspect-square sm:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-inner">
-        <Image src={mainUrl} alt={productName} fill priority unoptimized={true}
-          sizes="(max-width: 768px) 100vw, 512px"
-          className="object-cover object-center" />
+      {/* Visor Principal */}
+      <div className="relative aspect-square sm:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-inner flex items-center justify-center">
+        {activeItem.type === "photo" ? (
+          <Image
+            src={activeItem.url}
+            alt={activeItem.alt}
+            fill
+            priority={activeIdx === 0}
+            unoptimized={true}
+            sizes="(max-width: 768px) 100vw, 512px"
+            className="object-cover object-center bg-slate-50"
+          />
+        ) : (
+          <video
+            src={activeItem.url}
+            controls
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-contain bg-black"
+          />
+        )}
+
+        {/* Badge de disponibilidad */}
         <div className="absolute top-3 left-3 z-10">
           <Badge status={status} />
         </div>
-        {safePhotos.length > 1 && (
+
+        {/* Contador / Indicador de tipo */}
+        {mediaItems.length > 1 && (
+          <div className="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm">
+            {activeItem.type === "video" ? (
+              <>
+                <Video className="w-3.5 h-3.5 text-rose-400" />
+                <span>Video</span>
+              </>
+            ) : (
+              <span>{activeIdx + 1} / {mediaItems.length}</span>
+            )}
+          </div>
+        )}
+
+        {/* Flechas de navegación */}
+        {mediaItems.length > 1 && (
           <>
-            <button type="button" onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setActiveIdx((i) => (i > 0 ? i - 1 : mediaItems.length - 1))}
+              aria-label="Anterior"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 backdrop-blur-xs shadow-md transition-all active:scale-90"
+            >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <button type="button" onClick={() => setActiveIdx(i => Math.min(safePhotos.length - 1, i + 1))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setActiveIdx((i) => (i < mediaItems.length - 1 ? i + 1 : 0))}
+              aria-label="Siguiente"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 backdrop-blur-xs shadow-md transition-all active:scale-90"
+            >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </>
         )}
       </div>
-      {safePhotos.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 justify-center">
-          {safePhotos.map((photo, idx) => (
-            <button key={idx} type="button" onClick={() => setActiveIdx(idx)}
-              className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all ${
-                idx === activeIdx ? "border-brand shadow-md" : "border-slate-200 opacity-60 hover:opacity-100"
-              }`}>
-              <img src={photo.url} alt={(photo as any).alt || productName} className="w-full h-full object-cover" />
-            </button>
-          ))}
+
+      {/* Miniaturas de fotos y video */}
+      {mediaItems.length > 1 && (
+        <div className="flex gap-2.5 overflow-x-auto pb-1.5 pt-1 px-1 justify-start sm:justify-center scrollbar-thin">
+          {mediaItems.map((item, idx) => {
+            const isSelected = idx === activeIdx;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveIdx(idx)}
+                aria-label={`Ver item ${idx + 1}`}
+                className={`relative flex-shrink-0 w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden border-2 transition-all ${
+                  isSelected
+                    ? "border-brand shadow-md scale-105 ring-2 ring-brand/20 opacity-100"
+                    : "border-slate-200 opacity-60 hover:opacity-100 bg-slate-100"
+                }`}
+              >
+                {item.type === "photo" ? (
+                  <img
+                    src={item.url}
+                    alt={item.alt}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center text-white">
+                    <div className="w-7 h-7 rounded-full bg-brand flex items-center justify-center mb-0.5 shadow-xs">
+                      <Play className="w-3.5 h-3.5 text-white ml-0.5 fill-white" />
+                    </div>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-white">Video</span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -242,6 +343,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         <div className="flex flex-col gap-4">
           <ProductGallery
             photos={activeVariant.fotos && activeVariant.fotos.length > 0 ? activeVariant.fotos : product.fotos}
+            videoUrl={product.videoUrl}
             productName={product.nombre}
             status={activeVariant.status}
           />

@@ -196,6 +196,16 @@ export async function uploadProductPhoto(
   fileName: string,
   options?: { alt?: string; orden?: number; isPrimary?: boolean }
 ) {
+  // 0. Validar límite de 10 fotos por producto
+  const { count } = await supabaseAdmin
+    .from("producto_fotos")
+    .select("id", { count: "exact", head: true })
+    .eq("producto_id", productoId);
+
+  if ((count || 0) >= 10) {
+    throw new Error("Este producto ya alcanzó el límite máximo de 10 fotos.");
+  }
+
   // 1. Subir archivo a Storage
   const filePath = `${productoId}/${Date.now()}-${fileName}`;
   const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
@@ -207,7 +217,7 @@ export async function uploadProductPhoto(
 
   if (uploadError) throw new Error(uploadError.message);
 
-  // 2. Obtener URL pública
+// 2. Obtener URL pública
   const { data: urlData } = supabaseAdmin.storage
     .from("productos")
     .getPublicUrl(filePath);
@@ -230,13 +240,32 @@ export async function uploadProductPhoto(
       url: publicUrl,
       alt: options?.alt || fileName,
       orden: options?.orden || 0,
-      is_primary: options?.isPrimary ?? true,
+      is_primary: options?.isPrimary ?? false,
     })
     .select()
     .single();
 
   if (fotoError) throw new Error(fotoError.message);
   return fotoData;
+}
+
+export async function setPrimaryPhoto(productoId: string, fotoId: string) {
+  // Desmarcar todas las fotos del producto
+  await supabaseAdmin
+    .from("producto_fotos")
+    .update({ is_primary: false })
+    .eq("producto_id", productoId);
+
+  // Marcar la seleccionada como primaria
+  const { data, error } = await supabaseAdmin
+    .from("producto_fotos")
+    .update({ is_primary: true })
+    .eq("id", fotoId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export async function deleteProductPhoto(fotoId: string, storageUrl: string) {
@@ -253,6 +282,62 @@ export async function deleteProductPhoto(fotoId: string, storageUrl: string) {
     .from("producto_fotos")
     .delete()
     .eq("id", fotoId);
+
+  if (error) throw new Error(error.message);
+  return true;
+}
+
+// ─────────────────────────────────────────────────────────
+// VIDEO: SUBIR Y ELIMINAR (1 por producto)
+// ─────────────────────────────────────────────────────────
+
+export async function uploadProductVideo(
+  productoId: string,
+  file: File | Buffer,
+  fileName: string
+) {
+  const cleanExt = fileName.split(".").pop() || "mp4";
+  const filePath = `${productoId}/video-${Date.now()}.${cleanExt}`;
+
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from("productos")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: true,
+      contentType: file instanceof File ? file.type : "video/mp4",
+    });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data: urlData } = supabaseAdmin.storage
+    .from("productos")
+    .getPublicUrl(filePath);
+
+  const publicUrl = urlData.publicUrl;
+
+  const { error: updateError } = await supabaseAdmin
+    .from("productos")
+    .update({ video_url: publicUrl })
+    .eq("id", productoId);
+
+  if (updateError) throw new Error(updateError.message);
+  return { url: publicUrl };
+}
+
+export async function deleteProductVideo(productoId: string, storageUrl?: string) {
+  if (storageUrl) {
+    const bucketBase = `/storage/v1/object/public/productos/`;
+    const pathIndex = storageUrl.indexOf(bucketBase);
+    if (pathIndex >= 0) {
+      const filePath = storageUrl.slice(pathIndex + bucketBase.length);
+      await supabaseAdmin.storage.from("productos").remove([filePath]);
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from("productos")
+    .update({ video_url: null })
+    .eq("id", productoId);
 
   if (error) throw new Error(error.message);
   return true;
@@ -284,6 +369,7 @@ export async function getAllProductsAdmin() {
 // ─────────────────────────────────────────────────────────
 function mapDbToProduct(row: any): Product {
   const variantes: ProductVariant[] = (row.variantes || []).map((v: any) => ({
+    id: v.id,
     sku: v.sku,
     color: v.color || "ESTÁNDAR",
     presentacion: v.presentacion || v.color || "Unidad",
@@ -297,8 +383,14 @@ function mapDbToProduct(row: any): Product {
     fotos: [],
   }));
 
-  const fotos: ProductPhoto[] = (row.producto_fotos || [])
-    .sort((a: any, b: any) => (a.orden || 0) - (b.orden || 0))
+  const rawFotos = row.producto_fotos || [];
+  const fotos: ProductPhoto[] = [...rawFotos]
+    .sort((a: any, b: any) => {
+      // Si alguno es primario, va primero
+      if (a.is_primary && !b.is_primary) return -1;
+      if (!a.is_primary && b.is_primary) return 1;
+      return (a.orden || 0) - (b.orden || 0);
+    })
     .map((f: any) => ({
       url: f.url,
       publicId: f.id,
@@ -345,6 +437,7 @@ function mapDbToProduct(row: any): Product {
     activo: row.activo,
     destacado: row.destacado,
     fotos,
+    videoUrl: row.video_url || undefined,
     status: hasAnyAvailable ? "disponible" : "agotado",
     isAvailable: hasAnyAvailable,
     descripcionLarga: row.descripcion,
