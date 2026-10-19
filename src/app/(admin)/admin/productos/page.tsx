@@ -546,6 +546,37 @@ export default function AdminProductosPage() {
     }
   };
 
+  const handleDeleteProduct = async (prod: Product) => {
+    if (!prod?.id) return;
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de que deseas eliminar permanentemente el producto:\n\n"${prod.nombre}" (SKU: ${prod.sku})?\n\nEsta acción eliminará el producto, todas sus variantes y sus fotos de la tienda y del almacenamiento en la nube.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/api/products/${prod.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Error al eliminar producto");
+      }
+      showToast(`Producto "${prod.nombre}" eliminado con éxito`);
+      if (editingProduct?.id === prod.id) {
+        setEditingProduct(null);
+      }
+      if (mediaProduct?.id === prod.id) {
+        setMediaProduct(null);
+      }
+      if (variantProduct?.id === prod.id) {
+        setVariantProduct(null);
+      }
+      await loadProducts();
+    } catch (err: any) {
+      showToast(err.message || "Error al eliminar el producto", "error");
+    }
+  };
+
   // Filtros de búsqueda
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -1009,6 +1040,14 @@ export default function AdminProductosPage() {
                       >
                         <Edit3 className="w-3.5 h-3.5 text-slate-500" />
                         <span>Editar</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProduct(p)}
+                        title="Eliminar producto"
+                        className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -1734,21 +1773,31 @@ export default function AdminProductosPage() {
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setEditingProduct(null)}
-                  className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100"
+                  onClick={() => handleDeleteProduct(editingProduct)}
+                  className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-1.5 transition-colors"
                 >
-                  Cancelar
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Eliminar Producto</span>
                 </button>
-                <button
-                  type="submit"
-                  disabled={savingEdit}
-                  className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50"
-                >
-                  {savingEdit ? "Guardando..." : "Guardar Cambios"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingProduct(null)}
+                    className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingEdit}
+                    className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50"
+                  >
+                    {savingEdit ? "Guardando..." : "Guardar Cambios"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

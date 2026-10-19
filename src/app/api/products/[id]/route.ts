@@ -118,6 +118,13 @@ export async function DELETE(
       }
     }
 
+    // 1. Eliminar fotos de la base de datos
+    await supabaseAdmin.from("producto_fotos").delete().eq("producto_id", id);
+
+    // 2. Eliminar variantes asociadas
+    await supabaseAdmin.from("variantes").delete().eq("producto_id", id);
+
+    // 3. Eliminar producto
     await deleteProduct(id);
     revalidateTag("products");
     return NextResponse.json({ ok: true });
