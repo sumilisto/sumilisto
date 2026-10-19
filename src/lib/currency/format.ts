@@ -50,13 +50,25 @@ export function formatVes(amountInVes: number): string {
 }
 
 /**
- * Convierte el total acumulado en USD a Bolívares usando la tasa BCV
- * IMPORTANTE: Siempre se convierte el total para no acumular discrepancias de redondeo en líneas intermedias
+ * Convierte un monto en USD a Bolívares (VES) usando la tasa BCV oficial:
+ * 1. Redondea los dólares a 2 decimales para hacer la multiplicación.
+ * 2. Redondea la tasa del Banco Central a 2 decimales para hacer la multiplicación (para coincidir con lo mostrado al cliente).
+ * 3. Multiplica ambos valores con precisión entera.
+ * 4. Redondea el resultado final a 2 decimales.
  */
 export function calculateVesTotal(totalUsd: number, bcvRate: number): number {
-  if (totalUsd <= 0 || bcvRate <= 0) return 0;
-  // Aritmética precisa en centavos
-  const totalCents = Math.round(totalUsd * 100);
-  const totalVes = (totalCents * bcvRate) / 100;
-  return Math.round(totalVes * 100) / 100;
+  if (!Number.isFinite(totalUsd) || totalUsd <= 0 || !Number.isFinite(bcvRate) || bcvRate <= 0) {
+    return 0;
+  }
+
+  // Redondear los dólares a 2 decimales en centavos enteros
+  const usdCents = Math.round(totalUsd * 100);
+
+  // Redondear la tasa del Banco Central a 2 decimales en centavos enteros
+  const rateCents = Math.round(bcvRate * 100);
+
+  // Multiplicación en aritmética entera y redondeo del resultado a 2 decimales
+  const totalVesCents = Math.round((usdCents * rateCents) / 100);
+
+  return totalVesCents / 100;
 }

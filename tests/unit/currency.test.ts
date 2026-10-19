@@ -35,4 +35,16 @@ describe("Formateo de Moneda y Conversión es-VE (Currency Module)", () => {
     const totalVes = calculateVesTotal(totalUsd, bcvRate);
     expect(totalVes).toBe(1211.25);
   });
+
+  it("redondea los dólares y la tasa BCV a 2 decimales para hacer la multiplicación y devuelve el resultado a 2 decimales", () => {
+    // 15.35 USD * tasa BCV 881.0743 -> se redondea tasa a 881.07 -> 15.35 * 881.07 = 13524.4245 -> 13524.42
+    expect(calculateVesTotal(15.35, 881.0743)).toBe(13524.42);
+
+    // Dólares con decimales extras se redondean a 2 decimales antes de multiplicar
+    // 10.3333 USD -> 10.33 USD * tasa 50.00 -> 516.50
+    expect(calculateVesTotal(10.3333, 50.0)).toBe(516.5);
+
+    // Formateo visual en Bs. coincide exactamente
+    expect(formatVes(calculateVesTotal(15.35, 881.0743))).toBe("Bs. 13.524,42");
+  });
 });

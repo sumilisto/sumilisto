@@ -10,7 +10,7 @@ import {
 import { useCart } from '@/lib/cart/CartContext';
 import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
-import { formatUsd } from '@/lib/currency/format';
+import { formatUsd, formatVes, calculateVesTotal } from '@/lib/currency/format';
 import { LocationPickerModal } from '@/components/cart/LocationPickerModal';
 
 const FALLBACK_IMAGE =
@@ -116,7 +116,7 @@ export default function CartPage() {
   }, [items, products]);
 
   const totalUsd = Math.round(lines.reduce((acc, l) => acc + l.subtotal, 0) * 100) / 100;
-  const totalVes = totalUsd * (bcvRate || 0);
+  const totalVes = calculateVesTotal(totalUsd, bcvRate || 0);
 
   // Auto-guardado en segundo plano de carrito para recuperación de abandonados
   useEffect(() => {
@@ -232,10 +232,7 @@ export default function CartPage() {
 
     message += `\n💰 *TOTAL USD:* ${formatUsd(totalUsd)}`;
     if (bcvRate) {
-      message += `\n💵 *TOTAL VES (BCV):* Bs. ${totalVes.toLocaleString('es-VE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
+      message += `\n💵 *TOTAL VES (BCV):* ${formatVes(totalVes)}`;
     }
 
     const whatsappNumber = theme.whatsappNumber;
@@ -639,11 +636,7 @@ export default function CartPage() {
               <div className="flex justify-between items-center text-slate-600 text-sm">
                 <span>Ref. Bolívares (BCV):</span>
                 <span className="font-bold text-slate-700">
-                  Bs.{' '}
-                  {totalVes.toLocaleString('es-VE', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {formatVes(totalVes)}
                 </span>
               </div>
             )}
