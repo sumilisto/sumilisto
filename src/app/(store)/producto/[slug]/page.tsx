@@ -56,8 +56,46 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     (p) => p.categoria.toLowerCase() === product.categoria.toLowerCase() && p.slug !== product.slug
   ).slice(0, 4);
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.nombre,
+    image: product.fotos?.map((f) => f.url) || [],
+    description:
+      product.descripcionLarga ||
+      `Compre ${product.nombre} al mayor y gran mayor en Venezuela. Entrega en Caracas, Guarenas y Guatire.`,
+    sku: product.sku,
+    category: product.categoria,
+    brand: {
+      "@type": "Brand",
+      name: "Sumilisto",
+    },
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "USD",
+      lowPrice: product.precioGranMayorUsd || product.precioMayorUsd || 0,
+      highPrice: product.precioMayorUsd || 0,
+      offerCount: product.variantes?.length || 1,
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Organization",
+        name: "Sumilisto",
+        url: "https://sumilisto.com",
+      },
+    },
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-8">
+      {/* Datos Estructurados JSON-LD para Google Rich Snippets */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+
       {/* Migas de pan (Breadcrumbs) */}
       <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-slate-500 flex-wrap">
         <Link href="/" className="hover:text-slate-900 transition-colors">

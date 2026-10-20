@@ -69,11 +69,40 @@ export default async function RootLayout({
   const [products, bcvRate, settings] = await Promise.all([
     getProducts(), 
     getBcvRate(),
-    getStoreSettings()
+    getStoreSettings(),
   ]);
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WholesaleStore",
+    name: "Sumilisto",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com",
+    logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com"}/logo.png`,
+    description:
+      "Distribución de envases térmicos, bolsas kraft, cubiertos descartables y papel parafinado al mayor para restaurantes en Caracas, Guarenas y Guatire.",
+    telephone: settings.whatsappNumber ? `+${settings.whatsappNumber}` : "+584227864547",
+    priceRange: "$$",
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "VE",
+      addressRegion: "Miranda / Distrito Capital",
+      addressLocality: "Caracas",
+    },
+    areaServed: [
+      { "@type": "City", name: "Caracas" },
+      { "@type": "City", name: "Guarenas" },
+      { "@type": "City", name: "Guatire" },
+      { "@type": "Country", name: "Venezuela" },
+    ],
+  };
 
   return (
     <html lang="es-VE" className={roboto.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+      </head>
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col selection:bg-brand selection:text-white">
         <SplashScreen />
         <ThemeProvider initialSettings={settings}>
