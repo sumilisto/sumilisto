@@ -158,6 +158,19 @@ export default function AdminProductosPage() {
     });
   }, []);
 
+  // Bloquear scroll de la página de fondo cuando cualquier modal esté abierto (elimina la doble barra de desplazamiento)
+  useEffect(() => {
+    const isModalOpen = Boolean(showAddModal || variantProduct || mediaProduct || editingProduct);
+    if (isModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showAddModal, variantProduct, mediaProduct, editingProduct]);
+
   const showToast = (text: string, type: "success" | "error" | "info" = "success") => {
     setFeedbackMsg({ text, type });
     setTimeout(() => setFeedbackMsg(null), 4000);
@@ -1238,9 +1251,10 @@ export default function AdminProductosPage() {
           MODAL: GESTOR MULTIMEDIA (FOTOS Y VIDEO)
           ───────────────────────────────────────────────────────── */}
       {mediaProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-6 my-8">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header Fijo */}
+            <div className="flex items-start justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
               <div>
                 <span className="text-[11px] font-bold text-brand uppercase tracking-wider block">
                   Galería Multimedia del Producto
@@ -1260,6 +1274,9 @@ export default function AdminProductosPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Contenido con scroll único */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
 
             {/* Estado de procesamiento en vivo */}
             {isProcessingMedia && (
@@ -1588,7 +1605,10 @@ export default function AdminProductosPage() {
               )}
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-slate-100">
+            </div>
+
+            {/* Footer Fijo */}
+            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex justify-end flex-shrink-0 bg-slate-50/90">
               <button
                 type="button"
                 onClick={() => setMediaProduct(null)}
@@ -1605,9 +1625,10 @@ export default function AdminProductosPage() {
           MODAL: GESTOR DE VARIANTES DE PRODUCTO
           ───────────────────────────────────────────────────────── */}
       {variantProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-6 my-8">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header Fijo */}
+            <div className="flex items-start justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
               <div>
                 <span className="text-[11px] font-bold text-brand uppercase tracking-wider block">
                   Colores y Variantes
@@ -1627,6 +1648,9 @@ export default function AdminProductosPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Contenido con scroll único */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
 
             {/* Listado de Variantes Actuales */}
             <div className="space-y-3">
@@ -2072,7 +2096,10 @@ export default function AdminProductosPage() {
               </form>
             )}
 
-            <div className="flex justify-end pt-2 border-t border-slate-100">
+            </div>
+
+            {/* Footer Fijo */}
+            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex justify-end flex-shrink-0 bg-slate-50/90">
               <button
                 type="button"
                 onClick={() => setVariantProduct(null)}
@@ -2089,25 +2116,30 @@ export default function AdminProductosPage() {
           MODAL: NUEVO PRODUCTO
           ───────────────────────────────────────────────────────── */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header Fijo Siempre Visible Arriba */}
+            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-slate-100 flex-shrink-0 bg-white">
+              <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
                   <Plus className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg font-black text-slate-900">Agregar Nuevo Producto</h3>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">Agregar Nuevo Producto</h3>
+                  <span className="text-[11px] text-slate-500">Datos, precios por niveles y fotos del carrusel</span>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateProduct} className="space-y-4">
+            {/* Contenido desplazable con scroll único */}
+            <form id="form-nuevo-producto" onSubmit={handleCreateProduct} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Código SKU *</label>
@@ -2590,23 +2622,27 @@ export default function AdminProductosPage() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={creatingProduct}
-                  className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-sm disabled:opacity-50"
-                >
-                  {creatingProduct ? "Creando..." : "Crear Producto"}
-                </button>
-              </div>
             </form>
+
+            {/* Footer Fijo Siempre Visible Abajo */}
+            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-end gap-2.5 flex-shrink-0 bg-slate-50/90">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200/70 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="form-nuevo-producto"
+                disabled={creatingProduct}
+                className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-sm disabled:opacity-50 transition-all active:scale-95 flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{creatingProduct ? "Creando Producto..." : "Crear Producto"}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2615,9 +2651,10 @@ export default function AdminProductosPage() {
           MODAL: EDICIÓN RÁPIDA DE PRODUCTO
           ───────────────────────────────────────────────────────── */}
       {editingProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header Fijo */}
+            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
               <h3 className="text-base font-black text-slate-900">Editar Información del Producto</h3>
               <button
                 type="button"
@@ -2628,7 +2665,8 @@ export default function AdminProductosPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEditProduct} className="space-y-4 text-xs">
+            {/* Formulario con scroll único */}
+            <form id="form-edit-product" onSubmit={handleSaveEditProduct} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Nombre</label>
                 <input
@@ -2695,34 +2733,36 @@ export default function AdminProductosPage() {
                   <span className="font-bold text-slate-700">Destacado</span>
                 </label>
               </div>
+            </form>
 
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            {/* Footer Fijo */}
+            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/90 text-xs">
+              <button
+                type="button"
+                onClick={() => handleDeleteProduct(editingProduct)}
+                className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-1.5 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Eliminar Producto</span>
+              </button>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => handleDeleteProduct(editingProduct)}
-                  className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-1.5 transition-colors"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Eliminar Producto</span>
+                  Cancelar
                 </button>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingProduct(null)}
-                    className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={savingEdit}
-                    className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50"
-                  >
-                    {savingEdit ? "Guardando..." : "Guardar Cambios"}
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  form="form-edit-product"
+                  disabled={savingEdit}
+                  className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50"
+                >
+                  {savingEdit ? "Guardando..." : "Guardar Cambios"}
+                </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
