@@ -945,8 +945,9 @@ export default function AdminSettingsPage() {
                           <span className="text-[11px] font-medium text-slate-700 block leading-tight">
                             Gran Mayor: 150Und
                           </span>
-                          <span className="text-[10px] font-black text-emerald-800 bg-emerald-200/90 px-1.5 py-0.5 rounded-md leading-none">
-                            Ahorras $20.43
+                          <span className="inline-flex flex-col items-center justify-center bg-amber-200 text-amber-950 border border-amber-300/90 px-2 py-0.5 rounded-lg shadow-2xs text-center leading-none">
+                            <span className="text-[9px] font-bold uppercase tracking-wide text-amber-900">Ahorras</span>
+                            <span className="text-[11px] font-black text-amber-950 mt-0.5">$20.43</span>
                           </span>
                         </div>
                         <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
