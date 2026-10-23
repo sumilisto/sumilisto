@@ -47,35 +47,51 @@ export async function PUT(
     // Separar variantes del producto base
     const { variantes, ...productData } = body;
 
+    // Normalizar campos en productData si vienen con camelCase
+    const cleanProductData: Record<string, any> = {};
+    if (productData.nombre !== undefined) cleanProductData.nombre = productData.nombre;
+    if (productData.categoria !== undefined) cleanProductData.categoria = productData.categoria;
+    if (productData.descripcion !== undefined) cleanProductData.descripcion = productData.descripcion;
+    if (productData.descripcionLarga !== undefined && cleanProductData.descripcion === undefined) {
+      cleanProductData.descripcion = productData.descripcionLarga;
+    }
+    if (productData.unidad_venta !== undefined) cleanProductData.unidad_venta = productData.unidad_venta;
+    if (productData.unidadVenta !== undefined && cleanProductData.unidad_venta === undefined) {
+      cleanProductData.unidad_venta = productData.unidadVenta;
+    }
+    if (productData.activo !== undefined) cleanProductData.activo = productData.activo;
+    if (productData.destacado !== undefined) cleanProductData.destacado = productData.destacado;
+
     // Actualizar producto base
-    const updated = await updateProduct(id, productData);
+    const updated = await updateProduct(id, cleanProductData);
 
     // Actualizar variantes si vienen en el body
     if (variantes && Array.isArray(variantes)) {
       for (const v of variantes) {
         if (v.id) {
           await updateVariant(v.id, {
-            color: v.color,
+            sku: v.sku?.trim(),
+            color: v.color?.trim(),
             presentacion: v.presentacion,
-            precio_mayor_usd: v.precio_mayor_usd,
-            min_mayor: v.min_mayor,
-            precio_gran_mayor_usd: v.precio_gran_mayor_usd,
-            min_gran_mayor: v.min_gran_mayor,
-            stock: v.stock,
+            precio_mayor_usd: Number(v.precio_mayor_usd),
+            min_mayor: Number(v.min_mayor),
+            precio_gran_mayor_usd: Number(v.precio_gran_mayor_usd),
+            min_gran_mayor: Number(v.min_gran_mayor),
+            stock: Number(v.stock),
             activo: v.activo,
           });
         } else {
           // Nueva variante
           await createVariant({
             producto_id: id,
-            sku: v.sku,
-            color: v.color,
-            presentacion: v.presentacion,
-            precio_mayor_usd: v.precio_mayor_usd,
-            min_mayor: v.min_mayor,
-            precio_gran_mayor_usd: v.precio_gran_mayor_usd,
-            min_gran_mayor: v.min_gran_mayor,
-            stock: v.stock,
+            sku: v.sku?.trim() || `${cleanProductData.nombre || "VAR"}-${Date.now()}`,
+            color: v.color?.trim() || "Estándar",
+            presentacion: v.presentacion || cleanProductData.unidad_venta || "Unidad",
+            precio_mayor_usd: Number(v.precio_mayor_usd) || 0,
+            min_mayor: Number(v.min_mayor) || 1,
+            precio_gran_mayor_usd: Number(v.precio_gran_mayor_usd) || 0,
+            min_gran_mayor: Number(v.min_gran_mayor) || 5,
+            stock: Number(v.stock) || 0,
             activo: v.activo ?? true,
           });
         }

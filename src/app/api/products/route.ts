@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    if (!body.sku || !body.nombre) {
+    const resolvedSku = (body.sku || (Array.isArray(body.variantes) && body.variantes[0]?.sku) || "").trim();
+    if (!resolvedSku || !body.nombre?.trim()) {
       return NextResponse.json(
         { error: "Campos obligatorios: sku, nombre" },
         { status: 400 }
@@ -32,29 +33,46 @@ export async function POST(request: NextRequest) {
       .replace(/(^-|-$)/g, "");
 
     const product = await createProduct({
-      sku: body.sku.trim(),
+      sku: resolvedSku,
       nombre: body.nombre.trim(),
       slug,
       categoria: body.categoria || "Envases",
-      descripcion: body.descripcion || "",
-      unidad_venta: body.unidad_venta || body.presentacion || "100 Unidades",
+      descripcion: body.descripcion || body.descripcionLarga || "",
+      unidad_venta: body.unidad_venta || body.unidadVenta || body.presentacion || "Unidad",
       activo: body.activo ?? true,
       destacado: body.destacado ?? false,
     });
 
     if (product && product.id) {
-      await createVariant({
-        producto_id: product.id,
-        sku: body.sku.trim(),
-        color: body.color || "ESTÁNDAR",
-        presentacion: body.presentacion || body.unidad_venta || "Unidad",
-        precio_mayor_usd: Number(body.precio_mayor_usd) || 0,
-        min_mayor: Number(body.min_mayor) || 1,
-        precio_gran_mayor_usd: Number(body.precio_gran_mayor_usd) || 0,
-        min_gran_mayor: Number(body.min_gran_mayor) || 5,
-        stock: Number(body.stock) || 0,
-        activo: body.activo ?? true,
-      });
+      if (Array.isArray(body.variantes) && body.variantes.length > 0) {
+        for (const v of body.variantes) {
+          await createVariant({
+            producto_id: product.id,
+            sku: (v.sku || resolvedSku).trim(),
+            color: (v.color || "ESTÁNDAR").trim(),
+            presentacion: v.presentacion || body.unidad_venta || body.unidadVenta || "Unidad",
+            precio_mayor_usd: Number(v.precio_mayor_usd) || 0,
+            min_mayor: Number(v.min_mayor) || 1,
+            precio_gran_mayor_usd: Number(v.precio_gran_mayor_usd) || 0,
+            min_gran_mayor: Number(v.min_gran_mayor) || 5,
+            stock: Number(v.stock) || 0,
+            activo: v.activo ?? true,
+          });
+        }
+      } else {
+        await createVariant({
+          producto_id: product.id,
+          sku: resolvedSku,
+          color: (body.color || "ESTÁNDAR").trim(),
+          presentacion: body.presentacion || body.unidad_venta || body.unidadVenta || "Unidad",
+          precio_mayor_usd: Number(body.precio_mayor_usd) || 0,
+          min_mayor: Number(body.min_mayor) || 1,
+          precio_gran_mayor_usd: Number(body.precio_gran_mayor_usd) || 0,
+          min_gran_mayor: Number(body.min_gran_mayor) || 5,
+          stock: Number(body.stock) || 0,
+          activo: body.activo ?? true,
+        });
+      }
     }
 
     revalidateTag("products");
