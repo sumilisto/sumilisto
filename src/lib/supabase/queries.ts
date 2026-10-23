@@ -323,13 +323,27 @@ export async function setPrimaryPhoto(productoId: string, fotoId: string) {
   // Marcar la seleccionada como primaria
   const { data, error } = await supabaseAdmin
     .from("producto_fotos")
-    .update({ is_primary: true })
+    .update({ is_primary: true, orden: 0 })
     .eq("id", fotoId)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
   return data;
+}
+
+export async function reorderProductPhotos(photoIds: string[]) {
+  // Actualizar el orden secuencial de cada foto
+  for (let i = 0; i < photoIds.length; i++) {
+    const { error } = await supabaseAdmin
+      .from("producto_fotos")
+      .update({ orden: i })
+      .eq("id", photoIds[i]);
+    if (error) {
+      console.error("Error al reordenar foto:", error);
+    }
+  }
+  return true;
 }
 
 export async function deleteProductPhoto(fotoId: string, storageUrl: string) {

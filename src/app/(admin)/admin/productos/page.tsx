@@ -10,9 +10,52 @@ import { optimizeImage, validateVideoFile, formatFileSize } from "@/lib/utils/me
 import {
   Package, Search, Plus, Upload, Trash2, Edit3, Check, AlertCircle,
   ExternalLink, LogOut, Lock, User, RefreshCw, Image as ImageIcon,
-  CheckCircle2, ArrowLeft, Filter, Sparkles, X, ChevronRight,
-  Video, Play, Star, Palette, Layers, Film
+  CheckCircle2, ArrowLeft, Filter, Sparkles, X, ChevronRight, ChevronLeft,
+  Video, Play, Star, Palette, Layers, Film, Calculator, ArrowRightLeft,
+  Percent, DollarSign, Eye, ArrowUpDown, HelpCircle
 } from "lucide-react";
+
+interface UploadPhotoItem {
+  id: string;
+  file: File;
+  previewUrl: string;
+  isPrimary: boolean;
+}
+
+// Función auxiliar para calcular precios según Costo + IVA + Margen
+function computePricing(costStr: string, withIva: boolean, mMayorStr: string, mGranStr: string) {
+  const rawCost = parseFloat(String(costStr).replace(",", "."));
+  if (isNaN(rawCost) || rawCost <= 0) {
+    return { costWithIva: 0, pMayor: 0, pGran: 0, profitMayor: 0, profitGran: 0, mMayor: 0, mGran: 0 };
+  }
+  const costWithIva = withIva ? rawCost * 1.16 : rawCost;
+
+  let mMayor = parseFloat(String(mMayorStr).replace(",", "."));
+  if (isNaN(mMayor) || mMayor < 0) mMayor = 0;
+  // Acepta formato decimal como 0.70 o 0.80 y lo convierte a porcentaje 70% u 80%
+  if (mMayor > 0 && mMayor <= 2.0 && String(mMayorStr).includes(".")) {
+    mMayor = mMayor * 100;
+  }
+
+  let mGran = parseFloat(String(mGranStr).replace(",", "."));
+  if (isNaN(mGran) || mGran < 0) mGran = 0;
+  if (mGran > 0 && mGran <= 2.0 && String(mGranStr).includes(".")) {
+    mGran = mGran * 100;
+  }
+
+  const pMayor = costWithIva * (1 + mMayor / 100);
+  const pGran = costWithIva * (1 + mGran / 100);
+
+  return {
+    costWithIva: Math.round(costWithIva * 100) / 100,
+    pMayor: Math.round(pMayor * 100) / 100,
+    pGran: Math.round(pGran * 100) / 100,
+    profitMayor: Math.round((pMayor - costWithIva) * 100) / 100,
+    profitGran: Math.round((pGran - costWithIva) * 100) / 100,
+    mMayor,
+    mGran,
+  };
+}
 
 export default function AdminProductosPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,6 +78,8 @@ export default function AdminProductosPage() {
   const [mediaProduct, setMediaProduct] = useState<Product | null>(null);
   const [isProcessingMedia, setIsProcessingMedia] = useState(false);
   const [mediaStatusText, setMediaStatusText] = useState("");
+  const [mediaActiveCarouselIdx, setMediaActiveCarouselIdx] = useState(0);
+  const [mediaViewMode, setMediaViewMode] = useState<"grid" | "carousel">("grid");
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,6 +98,12 @@ export default function AdminProductosPage() {
     precio_gran_mayor_usd: "",
     min_gran_mayor: "5",
   });
+  // Calculadora en Modal Variantes
+  const [showVarCalc, setShowVarCalc] = useState(false);
+  const [varCostBase, setVarCostBase] = useState("");
+  const [varApplyIva, setVarApplyIva] = useState(true);
+  const [varMarginMayor, setVarMarginMayor] = useState("70");
+  const [varMarginGranMayor, setVarMarginGranMayor] = useState("40");
 
   // Modal: Agregar Producto Nuevo
   const [showAddModal, setShowAddModal] = useState(false);
@@ -70,7 +121,16 @@ export default function AdminProductosPage() {
     stock: "100",
     descripcion: "",
   });
-  const [newProductFiles, setNewProductFiles] = useState<File[]>([]);
+
+  // Calculadora en Modal Nuevo Producto
+  const [showAddCalc, setShowAddCalc] = useState(true);
+  const [addCostBase, setAddCostBase] = useState("");
+  const [addApplyIva, setAddApplyIva] = useState(true);
+  const [addMarginMayor, setAddMarginMayor] = useState("70");
+  const [addMarginGranMayor, setAddMarginGranMayor] = useState("40");
+
+  // Fotos interactivas del nuevo producto (previsualización, portada y orden)
+  const [newProductPhotoItems, setNewProductPhotoItems] = useState<UploadPhotoItem[]>([]);
   const [newProductVideo, setNewProductVideo] = useState<File | null>(null);
 
   // Modal: Edición Rápida de Producto
@@ -260,6 +320,43 @@ export default function AdminProductosPage() {
     }
   };
 
+  // Reordenar foto existente (Mover antes / después)
+  const handleMoveExistingPhoto = async (productId: string, fromIdx: number, toIdx: number) => {
+    if (!mediaProduct || !mediaProduct.fotos) return;
+    const realPhotos = mediaProduct.fotos.filter((f) => !f.url.includes("placehold.co"));
+    if (toIdx < 0 || toIdx >= realPhotos.length) return;
+
+    const updated = [...realPhotos];
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(toIdx, 0, moved);
+
+    // Actualizar orden numérico local
+    setMediaProduct({ ...mediaProduct, fotos: updated });
+
+    setIsProcessingMedia(true);
+    setMediaStatusText("Guardando orden de las fotos...");
+    try {
+      const photoIds = updated.map((f) => f.publicId).filter(Boolean);
+      const formData = new FormData();
+      formData.append("action", "reorder");
+      formData.append("photo_ids", JSON.stringify(photoIds));
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Error al guardar el nuevo orden");
+      showToast("Orden de fotos actualizado");
+      await loadProducts();
+    } catch (err: any) {
+      showToast(err.message || "Error al reordenar fotos", "error");
+    } finally {
+      setIsProcessingMedia(false);
+      setMediaStatusText("");
+    }
+  };
+
   // Eliminar foto individual
   const handleDeletePhoto = async (productId: string, fotoId: string, storageUrl: string) => {
     if (!confirm("¿Deseas eliminar esta foto del carrusel?")) return;
@@ -429,6 +526,68 @@ export default function AdminProductosPage() {
   };
 
   // ─────────────────────────────────────────────────────────
+  // GESTIÓN DE FOTOS PARA NUEVO PRODUCTO (Preview, Portada y Orden)
+  // ─────────────────────────────────────────────────────────
+  const handleSelectNewPhotos = (eOrFiles: React.ChangeEvent<HTMLInputElement> | FileList | File[]) => {
+    let files: File[] = [];
+    if ("target" in eOrFiles) {
+      if (eOrFiles.target.files) {
+        files = Array.from(eOrFiles.target.files);
+        eOrFiles.target.value = "";
+      }
+    } else {
+      files = Array.from(eOrFiles);
+    }
+    const remaining = 10 - newProductPhotoItems.length;
+    if (remaining <= 0) {
+      showToast("Ya alcanzaste el límite máximo de 10 fotos.", "error");
+      return;
+    }
+    const toAdd: UploadPhotoItem[] = files.slice(0, remaining).map((f, i) => ({
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      file: f,
+      previewUrl: URL.createObjectURL(f),
+      isPrimary: newProductPhotoItems.length === 0 && i === 0,
+    }));
+    setNewProductPhotoItems((prev) => [...prev, ...toAdd]);
+  };
+
+  const handleSetPrimaryNewPhoto = (id: string) => {
+    setNewProductPhotoItems((prev) =>
+      prev.map((item) => ({
+        ...item,
+        isPrimary: item.id === id,
+      }))
+    );
+  };
+
+  const handleMoveNewPhoto = (index: number, direction: -1 | 1) => {
+    setNewProductPhotoItems((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[target];
+      copy[target] = temp;
+      return copy;
+    });
+  };
+
+  const handleRemoveNewPhoto = (id: string) => {
+    setNewProductPhotoItems((prev) => {
+      const itemToRemove = prev.find((p) => p.id === id);
+      if (itemToRemove) {
+        URL.revokeObjectURL(itemToRemove.previewUrl);
+      }
+      const filtered = prev.filter((p) => p.id !== id);
+      if (filtered.length > 0 && !filtered.some((p) => p.isPrimary)) {
+        filtered[0].isPrimary = true;
+      }
+      return filtered;
+    });
+  };
+
+  // ─────────────────────────────────────────────────────────
   // CREACIÓN DE PRODUCTO NUEVO
   // ─────────────────────────────────────────────────────────
   const handleCreateProduct = async (e: React.FormEvent) => {
@@ -454,15 +613,17 @@ export default function AdminProductosPage() {
 
       const created = await res.json();
 
-      // 2. Si adjuntó fotos, subirlas optimizadas
-      if (newProductFiles.length > 0 && created.id) {
-        for (let i = 0; i < newProductFiles.length; i++) {
-          const opt = await optimizeImage(newProductFiles[i], 1280, 0.85);
+      // 2. Si adjuntó fotos, subirlas optimizadas en el orden exacto configurado
+      if (newProductPhotoItems.length > 0 && created.id) {
+        for (let i = 0; i < newProductPhotoItems.length; i++) {
+          const item = newProductPhotoItems[i];
+          const opt = await optimizeImage(item.file, 1280, 0.85);
           const formData = new FormData();
           formData.append("file", opt.file);
           formData.append("producto_id", created.id);
           formData.append("alt", newProduct.nombre);
-          formData.append("is_primary", i === 0 ? "true" : "false");
+          formData.append("orden", String(i));
+          formData.append("is_primary", item.isPrimary ? "true" : "false");
           await fetch("/api/upload", { method: "POST", body: formData });
         }
       }
@@ -491,8 +652,10 @@ export default function AdminProductosPage() {
         stock: "100",
         descripcion: "",
       });
-      setNewProductFiles([]);
+      newProductPhotoItems.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+      setNewProductPhotoItems([]);
       setNewProductVideo(null);
+      setAddCostBase("");
       await loadProducts();
     } catch (err: any) {
       showToast(err.message || "Error al crear producto", "error");
@@ -1095,11 +1258,44 @@ export default function AdminProductosPage() {
 
             {/* SECCIÓN 1: FOTOS (Máx 10) */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-brand" />
-                  <span>Fotos del Carrusel ({mediaProduct.fotos?.filter(f => !f.url.includes("placehold.co")).length || 0} / 10)</span>
-                </h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-brand" />
+                    <span>Fotos ({mediaProduct.fotos?.filter(f => !f.url.includes("placehold.co")).length || 0} / 10)</span>
+                  </h4>
+
+                  {/* Switch vista cuadrícula vs carrusel */}
+                  {(mediaProduct.fotos?.filter(f => !f.url.includes("placehold.co")).length || 0) > 0 && (
+                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg ml-2">
+                      <button
+                        type="button"
+                        onClick={() => setMediaViewMode("grid")}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                          mediaViewMode === "grid"
+                            ? "bg-white text-slate-900 shadow-2xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        🗂️ Cuadrícula y Orden
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMediaViewMode("carousel");
+                          setMediaActiveCarouselIdx(0);
+                        }}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                          mediaViewMode === "carousel"
+                            ? "bg-brand text-white shadow-2xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        🖼️ Vista Carrusel
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* Input de subida de fotos múltiple */}
                 <input
@@ -1119,88 +1315,206 @@ export default function AdminProductosPage() {
                 />
                 <label
                   htmlFor="media-photos-input"
-                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all"
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all self-start sm:self-auto"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Subir Fotos</span>
                 </label>
               </div>
 
-              {/* Grid de Fotos Actuales */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                {(mediaProduct.fotos || [])
-                  .filter((f) => !f.url.includes("placehold.co"))
-                  .map((foto, idx) => (
-                    <div
-                      key={foto.publicId || foto.url}
-                      className="bg-white rounded-2xl border border-slate-200 p-2 shadow-2xs space-y-1.5 flex flex-col justify-between"
-                    >
-                      <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-50 border border-slate-100">
-                        <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
+              {/* VISTA CARRUSEL INTERACTIVO */}
+              {mediaViewMode === "carousel" && (
+                (() => {
+                  const realPhotos = (mediaProduct.fotos || []).filter((f) => !f.url.includes("placehold.co"));
+                  if (realPhotos.length === 0) return null;
+                  const currentPhoto = realPhotos[mediaActiveCarouselIdx] || realPhotos[0];
+                  return (
+                    <div className="space-y-3 p-4 rounded-2xl bg-slate-900 text-white">
+                      <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
+                        <span className="font-bold flex items-center gap-1.5 text-slate-300">
+                          <Eye className="w-3.5 h-3.5 text-brand" />
+                          Previsualización del Carrusel (así lo ven los clientes en la tienda)
+                        </span>
+                        <span className="font-mono text-xs text-slate-400">
+                          {mediaActiveCarouselIdx + 1} / {realPhotos.length}
+                        </span>
+                      </div>
 
-                        {/* Badge de Portada Principal */}
-                        {foto.isPrimary ? (
-                          <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center gap-0.5 shadow-sm">
-                            <Star className="w-2.5 h-2.5 fill-white" /> Portada
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, foto.publicId!)}
-                            title="Hacer foto principal de portada"
-                            className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 hover:bg-emerald-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            Hacer Portada
-                          </button>
-                        )}
+                      {/* Visor Principal con Flechas */}
+                      <div className="relative aspect-video max-h-72 rounded-xl overflow-hidden bg-black flex items-center justify-center">
+                        <img
+                          src={currentPhoto.url}
+                          alt={currentPhoto.alt}
+                          className="max-h-72 w-full object-contain"
+                        />
 
-                        {/* Botón Eliminar Foto */}
+                        {/* Botón Anterior */}
                         <button
                           type="button"
-                          onClick={() => handleDeletePhoto(mediaProduct.id!, foto.publicId!, foto.url)}
-                          title="Eliminar foto"
-                          className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setMediaActiveCarouselIdx((prev) => (prev > 0 ? prev - 1 : realPhotos.length - 1))}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <ChevronLeft className="w-5 h-5" />
                         </button>
 
-                        <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-white bg-black/50 px-1 rounded">
-                          #{idx + 1}
-                        </span>
+                        {/* Botón Siguiente */}
+                        <button
+                          type="button"
+                          onClick={() => setMediaActiveCarouselIdx((prev) => (prev < realPhotos.length - 1 ? prev + 1 : 0))}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+
+                        {/* Badge de Portada en el carrusel */}
+                        <div className="absolute top-2 left-2 flex items-center gap-2">
+                          {currentPhoto.isPrimary ? (
+                            <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[11px] font-black flex items-center gap-1 shadow-md">
+                              <Star className="w-3.5 h-3.5 fill-white" /> Portada Principal de la Tienda
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, currentPhoto.publicId!)}
+                              className="px-2.5 py-1 rounded-md bg-black/80 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 transition-colors shadow-md"
+                            >
+                              <Star className="w-3 h-3" /> Hacer Portada Principal
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Selector de Variante / Color Asociado */}
-                      <div className="space-y-0.5">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Variante:
-                        </span>
-                        <select
-                          value={foto.varianteColor || ""}
-                          disabled={isProcessingMedia}
-                          onChange={(e) => handleSetPhotoVariant(mediaProduct.id!, foto.publicId!, e.target.value)}
-                          className={`w-full text-[10px] font-bold py-1 px-1.5 rounded-lg border transition-colors ${
-                            foto.varianteColor
-                              ? "bg-brand/10 text-brand border-brand/30"
-                              : "bg-slate-50 text-slate-600 border-slate-200"
-                          }`}
-                        >
-                          <option value="">🌐 General (Todas)</option>
-                          {(mediaProduct.variantes || []).map((v) => (
-                            <option key={v.sku} value={v.color}>
-                              🎨 {v.color}
-                            </option>
-                          ))}
-                        </select>
+                      {/* Tira de Miniaturas del Carrusel */}
+                      <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+                        {realPhotos.map((f, i) => (
+                          <button
+                            key={f.publicId || f.url}
+                            type="button"
+                            onClick={() => setMediaActiveCarouselIdx(i)}
+                            className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                              i === mediaActiveCarouselIdx
+                                ? "border-brand ring-2 ring-brand/40 scale-105"
+                                : "border-slate-700 opacity-60 hover:opacity-100"
+                            }`}
+                          >
+                            <img src={f.url} alt="" className="w-full h-full object-cover" />
+                            {f.isPrimary && (
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400 absolute top-0.5 right-0.5" />
+                            )}
+                            <span className="absolute bottom-0.5 left-1 text-[8px] font-mono font-bold bg-black/70 px-1 rounded text-white">
+                              #{i + 1}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  );
+                })()
+              )}
 
-                {(mediaProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length === 0 && (
-                  <div className="col-span-2 sm:col-span-5 p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs">
-                    No hay fotos subidas todavía. Toca &ldquo;Subir Fotos&rdquo; para agregar fotos directamente desde tu galería.
-                  </div>
-                )}
-              </div>
+              {/* Grid de Fotos Actuales (Vista Cuadrícula y Orden) */}
+              {mediaViewMode === "grid" && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                  {(mediaProduct.fotos || [])
+                    .filter((f) => !f.url.includes("placehold.co"))
+                    .map((foto, idx, arr) => (
+                      <div
+                        key={foto.publicId || foto.url}
+                        className={`bg-white rounded-2xl border p-2 shadow-2xs space-y-1.5 flex flex-col justify-between transition-all ${
+                          foto.isPrimary ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200"
+                        }`}
+                      >
+                        <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-50 border border-slate-100">
+                          <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
+
+                          {/* Badge de Portada Principal */}
+                          {foto.isPrimary ? (
+                            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center gap-0.5 shadow-sm">
+                              <Star className="w-2.5 h-2.5 fill-white" /> Portada
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, foto.publicId!)}
+                              title="Hacer foto principal de portada"
+                              className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 hover:bg-emerald-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              Hacer Portada
+                            </button>
+                          )}
+
+                          {/* Botón Eliminar Foto */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePhoto(mediaProduct.id!, foto.publicId!, foto.url)}
+                            title="Eliminar foto"
+                            className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+
+                          <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-white bg-black/50 px-1 rounded">
+                            #{idx + 1}
+                          </span>
+                        </div>
+
+                        {/* Botones de orden: Mover antes / después */}
+                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
+                          <button
+                            type="button"
+                            disabled={idx === 0 || isProcessingMedia}
+                            onClick={() => handleMoveExistingPhoto(mediaProduct.id!, idx, idx - 1)}
+                            title="Mover foto antes en el carrusel"
+                            className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                          >
+                            <ChevronLeft className="w-3 h-3" />
+                            <span>Antes</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === arr.length - 1 || isProcessingMedia}
+                            onClick={() => handleMoveExistingPhoto(mediaProduct.id!, idx, idx + 1)}
+                            title="Mover foto después en el carrusel"
+                            className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                          >
+                            <span>Después</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Selector de Variante / Color Asociado */}
+                        <div className="space-y-0.5 pt-1 border-t border-slate-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Variante:
+                          </span>
+                          <select
+                            value={foto.varianteColor || ""}
+                            disabled={isProcessingMedia}
+                            onChange={(e) => handleSetPhotoVariant(mediaProduct.id!, foto.publicId!, e.target.value)}
+                            className={`w-full text-[10px] font-bold py-1 px-1.5 rounded-lg border transition-colors ${
+                              foto.varianteColor
+                                ? "bg-brand/10 text-brand border-brand/30"
+                                : "bg-slate-50 text-slate-600 border-slate-200"
+                            }`}
+                          >
+                            <option value="">🌐 General (Todas)</option>
+                            {(mediaProduct.variantes || []).map((v) => (
+                              <option key={v.sku} value={v.color}>
+                                🎨 {v.color}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+
+                  {(mediaProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length === 0 && (
+                    <div className="col-span-2 sm:col-span-4 p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs">
+                      No hay fotos subidas todavía. Toca &ldquo;Subir Fotos&rdquo; para agregar fotos directamente desde tu galería.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* SECCIÓN 2: VIDEO DEL PRODUCTO (Máx 1) */}
@@ -1465,28 +1779,269 @@ export default function AdminProductosPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Precio al Mayor ($ USD)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={variantForm.precio_mayor_usd}
-                      onChange={(e) => setVariantForm({ ...variantForm, precio_mayor_usd: e.target.value })}
-                      placeholder="22.75"
-                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
-                    />
+                </div>
+
+                {/* CALCULADORA DE COSTO + IVA + MARGEN (% GANANCIA) PARA LA VARIANTE */}
+                <div className="rounded-2xl border-2 border-emerald-500/20 bg-emerald-50/40 p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                        <Calculator className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h5 className="text-[11px] font-black uppercase tracking-wider text-emerald-950">
+                          Calculadora de Costo y Margen (% Ganancia)
+                        </h5>
+                        <p className="text-[10px] text-emerald-800">
+                          Calcula el precio Mayor y Gran Mayor según costo + IVA 16% + margen (ej. 0.70 o 70%)
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowVarCalc(!showVarCalc)}
+                      className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
+                    >
+                      {showVarCalc ? "Ocultar" : "Usar Calculadora"}
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Precio Gran Mayor ($ USD)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={variantForm.precio_gran_mayor_usd}
-                      onChange={(e) => setVariantForm({ ...variantForm, precio_gran_mayor_usd: e.target.value })}
-                      placeholder="41.20"
-                      className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-emerald-800"
-                    />
+                  {showVarCalc && (
+                    <div className="space-y-2.5 pt-1 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block font-bold text-slate-800 mb-1 text-[11px]">
+                            Costo Base de Compra ($ USD)
+                          </label>
+                          <div className="relative">
+                            <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={varCostBase}
+                              onChange={(e) => setVarCostBase(e.target.value)}
+                              placeholder="ej. 10.00"
+                              className="w-full h-8 pl-7 pr-2.5 rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-900 text-xs"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col justify-end">
+                          <label className="flex items-center gap-2 p-1.5 rounded-xl bg-white border border-emerald-200 cursor-pointer hover:bg-emerald-50/60 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={varApplyIva}
+                              onChange={(e) => setVarApplyIva(e.target.checked)}
+                              className="w-3.5 h-3.5 text-emerald-600 rounded focus:ring-emerald-500"
+                            />
+                            <span className="font-bold text-slate-800 text-[11px]">
+                              + IVA 16% (Factura Fiscal)
+                            </span>
+                          </label>
+                          <span className="text-[10px] text-emerald-700 mt-1 pl-1">
+                            Costo con IVA: <strong>${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).costWithIva.toFixed(2)}</strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-800 text-[10px]">
+                              % Ganancia Mayor (ej. 0.70 o 70)
+                            </span>
+                            <span className="text-[10px] font-black text-emerald-700">
+                              {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).mMayor}%
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            value={varMarginMayor}
+                            onChange={(e) => setVarMarginMayor(e.target.value)}
+                            placeholder="70 o 0.70"
+                            className="w-full h-7 px-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                          />
+                          <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                            {["30", "40", "50", "70", "80"].map((pct) => (
+                              <button
+                                key={pct}
+                                type="button"
+                                onClick={() => setVarMarginMayor(pct)}
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                  varMarginMayor === pct || varMarginMayor === `0.${pct}`
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                              >
+                                {pct}%
+                              </button>
+                            ))}
+                          </div>
+                          {parseFloat(varCostBase) > 0 && (
+                            <div className="text-[10px] font-bold text-emerald-900 pt-0.5 border-t border-slate-100 flex items-center justify-between">
+                              <span>Sugerido:</span>
+                              <span className="font-black text-emerald-700">
+                                ${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).pMayor.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-800 text-[10px]">
+                              % Ganancia Gran Mayor (ej. 0.40 o 40)
+                            </span>
+                            <span className="text-[10px] font-black text-emerald-700">
+                              {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).mGran}%
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            value={varMarginGranMayor}
+                            onChange={(e) => setVarMarginGranMayor(e.target.value)}
+                            placeholder="40 o 0.40"
+                            className="w-full h-7 px-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                          />
+                          <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                            {["25", "35", "40", "50", "60"].map((pct) => (
+                              <button
+                                key={pct}
+                                type="button"
+                                onClick={() => setVarMarginGranMayor(pct)}
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                  varMarginGranMayor === pct || varMarginGranMayor === `0.${pct}`
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                              >
+                                {pct}%
+                              </button>
+                            ))}
+                          </div>
+                          {parseFloat(varCostBase) > 0 && (
+                            <div className="text-[10px] font-bold text-emerald-900 pt-0.5 border-t border-slate-100 flex items-center justify-between">
+                              <span>Sugerido:</span>
+                              <span className="font-black text-emerald-700">
+                                ${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).pGran.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {parseFloat(varCostBase) > 0 && (
+                        <div className="flex justify-end pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const computed = computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor);
+                              if (computed.pMayor > 0) {
+                                setVariantForm((prev) => ({
+                                  ...prev,
+                                  precio_mayor_usd: computed.pMayor.toFixed(2),
+                                  precio_gran_mayor_usd: computed.pGran.toFixed(2),
+                                }));
+                                showToast("¡Precios calculados aplicados a la variante!");
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Aplicar Precios a los Campos</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ORGANIZACIÓN DE PRECIOS Y MÍNIMOS DE COMPRA PARA LA VARIANTE */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {/* Tarjeta Nivel 1: Venta al Mayor */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-black text-[10px] uppercase">
+                        Nivel 1: Venta al Mayor
+                      </span>
+                      <span className="text-[10px] text-slate-500">Regular</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Mínimo Mayor (unidades/bultos) *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={variantForm.min_mayor}
+                        onChange={(e) => setVariantForm({ ...variantForm, min_mayor: e.target.value })}
+                        placeholder="1"
+                        className="w-full h-8 px-3 rounded-xl border border-slate-200 bg-white font-bold"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Precio al Mayor ($ USD) *
+                      </label>
+                      <div className="relative">
+                        <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={variantForm.precio_mayor_usd}
+                          onChange={(e) => setVariantForm({ ...variantForm, precio_mayor_usd: e.target.value })}
+                          placeholder="22.75"
+                          className="w-full h-8 pl-7 pr-3 rounded-xl border border-slate-300 bg-white font-black text-slate-900"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tarjeta Nivel 2: Gran Mayor */}
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded bg-emerald-600 text-white font-black text-[10px] uppercase shadow-2xs">
+                        Nivel 2: Gran Mayor
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-bold">Volumen</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-emerald-900 mb-1">
+                        Mínimo Gran Mayor (unidades/bultos) *
+                      </label>
+                      <input
+                        type="number"
+                        min="2"
+                        value={variantForm.min_gran_mayor}
+                        onChange={(e) => setVariantForm({ ...variantForm, min_gran_mayor: e.target.value })}
+                        placeholder="5"
+                        className="w-full h-8 px-3 rounded-xl border border-emerald-300 bg-white font-bold text-emerald-950"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-emerald-900 mb-1">
+                        Precio Gran Mayor ($ USD) *
+                      </label>
+                      <div className="relative">
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-500 absolute left-2.5 top-2.5" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={variantForm.precio_gran_mayor_usd}
+                          onChange={(e) => setVariantForm({ ...variantForm, precio_gran_mayor_usd: e.target.value })}
+                          placeholder="19.50"
+                          className="w-full h-8 pl-7 pr-3 rounded-xl border border-emerald-300 bg-white font-black text-emerald-900"
+                          required
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1589,7 +2144,7 @@ export default function AdminProductosPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Presentación (ej. 50 Und)</label>
+                  <label className="block font-bold text-slate-700 mb-1">Presentación (ej. 50 Und / Bulto)</label>
                   <input
                     type="text"
                     value={newProduct.presentacion}
@@ -1600,70 +2155,423 @@ export default function AdminProductosPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Precio al Mayor ($ USD)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newProduct.precio_mayor_usd}
-                    onChange={(e) => setNewProduct({ ...newProduct, precio_mayor_usd: e.target.value })}
-                    placeholder="22.75"
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Precio Gran Mayor ($ USD)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newProduct.precio_gran_mayor_usd}
-                    onChange={(e) => setNewProduct({ ...newProduct, precio_gran_mayor_usd: e.target.value })}
-                    placeholder="41.20"
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-emerald-800"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Stock Inicial</label>
+                  <label className="block font-bold text-slate-700 mb-1">Stock Inicial Disponible</label>
                   <input
                     type="number"
                     value={newProduct.stock}
                     onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Mínimo Mayor (unidades)</label>
-                  <input
-                    type="number"
-                    value={newProduct.min_mayor}
-                    onChange={(e) => setNewProduct({ ...newProduct, min_mayor: e.target.value })}
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
+                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
                   />
                 </div>
               </div>
 
-              {/* Subida opcional de fotos iniciales */}
-              <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Fotos Iniciales (hasta 10 fotos se optimizarán automáticamente)
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      setNewProductFiles(Array.from(e.target.files).slice(0, 10));
-                    }
-                  }}
-                  className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer"
-                />
-                {newProductFiles.length > 0 && (
-                  <p className="text-[11px] text-emerald-600 font-bold mt-1">
-                    ✓ {newProductFiles.length} foto(s) seleccionada(s)
-                  </p>
+              {/* ─────────────────────────────────────────────────────────
+                  CALCULADORA DE COSTO + IVA + MARGEN (% GANANCIA)
+                  ───────────────────────────────────────────────────────── */}
+              <div className="rounded-2xl border-2 border-emerald-500/20 bg-emerald-50/40 p-4 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                      <Calculator className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                        Calculadora de Costos y Margen de Ganancia
+                      </h4>
+                      <p className="text-[11px] text-emerald-800">
+                        Ingresa tu costo base y define el % o multiplicador (ej. 0.70 o 70%)
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCalc(!showAddCalc)}
+                    className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
+                  >
+                    {showAddCalc ? "Ocultar" : "Mostrar Calculadora"}
+                  </button>
+                </div>
+
+                {showAddCalc && (
+                  <div className="space-y-3 pt-1 text-xs">
+                    {/* Fila 1: Costo base e IVA */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">
+                          Costo Base de Compra ($ USD) *
+                        </label>
+                        <div className="relative">
+                          <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={addCostBase}
+                            onChange={(e) => setAddCostBase(e.target.value)}
+                            placeholder="ej. 10.00"
+                            className="w-full h-9 pl-8 pr-3 rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-900"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col justify-end">
+                        <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-200 cursor-pointer hover:bg-emerald-50/60 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={addApplyIva}
+                            onChange={(e) => setAddApplyIva(e.target.checked)}
+                            className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                          />
+                          <span className="font-bold text-slate-800 text-[11px]">
+                            + IVA 16% (Factura Fiscal)
+                          </span>
+                        </label>
+                        <span className="text-[10px] text-emerald-700 mt-1 pl-1">
+                          Costo total calculado: <strong>${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).costWithIva.toFixed(2)}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Fila 2: Margen Mayor y Gran Mayor */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Margen Mayor */}
+                      <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-800 text-[11px]">
+                            % Ganancia al Mayor (ej. 0.70 o 70)
+                          </span>
+                          <span className="text-[10px] font-black text-emerald-700">
+                            {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).mMayor}%
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          value={addMarginMayor}
+                          onChange={(e) => setAddMarginMayor(e.target.value)}
+                          placeholder="70 o 0.70"
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                        />
+                        <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                          {["30", "40", "50", "70", "80"].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => setAddMarginMayor(pct)}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                addMarginMayor === pct || addMarginMayor === `0.${pct}`
+                                  ? "bg-emerald-600 text-white"
+                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              }`}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
+                        </div>
+                        {parseFloat(addCostBase) > 0 && (
+                          <div className="text-[11px] font-bold text-emerald-900 pt-1 border-t border-slate-100 flex items-center justify-between">
+                            <span>Precio Sugerido:</span>
+                            <span className="text-xs font-black text-emerald-700">
+                              ${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).pMayor.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Margen Gran Mayor */}
+                      <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-800 text-[11px]">
+                            % Ganancia Gran Mayor (ej. 0.40 o 40)
+                          </span>
+                          <span className="text-[10px] font-black text-emerald-700">
+                            {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).mGran}%
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          value={addMarginGranMayor}
+                          onChange={(e) => setAddMarginGranMayor(e.target.value)}
+                          placeholder="40 o 0.40"
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                        />
+                        <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                          {["25", "35", "40", "50", "60"].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => setAddMarginGranMayor(pct)}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                addMarginGranMayor === pct || addMarginGranMayor === `0.${pct}`
+                                  ? "bg-emerald-600 text-white"
+                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              }`}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
+                        </div>
+                        {parseFloat(addCostBase) > 0 && (
+                          <div className="text-[11px] font-bold text-emerald-900 pt-1 border-t border-slate-100 flex items-center justify-between">
+                            <span>Precio Sugerido:</span>
+                            <span className="text-xs font-black text-emerald-700">
+                              ${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).pGran.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Botón Aplicar Precios */}
+                    {parseFloat(addCostBase) > 0 && (
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const computed = computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor);
+                            if (computed.pMayor > 0) {
+                              setNewProduct((prev) => ({
+                                ...prev,
+                                precio_mayor_usd: computed.pMayor.toFixed(2),
+                                precio_gran_mayor_usd: computed.pGran.toFixed(2),
+                              }));
+                              showToast("¡Precios calculados aplicados a los campos!");
+                            }
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-transform active:scale-95"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Aplicar Precios a los Campos Abajo</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ─────────────────────────────────────────────────────────
+                  ORGANIZACIÓN DE PRECIOS: VENTA AL MAYOR Y GRAN MAYOR
+                  ───────────────────────────────────────────────────────── */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-brand" />
+                  <span>Configuración de Precios y Mínimos de Compra</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Tarjeta Nivel 1: Venta al Mayor */}
+                  <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-800 font-black text-[10px] uppercase">
+                        Nivel 1: Venta al Mayor
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium">Pedidos regulares</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Cantidad Mínima Mayor (unidades o bultos) *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={newProduct.min_mayor}
+                        onChange={(e) => setNewProduct({ ...newProduct, min_mayor: e.target.value })}
+                        placeholder="1"
+                        className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 font-bold text-xs"
+                        required
+                      />
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        Ej. 1 bulto o paquete mínimo para comprar
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Precio al Mayor ($ USD) *
+                      </label>
+                      <div className="relative">
+                        <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={newProduct.precio_mayor_usd}
+                          onChange={(e) => setNewProduct({ ...newProduct, precio_mayor_usd: e.target.value })}
+                          placeholder="22.75"
+                          className="w-full h-9 pl-8 pr-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 font-black text-sm text-slate-900"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tarjeta Nivel 2: Venta al Gran Mayor */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-black text-[10px] uppercase shadow-2xs">
+                        Nivel 2: Gran Mayor (Volumen)
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-bold">Descuento</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-emerald-900 mb-1">
+                        Cantidad Mínima Gran Mayor (unidades o bultos) *
+                      </label>
+                      <input
+                        type="number"
+                        min="2"
+                        value={newProduct.min_gran_mayor}
+                        onChange={(e) => setNewProduct({ ...newProduct, min_gran_mayor: e.target.value })}
+                        placeholder="5"
+                        className="w-full h-9 px-3 rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-xs text-emerald-950"
+                        required
+                      />
+                      <span className="text-[10px] text-emerald-600 block mt-0.5">
+                        Ej. A partir de 5 bultos o cajas
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-emerald-900 mb-1">
+                        Precio Gran Mayor ($ USD) *
+                      </label>
+                      <div className="relative">
+                        <DollarSign className="w-4 h-4 text-emerald-500 absolute left-3 top-2.5" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={newProduct.precio_gran_mayor_usd}
+                          onChange={(e) => setNewProduct({ ...newProduct, precio_gran_mayor_usd: e.target.value })}
+                          placeholder="19.50"
+                          className="w-full h-9 pl-8 pr-3 rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-black text-sm text-emerald-900"
+                          required
+                        />
+                      </div>
+                      <span className="text-[10px] text-emerald-700 block mt-0.5 font-medium">
+                        Precio más económico por unidad al llevar volumen
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ─────────────────────────────────────────────────────────
+                  CARRUSEL DE FOTOS: PORTADA Y ORDEN INTERACTIVO
+                  ───────────────────────────────────────────────────────── */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-brand" />
+                      <span>Fotos del Producto ({newProductPhotoItems.length} / 10)</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Organiza el orden y elige cuál será la foto principal de portada.
+                    </p>
+                  </div>
+
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all">
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Seleccionar Fotos</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleSelectNewPhotos}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Previsualización interactiva con carrusel/tira de miniaturas */}
+                {newProductPhotoItems.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {newProductPhotoItems.map((item, idx) => (
+                        <div
+                          key={item.id}
+                          className={`relative rounded-2xl border p-2 bg-white transition-all shadow-2xs flex flex-col justify-between ${
+                            item.isPrimary
+                              ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-md"
+                              : "border-slate-200"
+                          }`}
+                        >
+                          {/* Miniatura de la foto */}
+                          <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-100 border border-slate-100 mb-1.5">
+                            <img
+                              src={item.previewUrl}
+                              alt={`Foto ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+
+                            {/* Badge de Portada */}
+                            {item.isPrimary ? (
+                              <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black flex items-center gap-1 shadow-sm">
+                                <Star className="w-3 h-3 fill-white" /> Portada
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSetPrimaryNewPhoto(item.id)}
+                                title="Hacer esta foto la portada principal"
+                                className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 hover:bg-emerald-600 text-white text-[10px] font-bold opacity-90 group-hover:opacity-100 transition-opacity"
+                              >
+                                Hacer Portada
+                              </button>
+                            )}
+
+                            {/* Botón Quitar */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveNewPhoto(item.id)}
+                              title="Quitar foto"
+                              className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-xs"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+
+                            {/* Número de orden en el carrusel */}
+                            <span className="absolute bottom-1.5 right-1.5 text-[9px] font-black text-white bg-black/60 px-1.5 py-0.5 rounded">
+                              #{idx + 1}
+                            </span>
+                          </div>
+
+                          {/* Botones para Mover Orden (Antes / Después) */}
+                          <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveNewPhoto(idx, -1)}
+                              title="Mover foto a la izquierda"
+                              className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                            >
+                              <ChevronLeft className="w-3 h-3" />
+                              <span>Antes</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === newProductPhotoItems.length - 1}
+                              onClick={() => handleMoveNewPhoto(idx, 1)}
+                              title="Mover foto a la derecha"
+                              className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                            >
+                              <span>Después</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" />
+                      {newProductPhotoItems.length} foto(s) listas. La foto marcada como &quot;Portada&quot; saldrá primero.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-1.5 bg-slate-50/50">
+                    <ImageIcon className="w-6 h-6 text-slate-300" />
+                    <span>No has seleccionado fotos todavía. Toca &quot;Seleccionar Fotos&quot; para subir hasta 10 fotos.</span>
+                  </div>
                 )}
               </div>
 

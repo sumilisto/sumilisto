@@ -6,6 +6,7 @@ import {
   deleteProductVideo,
   setPrimaryPhoto,
   setPhotoVariant,
+  reorderProductPhotos,
 } from "@/lib/supabase/queries";
 import { revalidateTag } from "next/cache";
 
@@ -14,6 +15,18 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const action = formData.get("action") as string;
+
+    // Acción para reordenar fotos
+    if (action === "reorder") {
+      const photoIdsRaw = formData.get("photo_ids") as string;
+      if (!photoIdsRaw) {
+        return NextResponse.json({ error: "Falta photo_ids" }, { status: 400 });
+      }
+      const photoIds = JSON.parse(photoIdsRaw);
+      await reorderProductPhotos(photoIds);
+      revalidateTag("products");
+      return NextResponse.json({ ok: true });
+    }
 
     // Acción para marcar foto como portada principal
     if (action === "set-primary") {
