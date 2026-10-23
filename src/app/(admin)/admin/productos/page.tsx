@@ -22,29 +22,40 @@ interface UploadPhotoItem {
   isPrimary: boolean;
 }
 
-// Función auxiliar para calcular precios según Costo + IVA + Margen
+// Función auxiliar para calcular precios según Costo + IVA dividido entre Factor Divisor ($10 / 0.70 = $14.29)
 function computePricing(costStr: string, withIva: boolean, mMayorStr: string, mGranStr: string) {
   const rawCost = parseFloat(String(costStr).replace(",", "."));
   if (isNaN(rawCost) || rawCost <= 0) {
-    return { costWithIva: 0, pMayor: 0, pGran: 0, profitMayor: 0, profitGran: 0, mMayor: 0, mGran: 0 };
+    return {
+      costWithIva: 0,
+      pMayor: 0,
+      pGran: 0,
+      profitMayor: 0,
+      profitGran: 0,
+      factorMayor: 0.70,
+      factorGran: 0.80,
+      factorMayorStr: "0.70",
+      factorGranStr: "0.80",
+    };
   }
   const costWithIva = withIva ? rawCost * 1.16 : rawCost;
 
-  let mMayor = parseFloat(String(mMayorStr).replace(",", "."));
-  if (isNaN(mMayor) || mMayor < 0) mMayor = 0;
-  // Acepta formato decimal como 0.70 o 0.80 y lo convierte a porcentaje 70% u 80%
-  if (mMayor > 0 && mMayor <= 2.0 && String(mMayorStr).includes(".")) {
-    mMayor = mMayor * 100;
-  }
+  const parseDivisor = (val: string, fallback: number) => {
+    let n = parseFloat(String(val).replace(",", "."));
+    if (isNaN(n) || n <= 0) return fallback;
+    if (n > 1) {
+      n = n / 100; // si escribe 70 -> 0.70, si escribe 80 -> 0.80
+    }
+    if (n <= 0 || n >= 1) return fallback;
+    return n;
+  };
 
-  let mGran = parseFloat(String(mGranStr).replace(",", "."));
-  if (isNaN(mGran) || mGran < 0) mGran = 0;
-  if (mGran > 0 && mGran <= 2.0 && String(mGranStr).includes(".")) {
-    mGran = mGran * 100;
-  }
+  const factorMayor = parseDivisor(mMayorStr, 0.70);
+  const factorGran = parseDivisor(mGranStr, 0.80);
 
-  const pMayor = costWithIva * (1 + mMayor / 100);
-  const pGran = costWithIva * (1 + mGran / 100);
+  // Fórmula solicitada por el usuario: Precio = Costo / Factor (ej. $10 / 0.70 = $14.2857 -> $14.29)
+  const pMayor = costWithIva / factorMayor;
+  const pGran = costWithIva / factorGran;
 
   return {
     costWithIva: Math.round(costWithIva * 100) / 100,
@@ -52,8 +63,10 @@ function computePricing(costStr: string, withIva: boolean, mMayorStr: string, mG
     pGran: Math.round(pGran * 100) / 100,
     profitMayor: Math.round((pMayor - costWithIva) * 100) / 100,
     profitGran: Math.round((pGran - costWithIva) * 100) / 100,
-    mMayor,
-    mGran,
+    factorMayor,
+    factorGran,
+    factorMayorStr: factorMayor.toFixed(2),
+    factorGranStr: factorGran.toFixed(2),
   };
 }
 
@@ -102,8 +115,8 @@ export default function AdminProductosPage() {
   const [showVarCalc, setShowVarCalc] = useState(false);
   const [varCostBase, setVarCostBase] = useState("");
   const [varApplyIva, setVarApplyIva] = useState(true);
-  const [varMarginMayor, setVarMarginMayor] = useState("70");
-  const [varMarginGranMayor, setVarMarginGranMayor] = useState("40");
+  const [varMarginMayor, setVarMarginMayor] = useState("0.70");
+  const [varMarginGranMayor, setVarMarginGranMayor] = useState("0.80");
 
   // Modal: Agregar Producto Nuevo
   const [showAddModal, setShowAddModal] = useState(false);
@@ -126,8 +139,8 @@ export default function AdminProductosPage() {
   const [showAddCalc, setShowAddCalc] = useState(true);
   const [addCostBase, setAddCostBase] = useState("");
   const [addApplyIva, setAddApplyIva] = useState(true);
-  const [addMarginMayor, setAddMarginMayor] = useState("70");
-  const [addMarginGranMayor, setAddMarginGranMayor] = useState("40");
+  const [addMarginMayor, setAddMarginMayor] = useState("0.70");
+  const [addMarginGranMayor, setAddMarginGranMayor] = useState("0.80");
 
   // Fotos interactivas del nuevo producto (previsualización, portada y orden)
   const [newProductPhotoItems, setNewProductPhotoItems] = useState<UploadPhotoItem[]>([]);
@@ -1790,10 +1803,10 @@ export default function AdminProductosPage() {
                       </div>
                       <div>
                         <h5 className="text-[11px] font-black uppercase tracking-wider text-emerald-950">
-                          Calculadora de Costo y Margen (% Ganancia)
+                          Calculadora de Precios: Costo ÷ Factor (ej. $10 ÷ 0.70 = $14.29)
                         </h5>
                         <p className="text-[10px] text-emerald-800">
-                          Calcula el precio Mayor y Gran Mayor según costo + IVA 16% + margen (ej. 0.70 o 70%)
+                          Divide el costo total entre el factor divisor deseado (0.70, 0.80, etc.)
                         </p>
                       </div>
                     </div>
@@ -1845,41 +1858,42 @@ export default function AdminProductosPage() {
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* Factor Mayor */}
                         <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-800 text-[10px]">
-                              % Ganancia Mayor (ej. 0.70 o 70)
+                              Factor Divisor Mayor (ej. 0.70 o 70)
                             </span>
                             <span className="text-[10px] font-black text-emerald-700">
-                              {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).mMayor}%
+                              ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorMayorStr}
                             </span>
                           </div>
                           <input
                             type="text"
                             value={varMarginMayor}
                             onChange={(e) => setVarMarginMayor(e.target.value)}
-                            placeholder="70 o 0.70"
+                            placeholder="0.70"
                             className="w-full h-7 px-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
                           />
                           <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                            {["30", "40", "50", "70", "80"].map((pct) => (
+                            {["0.60", "0.65", "0.70", "0.75", "0.80"].map((f) => (
                               <button
-                                key={pct}
+                                key={f}
                                 type="button"
-                                onClick={() => setVarMarginMayor(pct)}
+                                onClick={() => setVarMarginMayor(f)}
                                 className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                  varMarginMayor === pct || varMarginMayor === `0.${pct}`
+                                  varMarginMayor === f || varMarginMayor === f.replace("0.", "")
                                     ? "bg-emerald-600 text-white"
                                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                 }`}
                               >
-                                {pct}%
+                                {f}
                               </button>
                             ))}
                           </div>
                           {parseFloat(varCostBase) > 0 && (
                             <div className="text-[10px] font-bold text-emerald-900 pt-0.5 border-t border-slate-100 flex items-center justify-between">
-                              <span>Sugerido:</span>
+                              <span>${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorMayorStr} =</span>
                               <span className="font-black text-emerald-700">
                                 ${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).pMayor.toFixed(2)}
                               </span>
@@ -1887,41 +1901,42 @@ export default function AdminProductosPage() {
                           )}
                         </div>
 
+                        {/* Factor Gran Mayor */}
                         <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-800 text-[10px]">
-                              % Ganancia Gran Mayor (ej. 0.40 o 40)
+                              Factor Divisor Gran Mayor (ej. 0.80 o 80)
                             </span>
                             <span className="text-[10px] font-black text-emerald-700">
-                              {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).mGran}%
+                              ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorGranStr}
                             </span>
                           </div>
                           <input
                             type="text"
                             value={varMarginGranMayor}
                             onChange={(e) => setVarMarginGranMayor(e.target.value)}
-                            placeholder="40 o 0.40"
+                            placeholder="0.80"
                             className="w-full h-7 px-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
                           />
                           <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                            {["25", "35", "40", "50", "60"].map((pct) => (
+                            {["0.70", "0.75", "0.80", "0.85", "0.90"].map((f) => (
                               <button
-                                key={pct}
+                                key={f}
                                 type="button"
-                                onClick={() => setVarMarginGranMayor(pct)}
+                                onClick={() => setVarMarginGranMayor(f)}
                                 className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                  varMarginGranMayor === pct || varMarginGranMayor === `0.${pct}`
+                                  varMarginGranMayor === f || varMarginGranMayor === f.replace("0.", "")
                                     ? "bg-emerald-600 text-white"
                                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                 }`}
                               >
-                                {pct}%
+                                {f}
                               </button>
                             ))}
                           </div>
                           {parseFloat(varCostBase) > 0 && (
                             <div className="text-[10px] font-bold text-emerald-900 pt-0.5 border-t border-slate-100 flex items-center justify-between">
-                              <span>Sugerido:</span>
+                              <span>${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorGranStr} =</span>
                               <span className="font-black text-emerald-700">
                                 ${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).pGran.toFixed(2)}
                               </span>
@@ -2176,10 +2191,10 @@ export default function AdminProductosPage() {
                     </div>
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
-                        Calculadora de Costos y Margen de Ganancia
+                        Calculadora de Precios: Costo ÷ Factor (ej. $10 ÷ 0.70 = $14.29)
                       </h4>
                       <p className="text-[11px] text-emerald-800">
-                        Ingresa tu costo base y define el % o multiplicador (ej. 0.70 o 70%)
+                        Divide el costo total entre el factor divisor deseado (0.70, 0.80, etc.) para fijar tu precio y ganancia
                       </p>
                     </div>
                   </div>
@@ -2231,44 +2246,44 @@ export default function AdminProductosPage() {
                       </div>
                     </div>
 
-                    {/* Fila 2: Margen Mayor y Gran Mayor */}
+                    {/* Fila 2: Factor Divisor Mayor y Gran Mayor */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      {/* Margen Mayor */}
+                      {/* Factor Mayor */}
                       <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-800 text-[11px]">
-                            % Ganancia al Mayor (ej. 0.70 o 70)
+                            Factor Divisor Mayor (ej. 0.70 o 70)
                           </span>
                           <span className="text-[10px] font-black text-emerald-700">
-                            {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).mMayor}%
+                            ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorMayorStr}
                           </span>
                         </div>
                         <input
                           type="text"
                           value={addMarginMayor}
                           onChange={(e) => setAddMarginMayor(e.target.value)}
-                          placeholder="70 o 0.70"
+                          placeholder="0.70"
                           className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
                         />
                         <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                          {["30", "40", "50", "70", "80"].map((pct) => (
+                          {["0.60", "0.65", "0.70", "0.75", "0.80"].map((f) => (
                             <button
-                              key={pct}
+                              key={f}
                               type="button"
-                              onClick={() => setAddMarginMayor(pct)}
+                              onClick={() => setAddMarginMayor(f)}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                addMarginMayor === pct || addMarginMayor === `0.${pct}`
+                                addMarginMayor === f || addMarginMayor === f.replace("0.", "")
                                   ? "bg-emerald-600 text-white"
                                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                               }`}
                             >
-                              {pct}%
+                              {f}
                             </button>
                           ))}
                         </div>
                         {parseFloat(addCostBase) > 0 && (
                           <div className="text-[11px] font-bold text-emerald-900 pt-1 border-t border-slate-100 flex items-center justify-between">
-                            <span>Precio Sugerido:</span>
+                            <span>${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorMayorStr} =</span>
                             <span className="text-xs font-black text-emerald-700">
                               ${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).pMayor.toFixed(2)}
                             </span>
@@ -2276,42 +2291,42 @@ export default function AdminProductosPage() {
                         )}
                       </div>
 
-                      {/* Margen Gran Mayor */}
+                      {/* Factor Gran Mayor */}
                       <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-800 text-[11px]">
-                            % Ganancia Gran Mayor (ej. 0.40 o 40)
+                            Factor Divisor Gran Mayor (ej. 0.80 o 80)
                           </span>
                           <span className="text-[10px] font-black text-emerald-700">
-                            {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).mGran}%
+                            ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorGranStr}
                           </span>
                         </div>
                         <input
                           type="text"
                           value={addMarginGranMayor}
                           onChange={(e) => setAddMarginGranMayor(e.target.value)}
-                          placeholder="40 o 0.40"
+                          placeholder="0.80"
                           className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
                         />
                         <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                          {["25", "35", "40", "50", "60"].map((pct) => (
+                          {["0.70", "0.75", "0.80", "0.85", "0.90"].map((f) => (
                             <button
-                              key={pct}
+                              key={f}
                               type="button"
-                              onClick={() => setAddMarginGranMayor(pct)}
+                              onClick={() => setAddMarginGranMayor(f)}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                addMarginGranMayor === pct || addMarginGranMayor === `0.${pct}`
+                                addMarginGranMayor === f || addMarginGranMayor === f.replace("0.", "")
                                   ? "bg-emerald-600 text-white"
                                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                               }`}
                             >
-                              {pct}%
+                              {f}
                             </button>
                           ))}
                         </div>
                         {parseFloat(addCostBase) > 0 && (
                           <div className="text-[11px] font-bold text-emerald-900 pt-1 border-t border-slate-100 flex items-center justify-between">
-                            <span>Precio Sugerido:</span>
+                            <span>${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorGranStr} =</span>
                             <span className="text-xs font-black text-emerald-700">
                               ${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).pGran.toFixed(2)}
                             </span>
