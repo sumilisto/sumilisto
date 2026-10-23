@@ -125,21 +125,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className="flex flex-col flex-1 justify-between"
       >
         <div>
-          {/* 1. Categoría */}
+          {/* 1. Categoría con el color de la marca ($) */}
           {product.categoria && (
             <p
               style={{ fontSize: categorySize }}
-              className="font-bold text-slate-900 leading-tight"
+              className="font-bold text-brand leading-tight"
             >
               {product.categoria}
             </p>
           )}
 
-          {/* 2. Nombre del producto */}
+          {/* 2. Nombre del producto en negrita */}
           <Link href={`/producto/${product.slug}`}>
             <h3
               style={{ fontSize: titleSize, marginTop: lineSpacing }}
-              className="font-normal text-slate-900 leading-snug line-clamp-2 hover:text-brand transition-colors"
+              className="font-bold text-slate-900 leading-snug line-clamp-2 hover:text-brand transition-colors"
             >
               {product.nombre}
             </h3>

@@ -906,13 +906,13 @@ export default function AdminSettingsPage() {
                   <div>
                     <p
                       style={{ fontSize: cardCategoryFontSize }}
-                      className="font-bold text-slate-900 leading-tight"
+                      className="font-bold text-brand leading-tight"
                     >
                       Bolsas para Café
                     </p>
                     <p
                       style={{ fontSize: cardTitleFontSize, marginTop: cardLineSpacing }}
-                      className="font-normal text-slate-900 leading-snug line-clamp-2"
+                      className="font-bold text-slate-900 leading-snug line-clamp-2"
                     >
                       Bolsa Kraft 250gr con Válvula Desgasificadora
                     </p>
