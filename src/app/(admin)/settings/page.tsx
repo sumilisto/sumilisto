@@ -945,10 +945,14 @@ export default function AdminSettingsPage() {
                           <span className="text-[11px] font-medium text-slate-700 block leading-tight">
                             Gran Mayor: 150Und
                           </span>
-                          <span className="inline-flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 py-0.5 rounded-lg text-center leading-none">
-                            <span className="text-[10px] font-bold text-amber-800">Ahorras</span>
-                            <span className="text-[11px] font-bold text-amber-900 mt-0.5">$20.43</span>
-                          </span>
+                          <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg text-center shrink-0">
+                            <span className="text-[10px] font-bold block leading-tight text-amber-800">
+                              Ahorras
+                            </span>
+                            <span className="text-[11px] font-black block leading-tight text-amber-950">
+                              $20.43
+                            </span>
+                          </div>
                         </div>
                         <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
                           <span
