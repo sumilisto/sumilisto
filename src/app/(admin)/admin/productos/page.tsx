@@ -22,13 +22,25 @@ interface UploadPhotoItem {
   isPrimary: boolean;
 }
 
-// Función auxiliar para calcular precios según Costo + IVA dividido entre Factor Divisor ($10 / 0.70 = $14.29)
-function computePricing(costStr: string, withIva: boolean, mMayorStr: string, mGranStr: string) {
+// Función auxiliar para calcular precios según Costo (+ IVA compra) / Factor de Margen (+ IVA venta)
+function computePricing(
+  costStr: string,
+  withIvaCompra: boolean,
+  withIvaVenta: boolean,
+  mMayorStr: string,
+  mGranStr: string
+) {
   const rawCost = parseFloat(String(costStr).replace(",", "."));
   if (isNaN(rawCost) || rawCost <= 0) {
     return {
+      costBase: 0,
+      costoCalculado: 0,
       costWithIva: 0,
+      netoMayor: 0,
+      ivaMayor: 0,
       pMayor: 0,
+      netoGran: 0,
+      ivaGran: 0,
       pGran: 0,
       profitMayor: 0,
       profitGran: 0,
@@ -38,7 +50,9 @@ function computePricing(costStr: string, withIva: boolean, mMayorStr: string, mG
       factorGranStr: "0.80",
     };
   }
-  const costWithIva = withIva ? rawCost * 1.16 : rawCost;
+
+  // 1. Costo de adquisición (con o sin IVA de compra)
+  const costoCalculado = withIvaCompra ? rawCost * 1.16 : rawCost;
 
   const parseDivisor = (val: string, fallback: number) => {
     let n = parseFloat(String(val).replace(",", "."));
@@ -53,16 +67,30 @@ function computePricing(costStr: string, withIva: boolean, mMayorStr: string, mG
   const factorMayor = parseDivisor(mMayorStr, 0.70);
   const factorGran = parseDivisor(mGranStr, 0.80);
 
-  // Fórmula solicitada por el usuario: Precio = Costo / Factor (ej. $10 / 0.70 = $14.2857 -> $14.29)
-  const pMayor = costWithIva / factorMayor;
-  const pGran = costWithIva / factorGran;
+  // 2. Precio base neto según margen divisor: Costo / Factor (ej. $22.75 / 0.70 = $32.50)
+  const netoMayor = costoCalculado / factorMayor;
+  const netoGran = costoCalculado / factorGran;
+
+  // 3. IVA a la hora de la Venta (16% sobre el precio de venta)
+  const ivaMayor = withIvaVenta ? netoMayor * 0.16 : 0;
+  const ivaGran = withIvaVenta ? netoGran * 0.16 : 0;
+
+  // 4. Precio final de venta (con IVA venta si aplica)
+  const pMayor = netoMayor + ivaMayor;
+  const pGran = netoGran + ivaGran;
 
   return {
-    costWithIva: Math.round(costWithIva * 100) / 100,
+    costBase: Math.round(rawCost * 100) / 100,
+    costoCalculado: Math.round(costoCalculado * 100) / 100,
+    costWithIva: Math.round(costoCalculado * 100) / 100,
+    netoMayor: Math.round(netoMayor * 100) / 100,
+    ivaMayor: Math.round(ivaMayor * 100) / 100,
     pMayor: Math.round(pMayor * 100) / 100,
+    netoGran: Math.round(netoGran * 100) / 100,
+    ivaGran: Math.round(ivaGran * 100) / 100,
     pGran: Math.round(pGran * 100) / 100,
-    profitMayor: Math.round((pMayor - costWithIva) * 100) / 100,
-    profitGran: Math.round((pGran - costWithIva) * 100) / 100,
+    profitMayor: Math.round((netoMayor - costoCalculado) * 100) / 100,
+    profitGran: Math.round((netoGran - costoCalculado) * 100) / 100,
     factorMayor,
     factorGran,
     factorMayorStr: factorMayor.toFixed(2),
@@ -114,7 +142,8 @@ export default function AdminProductosPage() {
   // Calculadora en Modal Variantes
   const [showVarCalc, setShowVarCalc] = useState(false);
   const [varCostBase, setVarCostBase] = useState("");
-  const [varApplyIva, setVarApplyIva] = useState(true);
+  const [varApplyIvaCompra, setVarApplyIvaCompra] = useState(false);
+  const [varApplyIvaVenta, setVarApplyIvaVenta] = useState(true);
   const [varMarginMayor, setVarMarginMayor] = useState("0.70");
   const [varMarginGranMayor, setVarMarginGranMayor] = useState("0.80");
 
@@ -138,7 +167,8 @@ export default function AdminProductosPage() {
   // Calculadora en Modal Nuevo Producto
   const [showAddCalc, setShowAddCalc] = useState(true);
   const [addCostBase, setAddCostBase] = useState("");
-  const [addApplyIva, setAddApplyIva] = useState(true);
+  const [addApplyIvaCompra, setAddApplyIvaCompra] = useState(false);
+  const [addApplyIvaVenta, setAddApplyIvaVenta] = useState(true);
   const [addMarginMayor, setAddMarginMayor] = useState("0.70");
   const [addMarginGranMayor, setAddMarginGranMayor] = useState("0.80");
 
@@ -1844,11 +1874,13 @@ export default function AdminProductosPage() {
                   </div>
 
                   {showVarCalc && (
-                    <div className="space-y-2.5 pt-1 text-xs">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <div>
+                    <div className="space-y-3 pt-1 text-xs">
+                      {/* Fila 1: Costo base e IVAs */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-start">
+                        {/* Costo Base de Compra */}
+                        <div className="md:col-span-5">
                           <label className="block font-bold text-slate-800 mb-1 text-[11px]">
-                            Costo Base de Compra ($ USD)
+                            Costo Base de Compra ($ USD) *
                           </label>
                           <div className="relative">
                             <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -1857,39 +1889,71 @@ export default function AdminProductosPage() {
                               step="0.01"
                               value={varCostBase}
                               onChange={(e) => setVarCostBase(e.target.value)}
-                              placeholder="ej. 10.00"
+                              placeholder="ej. 22.75"
                               className="w-full h-8 pl-7 pr-2.5 rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-900 text-xs"
                             />
                           </div>
+                          {parseFloat(varCostBase) > 0 && (
+                            <span className="text-[10px] text-emerald-800 font-medium block mt-1 pl-0.5">
+                              Costo compra: <strong>${computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor).costoCalculado.toFixed(2)}</strong> {varApplyIvaCompra ? "(con IVA 16%)" : "(neto)"}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex flex-col justify-end">
-                          <label className="flex items-center gap-2 p-1.5 rounded-xl bg-white border border-emerald-200 cursor-pointer hover:bg-emerald-50/60 transition-colors">
+                        {/* Opciones de IVA: Compra y Venta */}
+                        <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {/* IVA Compra */}
+                          <label className={`flex items-start gap-2 p-2 rounded-xl border cursor-pointer transition-colors ${
+                            varApplyIvaCompra ? "bg-emerald-50/80 border-emerald-300" : "bg-white border-slate-200 hover:bg-slate-50"
+                          }`}>
                             <input
                               type="checkbox"
-                              checked={varApplyIva}
-                              onChange={(e) => setVarApplyIva(e.target.checked)}
-                              className="w-3.5 h-3.5 text-emerald-600 rounded focus:ring-emerald-500"
+                              checked={varApplyIvaCompra}
+                              onChange={(e) => setVarApplyIvaCompra(e.target.checked)}
+                              className="w-3.5 h-3.5 mt-0.5 text-emerald-600 rounded focus:ring-emerald-500"
                             />
-                            <span className="font-bold text-slate-800 text-[11px]">
-                              + IVA 16% (Factura Fiscal)
-                            </span>
+                            <div className="flex flex-col leading-tight">
+                              <span className="font-bold text-slate-800 text-[11px]">
+                                + IVA 16% en Compra
+                              </span>
+                              <span className="text-[9px] text-slate-500 mt-0.5">
+                                Factura fiscal proveedor
+                              </span>
+                            </div>
                           </label>
-                          <span className="text-[10px] text-emerald-700 mt-1 pl-1">
-                            Costo con IVA: <strong>${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).costWithIva.toFixed(2)}</strong>
-                          </span>
+
+                          {/* IVA Venta */}
+                          <label className={`flex items-start gap-2 p-2 rounded-xl border cursor-pointer transition-colors ${
+                            varApplyIvaVenta ? "bg-emerald-100/70 border-emerald-400 ring-1 ring-emerald-300" : "bg-white border-slate-200 hover:bg-slate-50"
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={varApplyIvaVenta}
+                              onChange={(e) => setVarApplyIvaVenta(e.target.checked)}
+                              className="w-3.5 h-3.5 mt-0.5 text-emerald-600 rounded focus:ring-emerald-500"
+                            />
+                            <div className="flex flex-col leading-tight">
+                              <span className="font-bold text-emerald-950 text-[11px]">
+                                + IVA 16% a la Venta
+                              </span>
+                              <span className="text-[9px] text-emerald-700 mt-0.5 font-medium">
+                                Cobrado al cliente en tienda
+                              </span>
+                            </div>
+                          </label>
                         </div>
                       </div>
 
+                      {/* Factores de Margen Divisor */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {/* Factor Mayor */}
-                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1">
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1.5 shadow-2xs">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-800 text-[10px]">
                               Factor Divisor Mayor (ej. 0.70 o 70)
                             </span>
                             <span className="text-[10px] font-black text-emerald-700">
-                              ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorMayorStr}
+                              ÷ {computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor).factorMayorStr}
                             </span>
                           </div>
                           <input
@@ -1915,24 +1979,37 @@ export default function AdminProductosPage() {
                               </button>
                             ))}
                           </div>
-                          {parseFloat(varCostBase) > 0 && (
-                            <div className="text-[10px] font-bold text-emerald-900 pt-0.5 border-t border-slate-100 flex items-center justify-between">
-                              <span>${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorMayorStr} =</span>
-                              <span className="font-black text-emerald-700">
-                                ${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).pMayor.toFixed(2)}
-                              </span>
-                            </div>
-                          )}
+                          {parseFloat(varCostBase) > 0 && (() => {
+                            const res = computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor);
+                            return (
+                              <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[10px]">
+                                <div className="flex items-center justify-between text-slate-600">
+                                  <span>Base neta (${res.costoCalculado.toFixed(2)} ÷ {res.factorMayorStr}):</span>
+                                  <span className="font-semibold text-slate-800">${res.netoMayor.toFixed(2)}</span>
+                                </div>
+                                {varApplyIvaVenta && (
+                                  <div className="flex items-center justify-between text-emerald-700">
+                                    <span>+ IVA 16% Venta:</span>
+                                    <span className="font-semibold">+${res.ivaMayor.toFixed(2)}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center justify-between font-black text-xs text-emerald-950 bg-emerald-50/90 p-1.5 rounded-lg border border-emerald-200/80">
+                                  <span>Precio Final:</span>
+                                  <span className="text-emerald-700 text-sm">${res.pMayor.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Factor Gran Mayor */}
-                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1">
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200/80 space-y-1.5 shadow-2xs">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-800 text-[10px]">
                               Factor Divisor Gran Mayor (ej. 0.80 o 80)
                             </span>
                             <span className="text-[10px] font-black text-emerald-700">
-                              ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorGranStr}
+                              ÷ {computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor).factorGranStr}
                             </span>
                           </div>
                           <input
@@ -1958,14 +2035,27 @@ export default function AdminProductosPage() {
                               </button>
                             ))}
                           </div>
-                          {parseFloat(varCostBase) > 0 && (
-                            <div className="text-[10px] font-bold text-emerald-900 pt-0.5 border-t border-slate-100 flex items-center justify-between">
-                              <span>${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).factorGranStr} =</span>
-                              <span className="font-black text-emerald-700">
-                                ${computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor).pGran.toFixed(2)}
-                              </span>
-                            </div>
-                          )}
+                          {parseFloat(varCostBase) > 0 && (() => {
+                            const res = computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor);
+                            return (
+                              <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[10px]">
+                                <div className="flex items-center justify-between text-slate-600">
+                                  <span>Base neta (${res.costoCalculado.toFixed(2)} ÷ {res.factorGranStr}):</span>
+                                  <span className="font-semibold text-slate-800">${res.netoGran.toFixed(2)}</span>
+                                </div>
+                                {varApplyIvaVenta && (
+                                  <div className="flex items-center justify-between text-emerald-700">
+                                    <span>+ IVA 16% Venta:</span>
+                                    <span className="font-semibold">+${res.ivaGran.toFixed(2)}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center justify-between font-black text-xs text-emerald-950 bg-emerald-50/90 p-1.5 rounded-lg border border-emerald-200/80">
+                                  <span>Precio Final:</span>
+                                  <span className="text-emerald-700 text-sm">${res.pGran.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
 
@@ -1974,7 +2064,7 @@ export default function AdminProductosPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              const computed = computePricing(varCostBase, varApplyIva, varMarginMayor, varMarginGranMayor);
+                              const computed = computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor);
                               if (computed.pMayor > 0) {
                                 setVariantForm((prev) => ({
                                   ...prev,
@@ -2241,9 +2331,10 @@ export default function AdminProductosPage() {
 
                 {showAddCalc && (
                   <div className="space-y-3 pt-1 text-xs">
-                    {/* Fila 1: Costo base e IVA */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
+                    {/* Fila 1: Costo base e IVAs */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                      {/* Costo Base de Compra */}
+                      <div className="md:col-span-5">
                         <label className="block font-bold text-slate-800 mb-1">
                           Costo Base de Compra ($ USD) *
                         </label>
@@ -2254,40 +2345,71 @@ export default function AdminProductosPage() {
                             step="0.01"
                             value={addCostBase}
                             onChange={(e) => setAddCostBase(e.target.value)}
-                            placeholder="ej. 10.00"
+                            placeholder="ej. 22.75"
                             className="w-full h-9 pl-8 pr-3 rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-900"
                           />
                         </div>
+                        {parseFloat(addCostBase) > 0 && (
+                          <span className="text-[11px] text-emerald-800 font-medium block mt-1 pl-1">
+                            Costo compra: <strong>${computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor).costoCalculado.toFixed(2)}</strong> {addApplyIvaCompra ? "(con IVA 16%)" : "(neto)"}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex flex-col justify-end">
-                        <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-200 cursor-pointer hover:bg-emerald-50/60 transition-colors">
+                      {/* Opciones de IVA: Compra y Venta */}
+                      <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {/* IVA Compra */}
+                        <label className={`flex items-start gap-2 p-2 rounded-xl border cursor-pointer transition-colors ${
+                          addApplyIvaCompra ? "bg-emerald-50/80 border-emerald-300" : "bg-white border-slate-200 hover:bg-slate-50"
+                        }`}>
                           <input
                             type="checkbox"
-                            checked={addApplyIva}
-                            onChange={(e) => setAddApplyIva(e.target.checked)}
-                            className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                            checked={addApplyIvaCompra}
+                            onChange={(e) => setAddApplyIvaCompra(e.target.checked)}
+                            className="w-4 h-4 mt-0.5 text-emerald-600 rounded focus:ring-emerald-500"
                           />
-                          <span className="font-bold text-slate-800 text-[11px]">
-                            + IVA 16% (Factura Fiscal)
-                          </span>
+                          <div className="flex flex-col leading-tight">
+                            <span className="font-bold text-slate-800 text-[11px]">
+                              + IVA 16% en Compra
+                            </span>
+                            <span className="text-[10px] text-slate-500 mt-0.5">
+                              Factura fiscal proveedor
+                            </span>
+                          </div>
                         </label>
-                        <span className="text-[10px] text-emerald-700 mt-1 pl-1">
-                          Costo total calculado: <strong>${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).costWithIva.toFixed(2)}</strong>
-                        </span>
+
+                        {/* IVA Venta */}
+                        <label className={`flex items-start gap-2 p-2 rounded-xl border cursor-pointer transition-colors ${
+                          addApplyIvaVenta ? "bg-emerald-100/70 border-emerald-400 ring-1 ring-emerald-300" : "bg-white border-slate-200 hover:bg-slate-50"
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={addApplyIvaVenta}
+                            onChange={(e) => setAddApplyIvaVenta(e.target.checked)}
+                            className="w-4 h-4 mt-0.5 text-emerald-600 rounded focus:ring-emerald-500"
+                          />
+                          <div className="flex flex-col leading-tight">
+                            <span className="font-bold text-emerald-950 text-[11px]">
+                              + IVA 16% a la Venta
+                            </span>
+                            <span className="text-[10px] text-emerald-700 mt-0.5 font-medium">
+                              Cobrado al cliente en tienda
+                            </span>
+                          </div>
+                        </label>
                       </div>
                     </div>
 
                     {/* Fila 2: Factor Divisor Mayor y Gran Mayor */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       {/* Factor Mayor */}
-                      <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5">
+                      <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5 shadow-2xs">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-800 text-[11px]">
                             Factor Divisor Mayor (ej. 0.70 o 70)
                           </span>
                           <span className="text-[10px] font-black text-emerald-700">
-                            ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorMayorStr}
+                            ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor).factorMayorStr}
                           </span>
                         </div>
                         <input
@@ -2313,24 +2435,37 @@ export default function AdminProductosPage() {
                             </button>
                           ))}
                         </div>
-                        {parseFloat(addCostBase) > 0 && (
-                          <div className="text-[11px] font-bold text-emerald-900 pt-1 border-t border-slate-100 flex items-center justify-between">
-                            <span>${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorMayorStr} =</span>
-                            <span className="text-xs font-black text-emerald-700">
-                              ${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).pMayor.toFixed(2)}
-                            </span>
-                          </div>
-                        )}
+                        {parseFloat(addCostBase) > 0 && (() => {
+                          const res = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor);
+                          return (
+                            <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[11px]">
+                              <div className="flex items-center justify-between text-slate-600">
+                                <span>Base neta (${res.costoCalculado.toFixed(2)} ÷ {res.factorMayorStr}):</span>
+                                <span className="font-semibold text-slate-800">${res.netoMayor.toFixed(2)}</span>
+                              </div>
+                              {addApplyIvaVenta && (
+                                <div className="flex items-center justify-between text-emerald-700">
+                                  <span>+ IVA 16% Venta:</span>
+                                  <span className="font-semibold">+${res.ivaMayor.toFixed(2)}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between font-black text-xs text-emerald-950 bg-emerald-50/90 p-1.5 rounded-lg border border-emerald-200/80">
+                                <span>Precio Final:</span>
+                                <span className="text-emerald-700 text-sm">${res.pMayor.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Factor Gran Mayor */}
-                      <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5">
+                      <div className="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-1.5 shadow-2xs">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-800 text-[11px]">
                             Factor Divisor Gran Mayor (ej. 0.80 o 80)
                           </span>
                           <span className="text-[10px] font-black text-emerald-700">
-                            ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorGranStr}
+                            ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor).factorGranStr}
                           </span>
                         </div>
                         <input
@@ -2356,14 +2491,27 @@ export default function AdminProductosPage() {
                             </button>
                           ))}
                         </div>
-                        {parseFloat(addCostBase) > 0 && (
-                          <div className="text-[11px] font-bold text-emerald-900 pt-1 border-t border-slate-100 flex items-center justify-between">
-                            <span>${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).costWithIva.toFixed(2)} ÷ {computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).factorGranStr} =</span>
-                            <span className="text-xs font-black text-emerald-700">
-                              ${computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor).pGran.toFixed(2)}
-                            </span>
-                          </div>
-                        )}
+                        {parseFloat(addCostBase) > 0 && (() => {
+                          const res = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor);
+                          return (
+                            <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[11px]">
+                              <div className="flex items-center justify-between text-slate-600">
+                                <span>Base neta (${res.costoCalculado.toFixed(2)} ÷ {res.factorGranStr}):</span>
+                                <span className="font-semibold text-slate-800">${res.netoGran.toFixed(2)}</span>
+                              </div>
+                              {addApplyIvaVenta && (
+                                <div className="flex items-center justify-between text-emerald-700">
+                                  <span>+ IVA 16% Venta:</span>
+                                  <span className="font-semibold">+${res.ivaGran.toFixed(2)}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between font-black text-xs text-emerald-950 bg-emerald-50/90 p-1.5 rounded-lg border border-emerald-200/80">
+                                <span>Precio Final:</span>
+                                <span className="text-emerald-700 text-sm">${res.pGran.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -2373,7 +2521,7 @@ export default function AdminProductosPage() {
                         <button
                           type="button"
                           onClick={() => {
-                            const computed = computePricing(addCostBase, addApplyIva, addMarginMayor, addMarginGranMayor);
+                            const computed = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor);
                             if (computed.pMayor > 0) {
                               setNewProduct((prev) => ({
                                 ...prev,
