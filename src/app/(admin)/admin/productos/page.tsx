@@ -28,9 +28,15 @@ function computePricing(
   withIvaCompra: boolean,
   withIvaVenta: boolean,
   mMayorStr: string,
-  mGranStr: string
+  mGranStr: string,
+  minMayorStr: string = "1",
+  minGranMayorStr: string = "1"
 ) {
   const rawCost = parseFloat(String(costStr).replace(",", "."));
+  const minM = Math.max(1, parseFloat(String(minMayorStr).replace(",", ".")) || 1);
+  const minGM = Math.max(minM, parseFloat(String(minGranMayorStr).replace(",", ".")) || minM);
+  const ratio = minGM > minM ? Math.round((minGM / minM) * 100) / 100 : 1;
+
   if (isNaN(rawCost) || rawCost <= 0) {
     return {
       costBase: 0,
@@ -41,6 +47,7 @@ function computePricing(
       pMayor: 0,
       netoGran: 0,
       ivaGran: 0,
+      pGranUnit: 0,
       pGran: 0,
       profitMayor: 0,
       profitGran: 0,
@@ -48,6 +55,10 @@ function computePricing(
       factorGran: 0.80,
       factorMayorStr: "0.70",
       factorGranStr: "0.80",
+      minM,
+      minGM,
+      ratio,
+      savingsGranMayor: 0,
     };
   }
 
@@ -75,9 +86,17 @@ function computePricing(
   const ivaMayor = withIvaVenta ? netoMayor * 0.16 : 0;
   const ivaGran = withIvaVenta ? netoGran * 0.16 : 0;
 
-  // 4. Precio final de venta (con IVA venta si aplica)
-  const pMayor = netoMayor + ivaMayor;
-  const pGran = netoGran + ivaGran;
+  // 4. Precio final de venta por paquete/lote base de Mayor
+  const pMayor = Math.round((netoMayor + ivaMayor) * 100) / 100;
+  const pGranUnit = Math.round((netoGran + ivaGran) * 100) / 100;
+
+  // 5. En Gran Mayor (Opción B), el precio total del lote de min_gran_mayor unidades
+  // Ej: 150 unds / 50 unds = 3 paquetes -> $34.01 * 3 = $102.03
+  const pGran = Math.round(pGranUnit * ratio * 100) / 100;
+
+  // Ahorro que recibe el cliente al comprar a Gran Mayor vs comprar las mismas unidades a tarifa Mayor
+  const regularEquivalent = Math.round(pMayor * ratio * 100) / 100;
+  const savingsGranMayor = Math.max(0, Math.round((regularEquivalent - pGran) * 100) / 100);
 
   return {
     costBase: Math.round(rawCost * 100) / 100,
@@ -85,16 +104,21 @@ function computePricing(
     costWithIva: Math.round(costoCalculado * 100) / 100,
     netoMayor: Math.round(netoMayor * 100) / 100,
     ivaMayor: Math.round(ivaMayor * 100) / 100,
-    pMayor: Math.round(pMayor * 100) / 100,
+    pMayor,
     netoGran: Math.round(netoGran * 100) / 100,
     ivaGran: Math.round(ivaGran * 100) / 100,
-    pGran: Math.round(pGran * 100) / 100,
+    pGranUnit,
+    pGran,
     profitMayor: Math.round((netoMayor - costoCalculado) * 100) / 100,
-    profitGran: Math.round((netoGran - costoCalculado) * 100) / 100,
+    profitGran: Math.round(((netoGran * ratio) - (costoCalculado * ratio)) * 100) / 100,
     factorMayor,
     factorGran,
     factorMayorStr: factorMayor.toFixed(2),
     factorGranStr: factorGran.toFixed(2),
+    minM,
+    minGM,
+    ratio,
+    savingsGranMayor,
   };
 }
 
@@ -2036,11 +2060,19 @@ export default function AdminProductosPage() {
                             ))}
                           </div>
                           {parseFloat(varCostBase) > 0 && (() => {
-                            const res = computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor);
+                            const res = computePricing(
+                              varCostBase,
+                              varApplyIvaCompra,
+                              varApplyIvaVenta,
+                              varMarginMayor,
+                              varMarginGranMayor,
+                              variantForm.min_mayor,
+                              variantForm.min_gran_mayor
+                            );
                             return (
                               <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[10px]">
                                 <div className="flex items-center justify-between text-slate-600">
-                                  <span>Base neta (${res.costoCalculado.toFixed(2)} ÷ {res.factorGranStr}):</span>
+                                  <span>Base neta unitaria ({res.minM} Und):</span>
                                   <span className="font-semibold text-slate-800">${res.netoGran.toFixed(2)}</span>
                                 </div>
                                 {varApplyIvaVenta && (
@@ -2049,10 +2081,21 @@ export default function AdminProductosPage() {
                                     <span className="font-semibold">+${res.ivaGran.toFixed(2)}</span>
                                   </div>
                                 )}
+                                {res.ratio > 1 && (
+                                  <div className="flex items-center justify-between text-slate-500 text-[9px]">
+                                    <span>Tarifa unitaria con descuento:</span>
+                                    <span>${res.pGranUnit.toFixed(2)} / lote base</span>
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between font-black text-xs text-emerald-950 bg-emerald-50/90 p-1.5 rounded-lg border border-emerald-200/80">
-                                  <span>Precio Final:</span>
+                                  <span>Precio Total ({res.minGM} Und{res.ratio > 1 ? ` · ${res.ratio}x` : ""}):</span>
                                   <span className="text-emerald-700 text-sm">${res.pGran.toFixed(2)}</span>
                                 </div>
+                                {res.savingsGranMayor > 0 && (
+                                  <div className="text-[10px] font-black text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded text-center">
+                                    🎉 El cliente ahorra ${res.savingsGranMayor.toFixed(2)} al Gran Mayor
+                                  </div>
+                                )}
                               </div>
                             );
                           })()}
@@ -2064,7 +2107,15 @@ export default function AdminProductosPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              const computed = computePricing(varCostBase, varApplyIvaCompra, varApplyIvaVenta, varMarginMayor, varMarginGranMayor);
+                              const computed = computePricing(
+                                varCostBase,
+                                varApplyIvaCompra,
+                                varApplyIvaVenta,
+                                varMarginMayor,
+                                varMarginGranMayor,
+                                variantForm.min_mayor,
+                                variantForm.min_gran_mayor
+                              );
                               if (computed.pMayor > 0) {
                                 setVariantForm((prev) => ({
                                   ...prev,
@@ -2492,11 +2543,19 @@ export default function AdminProductosPage() {
                           ))}
                         </div>
                         {parseFloat(addCostBase) > 0 && (() => {
-                          const res = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor);
+                          const res = computePricing(
+                            addCostBase,
+                            addApplyIvaCompra,
+                            addApplyIvaVenta,
+                            addMarginMayor,
+                            addMarginGranMayor,
+                            newProduct.min_mayor,
+                            newProduct.min_gran_mayor
+                          );
                           return (
                             <div className="pt-1.5 border-t border-slate-100 space-y-1 text-[11px]">
                               <div className="flex items-center justify-between text-slate-600">
-                                <span>Base neta (${res.costoCalculado.toFixed(2)} ÷ {res.factorGranStr}):</span>
+                                <span>Base neta unitaria ({res.minM} Und):</span>
                                 <span className="font-semibold text-slate-800">${res.netoGran.toFixed(2)}</span>
                               </div>
                               {addApplyIvaVenta && (
@@ -2505,10 +2564,21 @@ export default function AdminProductosPage() {
                                   <span className="font-semibold">+${res.ivaGran.toFixed(2)}</span>
                                 </div>
                               )}
+                              {res.ratio > 1 && (
+                                <div className="flex items-center justify-between text-slate-500 text-[10px]">
+                                  <span>Tarifa unitaria con descuento:</span>
+                                  <span>${res.pGranUnit.toFixed(2)} / lote base</span>
+                                </div>
+                              )}
                               <div className="flex items-center justify-between font-black text-xs text-emerald-950 bg-emerald-50/90 p-1.5 rounded-lg border border-emerald-200/80">
-                                <span>Precio Final:</span>
+                                <span>Precio Total ({res.minGM} Und{res.ratio > 1 ? ` · ${res.ratio}x` : ""}):</span>
                                 <span className="text-emerald-700 text-sm">${res.pGran.toFixed(2)}</span>
                               </div>
+                              {res.savingsGranMayor > 0 && (
+                                <div className="text-[10px] font-black text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded text-center">
+                                  🎉 El cliente ahorra ${res.savingsGranMayor.toFixed(2)} al Gran Mayor
+                                </div>
+                              )}
                             </div>
                           );
                         })()}
@@ -2521,7 +2591,15 @@ export default function AdminProductosPage() {
                         <button
                           type="button"
                           onClick={() => {
-                            const computed = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor);
+                            const computed = computePricing(
+                              addCostBase,
+                              addApplyIvaCompra,
+                              addApplyIvaVenta,
+                              addMarginMayor,
+                              addMarginGranMayor,
+                              newProduct.min_mayor,
+                              newProduct.min_gran_mayor
+                            );
                             if (computed.pMayor > 0) {
                               setNewProduct((prev) => ({
                                 ...prev,

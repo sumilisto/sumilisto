@@ -564,9 +564,22 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     <span className="text-sm font-black text-slate-900 uppercase">
                       GRAN MAYOR: {minGranMayor} unds
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">
-                      Ahorro
-                    </span>
+                    {(() => {
+                      const regularEquivalent = minMayor > 0 ? (priceMayor / minMayor) * minGranMayor : priceMayor;
+                      const savings = regularEquivalent - priceGranMayor;
+                      if (savings > 0.05) {
+                        return (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            Ahorras $ {savings.toFixed(2).replace(".", ",")}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">
+                          Tarifa especial
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div className="text-base font-bold text-brand mt-0.5">
                     $ {priceGranMayor.toFixed(2).replace(".", ",")}

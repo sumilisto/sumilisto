@@ -174,26 +174,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </div>
 
               {/* 4. Sección Gran Mayor con fondo verde */}
-              {priceGranMayor > 0 && minGranMayor > 0 && (
-                <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80">
-                  <span className="text-[11px] font-medium text-slate-600 block leading-tight">
-                    Gran Mayor: {minGranMayor}Und
-                  </span>
-                  <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
-                    <span
-                      style={{ fontSize: granMayorSize }}
-                      className="font-bold text-brand leading-tight"
-                    >
-                      {formatUsd(priceGranMayor)}
-                    </span>
-                    {bcvRate > 0 && (
-                      <span className="text-xs font-normal text-emerald-800 leading-tight">
-                        / {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
+              {priceGranMayor > 0 && minGranMayor > 0 && (() => {
+                const regularEquivalent = minMayor > 0 ? (priceMayor / minMayor) * minGranMayor : priceMayor;
+                const savings = regularEquivalent - priceGranMayor;
+                return (
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[11px] font-medium text-slate-700 block leading-tight">
+                        Gran Mayor: {minGranMayor}Und
                       </span>
-                    )}
+                      {savings > 0.05 && (
+                        <span className="text-[10px] font-black text-emerald-800 bg-emerald-200/90 px-1.5 py-0.5 rounded-md leading-none">
+                          Ahorras {formatUsd(savings)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
+                      <span
+                        style={{ fontSize: granMayorSize }}
+                        className="font-bold text-brand leading-tight"
+                      >
+                        {formatUsd(priceGranMayor)}
+                      </span>
+                      {bcvRate > 0 && (
+                        <span className="text-xs font-normal text-emerald-800 leading-tight">
+                          / {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium bg-slate-50 p-2 rounded-lg border border-slate-200">

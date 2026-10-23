@@ -932,27 +932,32 @@ export default function AdminSettingsPage() {
                             style={{ fontSize: cardMayorFontSize }}
                             className="font-bold text-brand leading-tight"
                           >
-                            $0.45
+                            $40.82
                           </span>
                           <span className="text-xs font-normal text-slate-900 leading-tight">
-                            / Bs. 396,05
+                            / Bs. 36.175,91
                           </span>
                         </div>
                       </div>
 
                       <div className="p-1.5 rounded-lg bg-emerald-50 border border-emerald-100/80">
-                        <span className="text-[11px] font-medium text-slate-600 block leading-tight">
-                          Gran Mayor: 500Und
-                        </span>
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[11px] font-medium text-slate-700 block leading-tight">
+                            Gran Mayor: 150Und
+                          </span>
+                          <span className="text-[10px] font-black text-emerald-800 bg-emerald-200/90 px-1.5 py-0.5 rounded-md leading-none">
+                            Ahorras $20.43
+                          </span>
+                        </div>
                         <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
                           <span
                             style={{ fontSize: cardGranMayorFontSize }}
                             className="font-bold text-brand leading-tight"
                           >
-                            $0.38
+                            $102.03
                           </span>
                           <span className="text-xs font-normal text-emerald-800 leading-tight">
-                            / Bs. 334,45
+                            / Bs. 90.437,35
                           </span>
                         </div>
                       </div>
