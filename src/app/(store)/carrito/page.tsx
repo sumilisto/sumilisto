@@ -159,33 +159,62 @@ export default function CartPage() {
       return;
     }
 
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      setGpsError('La geolocalización requiere conexión segura HTTPS. Puedes marcar tu dirección en el mapa interactivo.');
+      setShowManualMapsInput(true);
+      return;
+    }
+
     setGpsLoading(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position: GeolocationPosition) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setGpsLocation({ lat, lng });
-        setCustomMapsUrl(`https://maps.google.com/?q=${lat},${lng}`);
-        setGpsLoading(false);
-        setGpsError('');
-      },
-      (error: GeolocationPositionError) => {
-        setGpsLoading(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          setGpsError('Permiso de ubicación no concedido. Puedes marcar tu punto directamente en el mapa interactivo.');
-        } else if (error.code === error.TIMEOUT) {
-          setGpsError('Tiempo de espera agotado buscando tu señal GPS. Puedes reintentar o marcar tu punto en el mapa interactivo.');
-        } else {
-          setGpsError('No se pudo obtener la ubicación. Puedes marcar tu punto en el mapa interactivo.');
-        }
-        setShowManualMapsInput(true);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+    const onSuccess = (position: GeolocationPosition) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      setGpsLocation({ lat, lng });
+      setCustomMapsUrl(`https://maps.google.com/?q=${lat},${lng}`);
+      setGpsLoading(false);
+      setGpsError('');
+    };
+
+    const onError = (error: GeolocationPositionError) => {
+      setGpsLoading(false);
+      if (error.code === error.PERMISSION_DENIED) {
+        setGpsError('Permiso de ubicación bloqueado. Toca el ícono 🔒 en la barra de direcciones de tu navegador y activa "Ubicación", o marca tu punto en el mapa interactivo.');
+      } else if (error.code === error.TIMEOUT) {
+        setGpsError('Tiempo de espera agotado buscando tu señal GPS. Verifica tener la ubicación encendida en tu teléfono o marca tu punto en el mapa interactivo.');
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        setGpsError('Señal de ubicación no disponible en tu dispositivo en este momento. Puedes marcar tu punto fácilmente en el mapa interactivo.');
+      } else {
+        setGpsError('No se pudo obtener la ubicación automática. Puedes marcar tu punto directamente en el mapa.');
       }
+      setShowManualMapsInput(true);
+    };
+
+    // Intentar primero con red/wifi/celular (rápido y compatible con PC y móviles bajo techo)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onSuccess(pos);
+        // Intentar afinar con alta precisión satelital si el dispositivo lo soporta
+        navigator.geolocation.getCurrentPosition(
+          (precisePos) => onSuccess(precisePos),
+          () => {},
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      },
+      (fastErr) => {
+        // Si el usuario denegó el permiso, no volver a preguntar
+        if (fastErr.code === fastErr.PERMISSION_DENIED) {
+          onError(fastErr);
+          return;
+        }
+        // Si fue por timeout o red, intentar una vez más con alta precisión y mayor tiempo
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          onError,
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+        );
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     );
   };
 

@@ -129,6 +129,11 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
       return;
     }
 
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setGpsError("La geolocalización requiere conexión segura HTTPS. Puedes mover el mapa manualmente.");
+      return;
+    }
+
     setIsGpsLoading(true);
 
     const onPosSuccess = (pos: GeolocationPosition) => {
@@ -144,36 +149,46 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
       }
     };
 
-    const onHighAccuracyRefinement = () => {
-      navigator.geolocation.getCurrentPosition(
-        onPosSuccess,
-        () => {}, // si falla el refinamiento de alta precisión, mantener la ubicación ya obtenida
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
+    const onError = (err: GeolocationPositionError) => {
+      setIsGpsLoading(false);
+      if (err.code === err.PERMISSION_DENIED) {
+        setGpsError(
+          "Permiso de ubicación bloqueado. Toca el candado 🔒 en la barra de direcciones de tu navegador y activa 'Ubicación', o mueve el mapa manualmente."
+        );
+      } else if (err.code === err.POSITION_UNAVAILABLE) {
+        setGpsError(
+          "Señal GPS no disponible en este momento. Puedes arrastrar el mapa y colocar el pin manualmente."
+        );
+      } else if (err.code === err.TIMEOUT) {
+        setGpsError("Tiempo agotado buscando señal GPS. Puedes arrastrar el mapa y fijar tu punto.");
+      } else {
+        setGpsError("No se pudo obtener la señal GPS. Puedes mover el mapa manualmente hasta tu dirección.");
+      }
     };
 
-    // Intento 1: Precisión estándar para desplegar el diálogo nativo de permisos de Android/iOS
+    // Intento 1: Precisión estándar (rápida por Wi-Fi/celular/red)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         onPosSuccess(pos);
-        // Intentar refinar con alta precisión una vez otorgado el permiso
-        onHighAccuracyRefinement();
+        // Intentar refinar con alta precisión satelital
+        navigator.geolocation.getCurrentPosition(
+          onPosSuccess,
+          () => {},
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
       },
-      (err) => {
-        setIsGpsLoading(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          setGpsError(
-            "El permiso de ubicación está desactivado o denegado. Enciende la 'Ubicación' en tu teléfono o mueve el mapa manualmente."
-          );
-        } else if (err.code === err.POSITION_UNAVAILABLE) {
-          setGpsError(
-            "Señal GPS no disponible en este momento. Puedes arrastrar el mapa y colocar el pin manualmente."
-          );
-        } else {
-          setGpsError("No se pudo obtener la señal GPS. Puedes mover el mapa manualmente hasta tu dirección.");
+      (fastErr) => {
+        if (fastErr.code === fastErr.PERMISSION_DENIED) {
+          onError(fastErr);
+          return;
         }
+        navigator.geolocation.getCurrentPosition(
+          onPosSuccess,
+          onError,
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+        );
       },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     );
   };
 
