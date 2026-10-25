@@ -281,6 +281,8 @@ export default function AdminProductosPage() {
   const [addApplyIvaVenta, setAddApplyIvaVenta] = useState(true);
   const [addMarginMayor, setAddMarginMayor] = useState("0.70");
   const [addMarginGranMayor, setAddMarginGranMayor] = useState("0.80");
+  const [addMinMayor, setAddMinMayor] = useState("1");
+  const [addMinGranMayor, setAddMinGranMayor] = useState("5");
 
   // Fotos interactivas del nuevo producto (previsualización, portada y orden)
   const [newProductPhotoItems, setNewProductPhotoItems] = useState<UploadPhotoItem[]>([]);
@@ -2228,28 +2230,44 @@ export default function AdminProductosPage() {
                                 </div>
                               </div>
 
-                              <div>
-                                <div className="flex items-center justify-between mb-1">
-                                  <label className="font-bold text-slate-700 text-[11px]">
-                                    Factor Divisor Mayor
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                    Cant. Mínima Mayor *
                                   </label>
-                                  <span className="text-[10px] font-black text-emerald-700">
-                                    ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, "1", "1", addCostGranBase).factorMayorStr}
-                                  </span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={addMinMayor}
+                                    onChange={(e) => setAddMinMayor(e.target.value)}
+                                    placeholder="1"
+                                    className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
+                                  />
                                 </div>
-                                <input
-                                  type="text"
-                                  value={addMarginMayor}
-                                  onChange={(e) => setAddMarginMayor(e.target.value)}
-                                  placeholder="0.70"
-                                  className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
-                                />
+
+                                <div>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <label className="font-bold text-slate-700 text-[11px]">
+                                      Factor Divisor Mayor
+                                    </label>
+                                    <span className="text-[10px] font-black text-emerald-700">
+                                      ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase).factorMayorStr}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={addMarginMayor}
+                                    onChange={(e) => setAddMarginMayor(e.target.value)}
+                                    placeholder="0.70"
+                                    className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
+                                  />
+                                </div>
                               </div>
                             </div>
 
                             {/* Desglose Fiscal Mayor */}
                             {parseFloat(addCostBase) > 0 && (() => {
-                              const p = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, "1", "1", addCostGranBase);
+                              const p = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase);
                               return (
                                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] space-y-1">
                                   <div className="grid grid-cols-2 gap-1 text-slate-600">
@@ -2300,36 +2318,51 @@ export default function AdminProductosPage() {
                                 </span>
                               </div>
 
-                              <div>
-                                <div className="flex items-center justify-between mb-1">
-                                  <label className="font-bold text-emerald-950 text-[11px]">
-                                    Factor Divisor Gran Mayor
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block font-bold text-emerald-950 text-[11px] mb-1">
+                                    Cant. Mínima Gran Mayor *
                                   </label>
-                                  <span className="text-[10px] font-black text-emerald-800">
-                                    ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, "1", "1", addCostGranBase).factorGranStr}
-                                  </span>
+                                  <input
+                                    type="number"
+                                    min="2"
+                                    value={addMinGranMayor}
+                                    onChange={(e) => setAddMinGranMayor(e.target.value)}
+                                    placeholder="5"
+                                    className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                  />
                                 </div>
-                                <input
-                                  type="text"
-                                  value={addMarginGranMayor}
-                                  onChange={(e) => setAddMarginGranMayor(e.target.value)}
-                                  placeholder="0.80"
-                                  className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                />
+
+                                <div>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <label className="font-bold text-emerald-950 text-[11px]">
+                                      Factor Divisor Gran Mayor
+                                    </label>
+                                    <span className="text-[10px] font-black text-emerald-800">
+                                      ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase).factorGranStr}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={addMarginGranMayor}
+                                    onChange={(e) => setAddMarginGranMayor(e.target.value)}
+                                    placeholder="0.80"
+                                    className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                  />
+                                </div>
                               </div>
                             </div>
 
                             {/* Desglose Fiscal Gran Mayor */}
                             {parseFloat(addCostBase) > 0 && (() => {
-                              const activeVar = newProductVariants[activeNewVariantIdx] || newProductVariants[0];
                               const p = computePricing(
                                 addCostBase,
                                 addApplyIvaCompra,
                                 addApplyIvaVenta,
                                 addMarginMayor,
                                 addMarginGranMayor,
-                                activeVar.min_mayor,
-                                activeVar.min_gran_mayor,
+                                addMinMayor,
+                                addMinGranMayor,
                                 addCostGranBase
                               );
                               return (
@@ -2362,7 +2395,15 @@ export default function AdminProductosPage() {
                               <span className="font-bold text-[11px] text-slate-600">Aplicar a:</span>
                               <select
                                 value={activeNewVariantIdx}
-                                onChange={(e) => setActiveNewVariantIdx(Number(e.target.value))}
+                                onChange={(e) => {
+                                  const idx = Number(e.target.value);
+                                  setActiveNewVariantIdx(idx);
+                                  const v = newProductVariants[idx];
+                                  if (v) {
+                                    if (v.min_mayor) setAddMinMayor(v.min_mayor);
+                                    if (v.min_gran_mayor) setAddMinGranMayor(v.min_gran_mayor);
+                                  }
+                                }}
                                 className="h-8 px-2 rounded-lg border border-slate-300 font-bold text-xs bg-white"
                               >
                                 {newProductVariants.map((v, i) => (
@@ -2384,13 +2425,15 @@ export default function AdminProductosPage() {
                                     addApplyIvaVenta,
                                     addMarginMayor,
                                     addMarginGranMayor,
-                                    targetVar.min_mayor,
-                                    targetVar.min_gran_mayor,
+                                    addMinMayor || "1",
+                                    addMinGranMayor || "5",
                                     addCostGranBase
                                   );
                                   handleUpdateNewProductVariant(targetVar.id, "precio_mayor_usd", computed.pMayor.toFixed(2));
+                                  handleUpdateNewProductVariant(targetVar.id, "min_mayor", addMinMayor || "1");
                                   handleUpdateNewProductVariant(targetVar.id, "precio_gran_mayor_usd", computed.pGran.toFixed(2));
-                                  showToast(`¡Precios aplicados a SKU #${activeNewVariantIdx + 1}!`);
+                                  handleUpdateNewProductVariant(targetVar.id, "min_gran_mayor", addMinGranMayor || "5");
+                                  showToast(`¡Precios y Cantidades aplicados a SKU #${activeNewVariantIdx + 1}!`);
                                 }}
                                 className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
                               >
@@ -2409,18 +2452,20 @@ export default function AdminProductosPage() {
                                         addApplyIvaVenta,
                                         addMarginMayor,
                                         addMarginGranMayor,
-                                        v.min_mayor,
-                                        v.min_gran_mayor,
+                                        addMinMayor || "1",
+                                        addMinGranMayor || "5",
                                         addCostGranBase
                                       );
                                       return {
                                         ...v,
                                         precio_mayor_usd: computed.pMayor.toFixed(2),
+                                        min_mayor: addMinMayor || "1",
                                         precio_gran_mayor_usd: computed.pGran.toFixed(2),
+                                        min_gran_mayor: addMinGranMayor || "5",
                                       };
                                     })
                                   );
-                                  showToast("¡Precios aplicados a TODOS los SKUs!");
+                                  showToast("¡Precios y Cantidades Mínimas aplicados a TODOS los SKUs!");
                                 }}
                                 className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs"
                               >
@@ -3167,22 +3212,38 @@ export default function AdminProductosPage() {
                                     </div>
                                   </div>
 
-                                  <div>
-                                    <div className="flex items-center justify-between mb-1">
-                                      <label className="font-bold text-slate-700 text-[11px]">
-                                        Factor Divisor Mayor
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                        Cant. Mínima Mayor *
                                       </label>
-                                      <span className="text-[10px] font-black text-emerald-700">
-                                        ÷ {computePricing(editVarCostBase, editVarApplyIvaCompra, editVarApplyIvaVenta, editVarMarginMayor, editVarMarginGranMayor, editVariantForm.min_mayor, editVariantForm.min_gran_mayor, editVarCostGranBase).factorMayorStr}
-                                      </span>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={editVariantForm.min_mayor}
+                                        onChange={(e) => setEditVariantForm({ ...editVariantForm, min_mayor: e.target.value })}
+                                        placeholder="1"
+                                        className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
+                                      />
                                     </div>
-                                    <input
-                                      type="text"
-                                      value={editVarMarginMayor}
-                                      onChange={(e) => setEditVarMarginMayor(e.target.value)}
-                                      placeholder="0.70"
-                                      className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
-                                    />
+
+                                    <div>
+                                      <div className="flex items-center justify-between mb-1">
+                                        <label className="font-bold text-slate-700 text-[11px]">
+                                          Factor Divisor Mayor
+                                        </label>
+                                        <span className="text-[10px] font-black text-emerald-700">
+                                          ÷ {computePricing(editVarCostBase, editVarApplyIvaCompra, editVarApplyIvaVenta, editVarMarginMayor, editVarMarginGranMayor, editVariantForm.min_mayor, editVariantForm.min_gran_mayor, editVarCostGranBase).factorMayorStr}
+                                        </span>
+                                      </div>
+                                      <input
+                                        type="text"
+                                        value={editVarMarginMayor}
+                                        onChange={(e) => setEditVarMarginMayor(e.target.value)}
+                                        placeholder="0.70"
+                                        className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
+                                      />
+                                    </div>
                                   </div>
                                 </div>
 
@@ -3227,25 +3288,40 @@ export default function AdminProductosPage() {
                                   </span>
                                 </div>
 
-                                <div className="space-y-2">
+                              <div className="space-y-2">
+                                <div>
+                                  <label className="block font-bold text-emerald-950 text-[11px] mb-1">
+                                    Costo Compra Gran Mayor ($ USD)
+                                  </label>
+                                  <div className="relative">
+                                    <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={editVarCostGranBase}
+                                      onChange={(e) => setEditVarCostGranBase(e.target.value)}
+                                      placeholder={editVarCostBase ? `Mismo costo ($${editVarCostBase})` : "ej. 8.50"}
+                                      className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                    />
+                                  </div>
+                                  <span className="text-[9px] text-emerald-700 font-medium block mt-0.5 pl-0.5">
+                                    {editVarCostGranBase ? `✓ Costo especial proveedor: $${editVarCostGranBase} por paquete` : `(Si está vacío, usa el costo de Mayor: $${editVarCostBase || "0.00"})`}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
                                   <div>
                                     <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                      Costo Compra Gran Mayor ($ USD)
+                                      Cant. Mínima Gran Mayor *
                                     </label>
-                                    <div className="relative">
-                                      <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
-                                      <input
-                                        type="number"
-                                        step="0.01"
-                                        value={editVarCostGranBase}
-                                        onChange={(e) => setEditVarCostGranBase(e.target.value)}
-                                        placeholder={editVarCostBase ? `Mismo costo ($${editVarCostBase})` : "ej. 8.50"}
-                                        className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                      />
-                                    </div>
-                                    <span className="text-[9px] text-emerald-700 font-medium block mt-0.5 pl-0.5">
-                                      {editVarCostGranBase ? `✓ Costo especial proveedor: $${editVarCostGranBase} por paquete` : `(Si está vacío, usa el costo de Mayor: $${editVarCostBase || "0.00"})`}
-                                    </span>
+                                    <input
+                                      type="number"
+                                      min="2"
+                                      value={editVariantForm.min_gran_mayor}
+                                      onChange={(e) => setEditVariantForm({ ...editVariantForm, min_gran_mayor: e.target.value })}
+                                      placeholder="5"
+                                      className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                    />
                                   </div>
 
                                   <div>
@@ -3266,6 +3342,7 @@ export default function AdminProductosPage() {
                                     />
                                   </div>
                                 </div>
+                              </div>
 
                                 {/* Desglose Fiscal Gran Mayor */}
                                 {parseFloat(editVarCostBase) > 0 && (() => {
