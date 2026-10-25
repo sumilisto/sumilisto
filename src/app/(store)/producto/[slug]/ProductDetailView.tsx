@@ -277,6 +277,29 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     return 0;
   });
 
+  // Registrar visita específica al producto en analítica
+  React.useEffect(() => {
+    try {
+      const vid =
+        typeof window !== "undefined"
+          ? localStorage.getItem("sumilisto_vid") || ("v_" + Math.random().toString(36).substring(2, 9))
+          : "v_anon";
+      fetch("/api/analytics/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ruta: `/producto/${product.slug}`,
+          productoSku: activeVariant.sku || product.sku,
+          productoNombre: product.nombre,
+          productoId: product.id,
+          sessionId: vid,
+          referrer: typeof document !== "undefined" ? document.referrer : "",
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {}
+  }, [product.slug, activeVariant.sku]);
+
   // Manejar selección de variante por botón
   const handleSelectVariant = (variant: ProductVariant) => {
     setSelectedSku(variant.sku);

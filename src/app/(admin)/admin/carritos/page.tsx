@@ -7,7 +7,7 @@ import { formatUsd } from "@/lib/currency/format";
 import {
   Clock, CheckCircle2, MessageCircle, AlertCircle, Phone, MapPin,
   Package, ChevronDown, ChevronUp, RefreshCw, ShoppingBag, ArrowLeft,
-  DollarSign, Check, Lock, User, LogOut, ExternalLink
+  DollarSign, Check, Lock, User, LogOut, ExternalLink, Activity
 } from "lucide-react";
 
 interface AbandonedCart {
@@ -223,6 +223,10 @@ export default function AdminCarritosPage() {
             <span className="text-slate-300">•</span>
             <Link href="/admin/productos" className="text-xs font-bold text-slate-500 hover:text-brand flex items-center gap-1">
               <Package className="w-3.5 h-3.5 text-brand" /> Productos y Fotos
+            </Link>
+            <span className="text-slate-300">•</span>
+            <Link href="/admin/estadisticas" className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1">
+              <Activity className="w-3.5 h-3.5 text-emerald-700" /> Estadísticas en Vivo
             </Link>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">

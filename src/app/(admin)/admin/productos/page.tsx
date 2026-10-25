@@ -12,7 +12,7 @@ import {
   ExternalLink, LogOut, Lock, User, RefreshCw, Image as ImageIcon,
   CheckCircle2, ArrowLeft, Filter, Sparkles, X, ChevronRight, ChevronLeft,
   Video, Play, Star, Palette, Layers, Film, Calculator, ArrowRightLeft,
-  Percent, DollarSign, Eye, ArrowUpDown, HelpCircle
+  Percent, DollarSign, Eye, ArrowUpDown, HelpCircle, Activity
 } from "lucide-react";
 
 interface UploadPhotoItem {
@@ -1238,6 +1238,13 @@ export default function AdminProductosPage() {
               className="font-bold text-slate-500 hover:text-brand flex items-center gap-1 transition-colors"
             >
               Carritos Abandonados
+            </Link>
+            <span className="text-slate-300">•</span>
+            <Link
+              href="/admin/estadisticas"
+              className="font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 transition-colors"
+            >
+              <Activity className="w-3.5 h-3.5 text-emerald-700" /> Estadísticas en Vivo
             </Link>
             <span className="text-slate-300">•</span>
             <Link

@@ -10,6 +10,8 @@ import { MobileBottomNav } from "@/components/store/MobileBottomNav";
 import { FloatingCartBar } from "@/components/store/FloatingCartBar";
 import { getProducts, getBcvRate } from "@/lib/api/store";
 import { getStoreSettings } from "@/lib/actions/settings";
+import { Suspense } from "react";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import { SplashScreen } from "@/components/common/SplashScreen";
 
 const roboto = Roboto({
@@ -104,6 +106,9 @@ export default async function RootLayout({
         />
       </head>
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col selection:bg-brand selection:text-white">
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
         <SplashScreen />
         <ThemeProvider initialSettings={settings}>
           <CartProvider>
