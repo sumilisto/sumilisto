@@ -59,8 +59,7 @@ function computePricing(
   const isCustomGranCost = (!isNaN(rawCostGranInput) && rawCostGranInput > 0);
 
   const minM = Math.max(1, parseFloat(String(minMayorStr).replace(",", ".")) || 1);
-  const minGM = Math.max(minM, parseFloat(String(minGranMayorStr).replace(",", ".")) || minM);
-  const ratio = minGM > minM ? Math.round((minGM / minM) * 100) / 100 : 1;
+  const minGM = Math.max(1, parseFloat(String(minGranMayorStr).replace(",", ".")) || 1);
 
   if (isNaN(rawCostMayor) || rawCostMayor <= 0) {
     return {
@@ -72,7 +71,9 @@ function computePricing(
       costoCalculado: 0,
       costWithIva: 0,
       rawCostGran: 0,
+      costBaseGran: 0,
       costBaseGranUnit: 0,
+      creditoFiscalGran: 0,
       creditoFiscalGranUnit: 0,
       costBaseGranTotal: 0,
       costoBaseGranTotal: 0,
@@ -83,12 +84,14 @@ function computePricing(
       ivaMayor: 0,
       ivaSeniatMayor: 0,
       pMayor: 0,
+      netoGran: 0,
       netoGranUnit: 0,
+      ivaGran: 0,
       ivaGranUnit: 0,
+      pGran: 0,
       pGranUnit: 0,
       netoGranTotal: 0,
       ivaGranTotal: 0,
-      pGran: 0,
       ivaSeniatGran: 0,
       profitMayor: 0,
       profitGran: 0,
@@ -98,7 +101,8 @@ function computePricing(
       factorGranStr: "0.80",
       minM,
       minGM,
-      ratio,
+      ratio: 1,
+      savingsUnit: 0,
       savingsGranMayor: 0,
     };
   }
@@ -107,9 +111,9 @@ function computePricing(
   const costoBaseMayor = costIncludesIva ? rawCostMayor / 1.16 : rawCostMayor;
   const creditoFiscalMayor = costIncludesIva ? rawCostMayor - costoBaseMayor : costoBaseMayor * 0.16;
 
-  // 2. Gran Mayor: Extracción de Costo Base y Crédito Fiscal (por paquete/unidad base)
-  const costoBaseGranUnit = costIncludesIva ? rawCostGran / 1.16 : rawCostGran;
-  const creditoFiscalGranUnit = costIncludesIva ? rawCostGran - costoBaseGranUnit : costoBaseGranUnit * 0.16;
+  // 2. Gran Mayor: Extracción de Costo Base y Crédito Fiscal (Totalmente independiente)
+  const costoBaseGran = costIncludesIva ? rawCostGran / 1.16 : rawCostGran;
+  const creditoFiscalGran = costIncludesIva ? rawCostGran - costoBaseGran : costoBaseGran * 0.16;
 
   const parseDivisor = (val: string, fallback: number) => {
     let n = parseFloat(String(val).replace(",", "."));
@@ -124,36 +128,30 @@ function computePricing(
   const factorMayor = parseDivisor(mMayorStr, 0.70);
   const factorGran = parseDivisor(mGranStr, 0.80);
 
-  // 3. Precios netos antes de IVA
+  // 3. Precios netos antes de IVA (ambos por unidad / paquete base)
   const netoMayor = costoBaseMayor / factorMayor;
-  const netoGranUnit = costoBaseGranUnit / factorGran;
+  const netoGran = costoBaseGran / factorGran;
 
   // 4. Débito Fiscal: IVA en la Venta
   const ivaMayor = withIvaVenta ? netoMayor * 0.16 : 0;
-  const ivaGranUnit = withIvaVenta ? netoGranUnit * 0.16 : 0;
+  const ivaGran = withIvaVenta ? netoGran * 0.16 : 0;
 
-  // 5. Precios finales unitarios
+  // 5. Precios finales: unitarios e independientes
   const pMayor = Math.round((netoMayor + ivaMayor) * 100) / 100;
-  const pGranUnit = Math.round((netoGranUnit + ivaGranUnit) * 100) / 100;
+  const pGran = Math.round((netoGran + ivaGran) * 100) / 100;
 
-  // 6. Gran Mayor Total del Lote (Opción B: min_gran_mayor unidades)
-  const pGran = Math.round(pGranUnit * ratio * 100) / 100;
-  const costoBaseGranTotal = Math.round(costoBaseGranUnit * ratio * 100) / 100;
-  const creditoFiscalGranTotal = Math.round(creditoFiscalGranUnit * ratio * 100) / 100;
-  const netoGranTotal = Math.round(netoGranUnit * ratio * 100) / 100;
-  const ivaGranTotal = Math.round(ivaGranUnit * ratio * 100) / 100;
-
-  // Ahorro que recibe el cliente al comprar a Gran Mayor vs comprar las mismas unidades a tarifa Mayor
-  const regularEquivalent = Math.round(pMayor * ratio * 100) / 100;
-  const savingsGranMayor = Math.max(0, Math.round((regularEquivalent - pGran) * 100) / 100);
-
-  // IVA a enterar al SENIAT (Débito Fiscal - Crédito Fiscal)
+  // 6. IVA a enterar al SENIAT (Débito Fiscal - Crédito Fiscal)
   const ivaSeniatMayor = Math.max(0, Math.round((ivaMayor - creditoFiscalMayor) * 100) / 100);
-  const ivaSeniatGranTotal = Math.max(0, Math.round((ivaGranTotal - creditoFiscalGranTotal) * 100) / 100);
+  const ivaSeniatGran = Math.max(0, Math.round((ivaGran - creditoFiscalGran) * 100) / 100);
 
-  // Ganancias netas reales
+  // 7. Ganancias netas reales
   const profitMayor = Math.round((netoMayor - costoBaseMayor) * 100) / 100;
-  const profitGranTotal = Math.round((netoGranTotal - costoBaseGranTotal) * 100) / 100;
+  const profitGran = Math.round((netoGran - costoBaseGran) * 100) / 100;
+
+  // 8. Ahorro para el cliente al comprar a Gran Mayor
+  const regularEquivalent = minM > 0 ? (pMayor / minM) * minGM : pMayor;
+  const savingsGranMayor = Math.max(0, Math.round((regularEquivalent - pGran) * 100) / 100);
+  const savingsUnit = minGM > 0 ? Math.round((savingsGranMayor / minGM) * 100) / 100 : 0;
 
   return {
     rawCost: Math.round(rawCostMayor * 100) / 100,
@@ -164,33 +162,38 @@ function computePricing(
     costoCalculado: Math.round(costoBaseMayor * 100) / 100,
     costWithIva: Math.round((costoBaseMayor + creditoFiscalMayor) * 100) / 100,
     rawCostGran: Math.round(rawCostGran * 100) / 100,
-    costBaseGranUnit: Math.round(costoBaseGranUnit * 100) / 100,
-    creditoFiscalGranUnit: Math.round(creditoFiscalGranUnit * 100) / 100,
-    costBaseGranTotal: costoBaseGranTotal,
-    costoBaseGranTotal,
-    creditoFiscalGranTotal,
+    costBaseGran: Math.round(costoBaseGran * 100) / 100,
+    costBaseGranUnit: Math.round(costoBaseGran * 100) / 100,
+    costBaseGranTotal: Math.round(costoBaseGran * 100) / 100,
+    costoBaseGranTotal: Math.round(costoBaseGran * 100) / 100,
+    creditoFiscalGran: Math.round(creditoFiscalGran * 100) / 100,
+    creditoFiscalGranUnit: Math.round(creditoFiscalGran * 100) / 100,
+    creditoFiscalGranTotal: Math.round(creditoFiscalGran * 100) / 100,
     isCustomGranCost,
     costIncludesIva,
     netoMayor: Math.round(netoMayor * 100) / 100,
     ivaMayor: Math.round(ivaMayor * 100) / 100,
     ivaSeniatMayor,
     pMayor,
-    netoGranUnit: Math.round(netoGranUnit * 100) / 100,
-    ivaGranUnit: Math.round(ivaGranUnit * 100) / 100,
-    pGranUnit,
-    netoGranTotal,
-    ivaGranTotal,
+    netoGran: Math.round(netoGran * 100) / 100,
+    netoGranUnit: Math.round(netoGran * 100) / 100,
+    netoGranTotal: Math.round(netoGran * 100) / 100,
+    ivaGran: Math.round(ivaGran * 100) / 100,
+    ivaGranUnit: Math.round(ivaGran * 100) / 100,
+    ivaGranTotal: Math.round(ivaGran * 100) / 100,
     pGran,
-    ivaSeniatGran: ivaSeniatGranTotal,
+    pGranUnit: pGran,
+    ivaSeniatGran,
     profitMayor,
-    profitGran: profitGranTotal,
+    profitGran,
     factorMayor,
     factorGran,
     factorMayorStr: factorMayor.toFixed(2),
     factorGranStr: factorGran.toFixed(2),
     minM,
     minGM,
-    ratio,
+    ratio: 1,
+    savingsUnit,
     savingsGranMayor,
   };
 }
@@ -2368,14 +2371,14 @@ export default function AdminProductosPage() {
                               return (
                                 <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-300 text-[10px] space-y-1">
                                   <div className="grid grid-cols-2 gap-1 text-slate-600">
-                                    <span>Base Lote ({p.minGM} u.): <strong>${p.costBaseGranTotal.toFixed(2)}</strong></span>
-                                    <span>Crédito Lote: <strong className="text-emerald-700">+${p.creditoFiscalGranTotal.toFixed(2)}</strong></span>
-                                    <span>Débito Lote: <strong className="text-blue-700">+${p.ivaGranTotal.toFixed(2)}</strong></span>
+                                    <span>Base Real: <strong>${p.costBaseGran.toFixed(2)}</strong></span>
+                                    <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalGran.toFixed(2)}</strong></span>
+                                    <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaGran.toFixed(2)}</strong></span>
                                     <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatGran.toFixed(2)}</strong></span>
                                   </div>
                                   <div className="flex items-center justify-between pt-1 border-t border-emerald-100 text-[11px] font-bold">
-                                    <span className="text-slate-700">Ganancia Lote: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
-                                    <span className="text-emerald-950">Total ({p.minGM} u.): <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
+                                    <span className="text-slate-700">Ganancia Neta: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
+                                    <span className="text-emerald-950">Precio Gran Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
                                   </div>
                                   {p.savingsGranMayor > 0 && (
                                     <div className="text-center pt-0.5 text-[10px] font-black text-amber-700 bg-amber-50 rounded-md py-0.5">
@@ -3359,14 +3362,14 @@ export default function AdminProductosPage() {
                                   return (
                                     <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-300 text-[10px] space-y-1">
                                       <div className="grid grid-cols-2 gap-1 text-slate-600">
-                                        <span>Base Lote ({p.minGM} u.): <strong>${p.costBaseGranTotal.toFixed(2)}</strong></span>
-                                        <span>Crédito Lote: <strong className="text-emerald-700">+${p.creditoFiscalGranTotal.toFixed(2)}</strong></span>
-                                        <span>Débito Lote: <strong className="text-blue-700">+${p.ivaGranTotal.toFixed(2)}</strong></span>
+                                        <span>Base Real: <strong>${p.costBaseGran.toFixed(2)}</strong></span>
+                                        <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalGran.toFixed(2)}</strong></span>
+                                        <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaGran.toFixed(2)}</strong></span>
                                         <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatGran.toFixed(2)}</strong></span>
                                       </div>
                                       <div className="flex items-center justify-between pt-1 border-t border-emerald-100 text-[11px] font-bold">
-                                        <span className="text-slate-700">Ganancia Lote: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
-                                        <span className="text-emerald-950">Total ({p.minGM} u.): <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
+                                        <span className="text-slate-700">Ganancia Neta: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
+                                        <span className="text-emerald-950">Precio Gran Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
                                       </div>
                                       {p.savingsGranMayor > 0 && (
                                         <div className="text-center pt-0.5 text-[10px] font-black text-amber-700 bg-amber-50 rounded-md py-0.5">
