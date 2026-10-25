@@ -35,10 +35,16 @@ interface NewProductVariantItem {
   min_gran_mayor: string;
 }
 
-// Función auxiliar para calcular precios según Costo (+ IVA compra) / Factor de Margen (+ IVA venta)
+// Función auxiliar para calcular precios con Gestión Fiscal y Crédito Fiscal (Opción A):
+// 1. Costo Base Imponible = si el costo ingresado ya incluye IVA, se extrae dividiendo entre 1.16; de lo contrario es el costo ingresado.
+// 2. Crédito Fiscal = IVA 16% de compra (factura de proveedor) a favor del negocio.
+// 3. Precio Neto = Costo Base / Factor Divisor de Margen (ej. 0.70 o 0.80).
+// 4. Débito Fiscal = IVA 16% que se traslada al cliente en la venta (si withIvaVenta está activo).
+// 5. IVA a enterar al SENIAT = Débito Fiscal - Crédito Fiscal.
+// 6. Ganancia Neta Real en caja = Precio Neto - Costo Base.
 function computePricing(
   costStr: string,
-  withIvaCompra: boolean,
+  costIncludesIva: boolean,
   withIvaVenta: boolean,
   mMayorStr: string,
   mGranStr: string,
@@ -52,16 +58,21 @@ function computePricing(
 
   if (isNaN(rawCost) || rawCost <= 0) {
     return {
+      rawCost: 0,
       costBase: 0,
+      creditoFiscal: 0,
       costoCalculado: 0,
       costWithIva: 0,
+      costIncludesIva,
       netoMayor: 0,
       ivaMayor: 0,
+      ivaSeniatMayor: 0,
       pMayor: 0,
       netoGran: 0,
       ivaGran: 0,
       pGranUnit: 0,
       pGran: 0,
+      ivaSeniatGran: 0,
       profitMayor: 0,
       profitGran: 0,
       factorMayor: 0.70,
@@ -75,8 +86,10 @@ function computePricing(
     };
   }
 
-  // 1. Costo de adquisición (con o sin IVA de compra)
-  const costoCalculado = withIvaCompra ? rawCost * 1.16 : rawCost;
+  // 1. Extracción de Costo Base y Crédito Fiscal
+  // Si el costo ingresado ya incluye IVA (factura final proveedor), se divide entre 1.16 para obtener el costo base real
+  const costoBase = costIncludesIva ? rawCost / 1.16 : rawCost;
+  const creditoFiscal = costIncludesIva ? rawCost - costoBase : costoBase * 0.16;
 
   const parseDivisor = (val: string, fallback: number) => {
     let n = parseFloat(String(val).replace(",", "."));
@@ -91,11 +104,11 @@ function computePricing(
   const factorMayor = parseDivisor(mMayorStr, 0.70);
   const factorGran = parseDivisor(mGranStr, 0.80);
 
-  // 2. Precio base neto según margen divisor: Costo / Factor (ej. $22.75 / 0.70 = $32.50)
-  const netoMayor = costoCalculado / factorMayor;
-  const netoGran = costoCalculado / factorGran;
+  // 2. Precio base neto según margen divisor: Costo Base / Factor (ej. $10.00 / 0.70 = $14.29)
+  const netoMayor = costoBase / factorMayor;
+  const netoGran = costoBase / factorGran;
 
-  // 3. IVA a la hora de la Venta (16% sobre el precio de venta)
+  // 3. Débito Fiscal: IVA en la Venta (16% sobre el precio neto de venta)
   const ivaMayor = withIvaVenta ? netoMayor * 0.16 : 0;
   const ivaGran = withIvaVenta ? netoGran * 0.16 : 0;
 
@@ -111,19 +124,28 @@ function computePricing(
   const regularEquivalent = Math.round(pMayor * ratio * 100) / 100;
   const savingsGranMayor = Math.max(0, Math.round((regularEquivalent - pGran) * 100) / 100);
 
+  // IVA a enterar al SENIAT (Débito Fiscal - Crédito Fiscal)
+  const ivaSeniatMayor = Math.max(0, Math.round((ivaMayor - creditoFiscal) * 100) / 100);
+  const ivaSeniatGran = Math.max(0, Math.round(((ivaGran * ratio) - (creditoFiscal * ratio)) * 100) / 100);
+
   return {
-    costBase: Math.round(rawCost * 100) / 100,
-    costoCalculado: Math.round(costoCalculado * 100) / 100,
-    costWithIva: Math.round(costoCalculado * 100) / 100,
+    rawCost: Math.round(rawCost * 100) / 100,
+    costBase: Math.round(costoBase * 100) / 100,
+    creditoFiscal: Math.round(creditoFiscal * 100) / 100,
+    costoCalculado: Math.round(costoBase * 100) / 100,
+    costWithIva: Math.round((costoBase + creditoFiscal) * 100) / 100,
+    costIncludesIva,
     netoMayor: Math.round(netoMayor * 100) / 100,
     ivaMayor: Math.round(ivaMayor * 100) / 100,
+    ivaSeniatMayor,
     pMayor,
     netoGran: Math.round(netoGran * 100) / 100,
     ivaGran: Math.round(ivaGran * 100) / 100,
+    ivaSeniatGran,
     pGranUnit,
     pGran,
-    profitMayor: Math.round((netoMayor - costoCalculado) * 100) / 100,
-    profitGran: Math.round(((netoGran * ratio) - (costoCalculado * ratio)) * 100) / 100,
+    profitMayor: Math.round((netoMayor - costoBase) * 100) / 100,
+    profitGran: Math.round(((netoGran * ratio) - (costoBase * ratio)) * 100) / 100,
     factorMayor,
     factorGran,
     factorMayorStr: factorMayor.toFixed(2),
@@ -2114,7 +2136,7 @@ export default function AdminProductosPage() {
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
                           <div className="md:col-span-5">
                             <label className="block font-bold text-slate-800 mb-1">
-                              Costo Base de Compra ($ USD) *
+                              Costo de Compra ($ USD) *
                             </label>
                             <div className="relative">
                               <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -2127,11 +2149,14 @@ export default function AdminProductosPage() {
                                 className="w-full h-9 pl-8 pr-3 rounded-xl border border-emerald-300 bg-white font-bold text-slate-900"
                               />
                             </div>
-                            {parseFloat(addCostBase) > 0 && (
-                              <span className="text-[11px] text-emerald-800 font-medium block mt-1 pl-1">
-                                Costo compra: <strong>${computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor).costoCalculado.toFixed(2)}</strong> {addApplyIvaCompra ? "(con IVA 16%)" : "(neto)"}
-                              </span>
-                            )}
+                            {parseFloat(addCostBase) > 0 && (() => {
+                              const p = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor);
+                              return (
+                                <span className="text-[11px] text-emerald-800 font-medium block mt-1 pl-1">
+                                  Base Imponible Real: <strong>${p.costBase.toFixed(2)}</strong> {addApplyIvaCompra ? "(IVA descontado)" : "(neto)"}
+                                </span>
+                              );
+                            })()}
                           </div>
 
                           <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2145,8 +2170,8 @@ export default function AdminProductosPage() {
                                 className="w-4 h-4 mt-0.5 text-emerald-600 rounded focus:ring-emerald-500"
                               />
                               <div className="flex flex-col leading-tight">
-                                <span className="font-bold text-slate-800 text-[11px]">+ IVA 16% en Compra</span>
-                                <span className="text-[10px] text-slate-500 mt-0.5">Factura fiscal proveedor</span>
+                                <span className="font-bold text-slate-800 text-[11px]">¿El costo ya incluye IVA?</span>
+                                <span className="text-[10px] text-slate-500 mt-0.5">Descuenta 16% (Crédito Fiscal)</span>
                               </div>
                             </label>
 
@@ -2166,6 +2191,55 @@ export default function AdminProductosPage() {
                             </label>
                           </div>
                         </div>
+
+                        {/* Desglose Fiscal Transparente (Crédito Fiscal y Débito Fiscal) */}
+                        {parseFloat(addCostBase) > 0 && (() => {
+                          const p = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor);
+                          return (
+                            <div className="p-3 rounded-2xl bg-white border border-emerald-300/90 shadow-2xs space-y-2">
+                              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                                <span className="font-black text-slate-800 text-[11px] flex items-center gap-1.5">
+                                  <Calculator className="w-3.5 h-3.5 text-emerald-700" />
+                                  <span>Desglose Fiscal y Ganancia Real (Opción A)</span>
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900">
+                                  {addApplyIvaCompra ? "Costo con IVA descontado" : "Costo neto"}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                                <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
+                                  <span className="text-slate-500 block">Costo Base Real:</span>
+                                  <strong className="text-slate-900 text-xs font-black">${p.costBase.toFixed(2)}</strong>
+                                </div>
+                                <div className="p-2 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                                  <span className="text-emerald-800 block">Crédito Fiscal (Compra):</span>
+                                  <strong className="text-emerald-700 text-xs font-black">+${p.creditoFiscal.toFixed(2)}</strong>
+                                  <span className="text-[9px] text-emerald-600 block">IVA a tu favor</span>
+                                </div>
+                                <div className="p-2 rounded-xl bg-blue-50/70 border border-blue-200">
+                                  <span className="text-blue-800 block">Débito Fiscal (Venta):</span>
+                                  <strong className="text-blue-700 text-xs font-black">+${p.ivaMayor.toFixed(2)}</strong>
+                                  <span className="text-[9px] text-blue-600 block">IVA al cliente</span>
+                                </div>
+                                <div className="p-2 rounded-xl bg-purple-50/70 border border-purple-200">
+                                  <span className="text-purple-800 block">A pagar al SENIAT:</span>
+                                  <strong className="text-purple-700 text-xs font-black">${p.ivaSeniatMayor.toFixed(2)}</strong>
+                                  <span className="text-[9px] text-purple-600 block">(Débito - Crédito)</span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1 border-t border-slate-100 text-[11px]">
+                                <span className="text-slate-600">
+                                  Tu Ganancia Neta Real (en caja): <strong className="text-emerald-700 font-black">${p.profitMayor.toFixed(2)}</strong>
+                                </span>
+                                <span className="text-slate-800 font-bold">
+                                  Precio Final Mayor: <strong className="text-emerald-800 font-black text-xs sm:text-sm">${p.pMayor.toFixed(2)}</strong>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Factores Mayor y Gran Mayor */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -2987,6 +3061,20 @@ export default function AdminProductosPage() {
                                   placeholder="22.75"
                                   className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs"
                                 />
+                                {parseFloat(editVarCostBase) > 0 && (() => {
+                                  const p = computePricing(
+                                    editVarCostBase,
+                                    editVarApplyIvaCompra,
+                                    editVarApplyIvaVenta,
+                                    editVarMarginMayor,
+                                    editVarMarginGranMayor
+                                  );
+                                  return (
+                                    <span className="text-[10px] text-emerald-800 font-medium block mt-0.5">
+                                      Base: <strong>${p.costBase.toFixed(2)}</strong> {editVarApplyIvaCompra ? "(IVA desc.)" : "(neto)"}
+                                    </span>
+                                  );
+                                })()}
                               </div>
 
                               <div className="flex flex-col justify-center gap-1">
@@ -2997,7 +3085,7 @@ export default function AdminProductosPage() {
                                     onChange={(e) => setEditVarApplyIvaCompra(e.target.checked)}
                                     className="rounded text-emerald-600"
                                   />
-                                  <span>+ IVA 16% Compra</span>
+                                  <span>¿Costo incluye IVA? (Descontar)</span>
                                 </label>
                                 <label className="flex items-center gap-1.5 cursor-pointer text-[10px] font-bold text-slate-700">
                                   <input
@@ -3029,7 +3117,7 @@ export default function AdminProductosPage() {
                                         precio_mayor_usd: computed.pMayor.toFixed(2),
                                         precio_gran_mayor_usd: computed.pGran.toFixed(2),
                                       }));
-                                      showToast("Precios aplicados a los campos");
+                                      showToast("Precios calculados con Crédito Fiscal aplicados");
                                     }
                                   }}
                                   disabled={!parseFloat(editVarCostBase)}
@@ -3039,6 +3127,33 @@ export default function AdminProductosPage() {
                                 </button>
                               </div>
                             </div>
+
+                            {/* Desglose Fiscal en SKU */}
+                            {parseFloat(editVarCostBase) > 0 && (() => {
+                              const p = computePricing(
+                                editVarCostBase,
+                                editVarApplyIvaCompra,
+                                editVarApplyIvaVenta,
+                                editVarMarginMayor,
+                                editVarMarginGranMayor,
+                                editVariantForm.min_mayor,
+                                editVariantForm.min_gran_mayor
+                              );
+                              return (
+                                <div className="p-2.5 rounded-xl bg-white border border-emerald-300 text-[10px] space-y-1">
+                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-slate-700">
+                                    <span>Base: <strong>${p.costBase.toFixed(2)}</strong></span>
+                                    <span className="text-emerald-800">Crédito Fiscal: <strong>+${p.creditoFiscal.toFixed(2)}</strong></span>
+                                    <span className="text-blue-800">Débito Fiscal: <strong>+${p.ivaMayor.toFixed(2)}</strong></span>
+                                    <span className="text-purple-800">SENIAT: <strong>${p.ivaSeniatMayor.toFixed(2)}</strong></span>
+                                  </div>
+                                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 font-bold text-slate-800">
+                                    <span>Ganancia Neta Real: <strong className="text-emerald-700 font-black">${p.profitMayor.toFixed(2)}</strong></span>
+                                    <span>Precio Final Mayor: <strong className="text-emerald-800 font-black">${p.pMayor.toFixed(2)}</strong></span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
