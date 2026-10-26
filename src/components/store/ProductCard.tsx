@@ -185,9 +185,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         Gran Mayor: {minGranMayor}Und
                       </span>
                       {savings > 0.05 && (
-                        <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-amber-900 bg-amber-100/90 border border-amber-300/80 px-1.5 py-0.5 rounded whitespace-nowrap shrink-0 leading-none">
-                          Ahorras {formatUsd(savings)}
-                        </span>
+                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg text-center shrink-0">
+                          <span className="text-[9.5px] font-bold block leading-tight text-amber-800">
+                            Ahorras
+                          </span>
+                          <span className="text-[10.5px] font-black block leading-tight text-amber-950">
+                            {formatUsd(savings)}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap overflow-hidden">
