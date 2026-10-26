@@ -110,15 +110,35 @@ export default function AdminEstadisticasPage() {
   const [liveViewMode, setLiveViewMode] = useState<"unicos" | "eventos">("unicos");
   const [timelineMetric, setTimelineMetric] = useState<"visitantesUnicos" | "visitas">("visitantesUnicos");
   const [expandedVisitorId, setExpandedVisitorId] = useState<string | null>(null);
+  const [isDeviceExcluded, setIsDeviceExcluded] = useState(true);
 
-  // Verificar autenticación
+  // Verificar autenticación y marcar dispositivo para no sumar visitas
   useEffect(() => {
     isAdminAuthenticated().then((auth) => {
       setIsAuthenticated(auth);
       setAuthChecked(true);
-      if (auth) loadStats(range);
+      if (auth) {
+        try {
+          localStorage.setItem("sumilisto_is_admin", "true");
+          if (localStorage.getItem("sumilisto_exclude_analytics") !== "false") {
+            localStorage.setItem("sumilisto_exclude_analytics", "true");
+            setIsDeviceExcluded(true);
+          } else {
+            setIsDeviceExcluded(false);
+          }
+        } catch {}
+        loadStats(range);
+      }
     });
   }, []);
+
+  const toggleExcludeDevice = () => {
+    const nextVal = !isDeviceExcluded;
+    setIsDeviceExcluded(nextVal);
+    try {
+      localStorage.setItem("sumilisto_exclude_analytics", nextVal ? "true" : "false");
+    } catch {}
+  };
 
   const loadStats = useCallback(async (selectedRange: string) => {
     setLoading(true);
@@ -158,6 +178,11 @@ export default function AdminEstadisticasPage() {
       const res = await loginAdmin(usernameInput, passwordInput);
       if (res.ok) {
         setIsAuthenticated(true);
+        try {
+          localStorage.setItem("sumilisto_is_admin", "true");
+          localStorage.setItem("sumilisto_exclude_analytics", "true");
+          setIsDeviceExcluded(true);
+        } catch {}
         loadStats(range);
       } else {
         setAuthError(res.error || "Credenciales incorrectas.");
@@ -345,6 +370,21 @@ export default function AdminEstadisticasPage() {
           >
             <span className={`w-2 h-2 rounded-full ${autoRefresh ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
             <span>{autoRefresh ? "Auto (15s)" : "Pausado"}</span>
+          </button>
+
+          {/* Exclusión de este dispositivo (Dueño/Admin) */}
+          <button
+            type="button"
+            onClick={toggleExcludeDevice}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+              isDeviceExcluded
+                ? "bg-purple-50 text-purple-900 border-purple-200 hover:bg-purple-100 shadow-xs"
+                : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
+            }`}
+            title="Cuando está activo, tus visitas desde este navegador (PC o tlf) no se contabilizan en las estadísticas"
+          >
+            <Shield className={`w-3.5 h-3.5 ${isDeviceExcluded ? "text-purple-600" : "text-slate-400"}`} />
+            <span>{isDeviceExcluded ? "Mi equipo: Excluido" : "Excluir mi equipo"}</span>
           </button>
 
           {/* Refrescar manual */}

@@ -25,6 +25,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: true });
     }
 
+    // Ignorar si la visita proviene de un administrador o dispositivo excluido
+    const adminCookie = req.cookies.get("sumilisto_admin_session");
+    if (adminCookie?.value || body.isExcluded || body.isAdmin) {
+      return NextResponse.json({ skipped: true, reason: "admin_excluded" });
+    }
+
     // Obtener IP del visitante
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip") || "127.0.0.1";

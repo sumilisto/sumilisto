@@ -60,6 +60,17 @@ export function AnalyticsTracker() {
       return;
     }
 
+    // Comprobar si este dispositivo está excluido (dueño / administrador)
+    try {
+      const isExcluded =
+        localStorage.getItem("sumilisto_exclude_analytics") === "true" ||
+        localStorage.getItem("sumilisto_is_admin") === "true" ||
+        document.cookie.includes("sumilisto_admin_session");
+      if (isExcluded) {
+        return;
+      }
+    } catch {}
+
     const fullPath = searchParams?.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
 
     // Evitar duplicar el evento si la ruta es la misma consecutivamente

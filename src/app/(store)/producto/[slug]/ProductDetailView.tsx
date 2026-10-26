@@ -280,6 +280,14 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   // Registrar visita específica al producto en analítica
   React.useEffect(() => {
     try {
+      if (
+        typeof window !== "undefined" &&
+        (localStorage.getItem("sumilisto_exclude_analytics") === "true" ||
+         localStorage.getItem("sumilisto_is_admin") === "true" ||
+         document.cookie.includes("sumilisto_admin_session"))
+      ) {
+        return;
+      }
       const vid =
         typeof window !== "undefined"
           ? localStorage.getItem("sumilisto_vid") || ("v_" + Math.random().toString(36).substring(2, 9))
