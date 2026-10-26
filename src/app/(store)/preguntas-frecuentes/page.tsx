@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import { ChevronRight, HelpCircle, MessageCircle, Truck, DollarSign, Package } from "lucide-react";
+import { ChevronRight, HelpCircle, Truck, DollarSign, Package } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 export const metadata = {
   title: "Preguntas Frecuentes | Sumilisto Venezuela",
@@ -12,7 +13,7 @@ export default function FAQPage() {
     {
       q: "¿Cómo funciona el pedido a través de la tienda y WhatsApp?",
       a: "Navegas por nuestro catálogo en línea, seleccionas las cantidades de bultos o cajas que requieres para tu negocio y agregas al pedido. Al hacer clic en 'Enviar Pedido por WhatsApp', se generará automáticamente un mensaje con la lista desglosada y el total referencial. Un asesor comercial verificará inventario y te indicará los pasos de pago y coordinación del despacho.",
-      icon: MessageCircle,
+      icon: WhatsAppIcon,
     },
     {
       q: "¿Cuáles son las zonas de despacho y tiempos de entrega?",

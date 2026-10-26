@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { Product } from "@/types/product";
 import { useCart } from "@/lib/cart/CartContext";
-import { Plus, Minus, ShoppingBag, MessageCircle, Share2, Check } from "lucide-react";
+import { Plus, Minus, ShoppingBag, Share2, Check } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 interface ProductDetailActionsProps {
   product: Product;
@@ -55,7 +56,7 @@ export const ProductDetailActions: React.FC<ProductDetailActionsProps> = ({
           rel="noopener noreferrer"
           className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm sm:text-base shadow-sm transition-colors touch-target"
         >
-          <MessageCircle className="w-5 h-5" />
+          <WhatsAppIcon className="w-5 h-5" />
           <span>Consultar disponibilidad por WhatsApp</span>
         </a>
 
@@ -117,7 +118,7 @@ export const ProductDetailActions: React.FC<ProductDetailActionsProps> = ({
           rel="noopener noreferrer"
           className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-xs sm:text-sm border border-emerald-200 transition-colors touch-target"
         >
-          <MessageCircle className="w-4 h-4 text-emerald-600" />
+          <WhatsAppIcon className="w-4 h-4 text-emerald-600" />
           <span>Consultar dudas de este producto</span>
         </a>
 

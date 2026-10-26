@@ -6,7 +6,8 @@ import Image from "next/image";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { formatVes } from "@/lib/currency/format";
-import { Search, ShoppingBag, MessageCircle, MapPin, Sparkles, Instagram } from "lucide-react";
+import { Search, ShoppingBag, MapPin, Sparkles, Instagram } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import { InstantSearchModal } from "@/components/search/InstantSearchModal";
 
 interface HeaderProps {
@@ -99,7 +100,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
               aria-label="Contactar por WhatsApp"
               className="hidden md:flex items-center gap-2 h-11 px-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-sm transition-colors shadow-sm"
             >
-              <MessageCircle className="w-4 h-4" />
+              <WhatsAppIcon className="w-5 h-5" />
               <span>Atención WhatsApp</span>
             </a>
 

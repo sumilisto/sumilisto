@@ -11,7 +11,6 @@ import { useTheme } from "@/lib/theme/ThemeContext";
 import {
   ShieldCheck,
   Truck,
-  MessageCircle,
   Palette,
   Check,
   Share2,
@@ -21,6 +20,7 @@ import {
   Play,
   Video,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 // ──── Galería multimedia (hasta 10 fotos y 1 video) ────
 interface GalleryProps {
@@ -708,7 +708,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 rel="noopener noreferrer"
                 className="w-full h-13 flex items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm shadow-sm transition-colors touch-target"
               >
-                <MessageCircle className="w-5 h-5" />
+                <WhatsAppIcon className="w-5 h-5" />
                 <span>Consultar por WhatsApp</span>
               </a>
             )}
@@ -721,7 +721,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-emerald-700 hover:underline font-semibold"
             >
-              <MessageCircle className="w-4 h-4" />
+              <WhatsAppIcon className="w-4 h-4" />
               <span>Consultar asesor</span>
             </a>
 

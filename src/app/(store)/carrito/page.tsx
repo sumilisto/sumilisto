@@ -4,9 +4,10 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Trash2, Plus, Minus, MessageCircle, MapPin, ArrowLeft,
+  Trash2, Plus, Minus, MapPin, ArrowLeft,
   Navigation, ExternalLink, AlertCircle, Check, X,
 } from 'lucide-react';
+import { WhatsAppIcon } from '@/components/common/WhatsAppIcon';
 import { useCart } from '@/lib/cart/CartContext';
 import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
@@ -676,7 +677,7 @@ export default function CartPage() {
             onClick={handleSendOrder}
             className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]"
           >
-            <MessageCircle className="w-5 h-5" />
+            <WhatsAppIcon className="w-5 h-5" />
             Enviar Pedido por WhatsApp
           </button>
 

@@ -5,10 +5,11 @@ import Link from "next/link";
 import { isAdminAuthenticated, loginAdmin, logoutAdmin } from "@/lib/actions/auth";
 import { formatUsd } from "@/lib/currency/format";
 import {
-  Clock, CheckCircle2, MessageCircle, AlertCircle, Phone, MapPin,
+  Clock, CheckCircle2, AlertCircle, Phone, MapPin,
   Package, ChevronDown, ChevronUp, RefreshCw, ShoppingBag, ArrowLeft,
   DollarSign, Check, Lock, User, LogOut, ExternalLink, Activity
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 interface AbandonedCart {
   id?: string;
@@ -464,7 +465,7 @@ export default function AdminCarritosPage() {
                           rel="noopener noreferrer"
                           className="h-10 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all"
                         >
-                          <MessageCircle className="w-4 h-4" />
+                          <WhatsAppIcon className="w-4 h-4" />
                           <span>Escribir WhatsApp</span>
                         </a>
                       )}

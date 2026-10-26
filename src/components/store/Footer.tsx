@@ -2,10 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
+import { useTheme } from "@/lib/theme/ThemeContext";
 import { DEFAULT_STORE_CONFIG, STORE_CATEGORIES } from "@/lib/constants/brand";
 import { DEFAULT_SETTINGS } from "@/lib/constants/settings";
-import { useTheme } from "@/lib/theme/ThemeContext";
-import { MessageCircle, MapPin, Clock, ShieldCheck, Truck, Phone, Instagram } from "lucide-react";
+import { MapPin, Clock, ShieldCheck, Truck, Phone, Instagram } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 export const Footer: React.FC = () => {
   const { theme } = useTheme();
@@ -74,7 +75,7 @@ export const Footer: React.FC = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-sm transition-all shadow-sm hover:scale-[1.01]"
               >
-                <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                <WhatsAppIcon className="w-4 h-4 flex-shrink-0" />
                 <span>WhatsApp: +{whatsappNum}</span>
               </a>
 

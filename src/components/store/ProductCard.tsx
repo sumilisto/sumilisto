@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
-import { Plus, MessageCircle, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 interface ProductCardProps {
   product: Product;
@@ -109,7 +110,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             aria-label="Consultar por WhatsApp"
             className="absolute bottom-2.5 right-2.5 z-20 w-10 h-10 rounded-2xl bg-white/90 text-emerald-600 shadow-md hover:bg-white flex items-center justify-center touch-target"
           >
-            <MessageCircle className="w-5 h-5" />
+            <WhatsAppIcon className="w-5 h-5 text-emerald-600" />
           </a>
         )}
       </div>
