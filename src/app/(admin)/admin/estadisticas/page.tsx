@@ -9,6 +9,7 @@ import {
   ExternalLink, TrendingUp, CheckCircle2, AlertCircle, Compass, Shield,
   Layers, ShoppingBag, Clock, Sparkles, Filter, ChevronRight
 } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 interface StatItem {
   nombre?: string;
@@ -260,24 +261,15 @@ export default function AdminEstadisticasPage() {
   const maxProductViews = data?.topProductos?.length ? Math.max(...data.topProductos.map((p) => p.views), 1) : 1;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12 space-y-8 print:p-0 print:m-0 print:max-w-none">
-      
-      {/* ── BARRA SUPERIOR: NAVEGACIÓN Y ENCABEZADO ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200 print:hidden">
-        <div>
-          <div className="flex items-center gap-3 mb-2 text-xs">
-            <Link href="/admin/settings" className="font-bold text-slate-500 hover:text-brand flex items-center gap-1 transition-colors">
-              <ArrowLeft className="w-3.5 h-3.5" /> Ajustes Tienda
-            </Link>
-            <span className="text-slate-300">•</span>
-            <Link href="/admin/productos" className="font-bold text-slate-500 hover:text-brand flex items-center gap-1 transition-colors">
-              <Package className="w-3.5 h-3.5 text-brand" /> Productos y Fotos
-            </Link>
-            <span className="text-slate-300">•</span>
-            <Link href="/admin/carritos" className="font-bold text-slate-500 hover:text-brand flex items-center gap-1 transition-colors">
-              <ShoppingBag className="w-3.5 h-3.5" /> Carritos Abandonados
-            </Link>
-          </div>
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      <div className="print:hidden">
+        <AdminNav onLogout={() => setIsAuthenticated(false)} />
+      </div>
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 print:p-0 print:m-0 print:max-w-none">
+        
+        {/* ── BARRA SUPERIOR: ENCABEZADO Y ACCIONES ── */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200 print:hidden">
+          <div>
 
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md">
@@ -899,5 +891,6 @@ export default function AdminEstadisticasPage() {
       </div>
 
     </div>
+  </div>
   );
 }

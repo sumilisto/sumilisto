@@ -10,6 +10,7 @@ import {
   DollarSign, Check, Lock, User, LogOut, ExternalLink, Activity
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 interface AbandonedCart {
   id?: string;
@@ -213,51 +214,32 @@ export default function AdminCarritosPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-      {/* Barra superior con navegación */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <Link href="/admin/settings" className="text-xs font-bold text-slate-500 hover:text-brand flex items-center gap-1">
-              <ArrowLeft className="w-3.5 h-3.5" /> Volver a Ajustes
-            </Link>
-            <span className="text-slate-300">•</span>
-            <Link href="/admin/productos" className="text-xs font-bold text-slate-500 hover:text-brand flex items-center gap-1">
-              <Package className="w-3.5 h-3.5 text-brand" /> Productos y Fotos
-            </Link>
-            <span className="text-slate-300">•</span>
-            <Link href="/admin/estadisticas" className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1">
-              <Activity className="w-3.5 h-3.5 text-emerald-700" /> Estadísticas en Vivo
-            </Link>
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      <AdminNav onLogout={() => setIsAuthenticated(false)} />
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Barra superior con acciones */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-200">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+              <ShoppingBag className="w-7 h-7 text-brand" />
+              Carritos Abandonados y Seguimiento
+            </h1>
+            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+              Monitorea los clientes que iniciaron su pedido pero no enviaron el WhatsApp.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-            <ShoppingBag className="w-7 h-7 text-brand" />
-            Carritos Abandonados y Seguimiento
-          </h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-            Monitorea los clientes que iniciaron su pedido pero no enviaron el WhatsApp.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={loadCarritos}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Refrescar</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Salir</span>
-          </button>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={loadCarritos}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>Refrescar</span>
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* Tarjetas de Métricas Rápidas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -524,5 +506,6 @@ export default function AdminCarritosPage() {
         </div>
       )}
     </div>
+  </div>
   );
 }

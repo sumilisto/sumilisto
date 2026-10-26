@@ -14,6 +14,7 @@ import {
   Video, Play, Star, Palette, Layers, Film, Calculator, ArrowRightLeft,
   Percent, DollarSign, Eye, ArrowUpDown, HelpCircle, Activity
 } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 interface UploadPhotoItem {
   id: string;
@@ -1261,96 +1262,60 @@ export default function AdminProductosPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-      {/* Toast Feedback */}
-      {feedbackMsg && (
-        <div
-          className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in slide-in-from-bottom-2 ${
-            feedbackMsg.type === "success"
-              ? "bg-slate-900 text-white border-slate-800"
-              : feedbackMsg.type === "error"
-              ? "bg-rose-600 text-white border-rose-700"
-              : "bg-blue-600 text-white border-blue-700"
-          }`}
-        >
-          {feedbackMsg.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-          {feedbackMsg.type === "error" && <AlertCircle className="w-4 h-4 text-white" />}
-          {feedbackMsg.type === "info" && <Sparkles className="w-4 h-4 text-amber-300" />}
-          <span>{feedbackMsg.text}</span>
-        </div>
-      )}
+    <div className="min-h-screen bg-slate-50/50">
+      <AdminNav onLogout={() => setIsAuthenticated(false)} />
 
-      {/* Encabezado Principal y Navegación */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-3 mb-1 text-xs">
-            <Link
-              href="/admin/settings"
-              className="font-bold text-slate-500 hover:text-brand flex items-center gap-1 transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Ajustes Tienda
-            </Link>
-            <span className="text-slate-300">•</span>
-            <Link
-              href="/admin/carritos"
-              className="font-bold text-slate-500 hover:text-brand flex items-center gap-1 transition-colors"
-            >
-              Carritos Abandonados
-            </Link>
-            <span className="text-slate-300">•</span>
-            <Link
-              href="/admin/estadisticas"
-              className="font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 transition-colors"
-            >
-              <Activity className="w-3.5 h-3.5 text-emerald-700" /> Estadísticas en Vivo
-            </Link>
-            <span className="text-slate-300">•</span>
-            <Link
-              href="/"
-              target="_blank"
-              className="font-bold text-slate-500 hover:text-brand flex items-center gap-1 transition-colors"
-            >
-              Ver Tienda <ExternalLink className="w-3 h-3" />
-            </Link>
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
+        {/* Toast Feedback */}
+        {feedbackMsg && (
+          <div
+            className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in slide-in-from-bottom-2 ${
+              feedbackMsg.type === "success"
+                ? "bg-slate-900 text-white border-slate-800"
+                : feedbackMsg.type === "error"
+                ? "bg-rose-600 text-white border-rose-700"
+                : "bg-blue-600 text-white border-blue-700"
+            }`}
+          >
+            {feedbackMsg.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+            {feedbackMsg.type === "error" && <AlertCircle className="w-4 h-4 text-white" />}
+            {feedbackMsg.type === "info" && <Sparkles className="w-4 h-4 text-amber-300" />}
+            <span>{feedbackMsg.text}</span>
+          </div>
+        )}
+
+        {/* Encabezado Principal */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+              <Package className="w-7 h-7 text-brand" />
+              Gestión de Productos, Multimedia y Variantes
+            </h1>
+            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+              Sube carruseles de hasta 10 fotos y 1 video optimizados, y gestiona colores o presentaciones con 1 clic.
+            </p>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Package className="w-7 h-7 text-brand" />
-            Gestión de Productos, Multimedia y Variantes
-          </h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-            Sube carruseles de hasta 10 fotos y 1 video optimizados, y gestiona colores o presentaciones con 1 clic.
-          </p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nuevo Producto</span>
+            </button>
+            <button
+              type="button"
+              onClick={loadProducts}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-2xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>Refrescar</span>
+            </button>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nuevo Producto</span>
-          </button>
-          <button
-            type="button"
-            onClick={loadProducts}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-2xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Refrescar</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Salir</span>
-          </button>
-        </div>
-      </div>
 
       {/* Contenido */}
       <div className="space-y-6">
@@ -3863,6 +3828,7 @@ export default function AdminProductosPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
