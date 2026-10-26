@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getProducts, getBcvRate } from "@/lib/api/store";
 import { STORE_CATEGORIES } from "@/lib/constants/brand";
 import { ProductCard } from "@/components/store/ProductCard";
-import { CategoryChips } from "@/components/store/CategoryChips";
 import { HeroSection } from "@/components/store/HeroSection";
 import { TrendingUp, ArrowRight } from "lucide-react";
 
@@ -17,16 +16,7 @@ export default async function HomePage() {
       {/* Hero Banner / Propuesta de Valor (dinámico desde Settings) */}
       <HeroSection />
 
-      {/* Selector de Categorías */}
-      <section id="categorias" className="max-w-7xl mx-auto w-full">
-        <div className="px-4 sm:px-6 mb-2 flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-bold text-slate-900">
-            Líneas de Suministros
-          </h2>
-          <span className="text-xs text-slate-500">4 categorías principales</span>
-        </div>
-        <CategoryChips />
-      </section>
+      <div id="categorias" />
 
       {/* Sección: Más Pedidos (Destacados) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
