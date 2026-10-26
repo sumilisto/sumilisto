@@ -6,11 +6,30 @@ import { STORE_CATEGORIES } from "@/lib/constants/brand";
 import { cn } from "@/lib/utils";
 import { Package, ShoppingBag, Utensils, Scroll, Layers } from "lucide-react";
 
+import { useTheme } from "@/lib/theme/ThemeContext";
+
 interface CategoryChipsProps {
   activeCategory?: string;
 }
 
 export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) => {
+  const { theme } = useTheme();
+  const deleted = (theme?.deletedCategories || []).map((c) => c.toLowerCase());
+
+  const visibleBaseCategories = STORE_CATEGORIES.filter(
+    (c) => !deleted.includes(c.slug.toLowerCase()) && !deleted.includes(c.nombre.toLowerCase())
+  );
+
+  const customCategories = (theme?.customCategories || []).filter(
+    (c) =>
+      !deleted.includes(c.toLowerCase()) &&
+      !STORE_CATEGORIES.some(
+        (sc) =>
+          sc.nombre.toLowerCase() === c.toLowerCase() ||
+          sc.slug.toLowerCase() === c.toLowerCase()
+      )
+  );
+
   const getIcon = (slug: string) => {
     switch (slug) {
       case "envases":
@@ -42,7 +61,7 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
           <span>Todo el Catálogo</span>
         </Link>
 
-        {STORE_CATEGORIES.map((cat) => {
+        {visibleBaseCategories.map((cat) => {
           const isActive = activeCategory?.toLowerCase() === cat.slug.toLowerCase();
           return (
             <Link
@@ -61,11 +80,34 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
           );
         })}
 
-        {activeCategory &&
-          !STORE_CATEGORIES.some((c) => c.slug.toLowerCase() === activeCategory.toLowerCase()) && (
-            <span
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border bg-brand text-white border-brand shadow-sm capitalize"
+        {customCategories.map((cat) => {
+          const catSlug = cat.toLowerCase().replace(/\s+/g, "-");
+          const isActive = activeCategory?.toLowerCase() === catSlug || activeCategory?.toLowerCase() === cat.toLowerCase();
+          return (
+            <Link
+              key={cat}
+              href={`/categoria/${catSlug}`}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150 touch-target border capitalize",
+                isActive
+                  ? "bg-brand text-white border-brand shadow-sm"
+                  : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+              )}
             >
+              <Layers className="w-4 h-4" />
+              <span>{cat}</span>
+            </Link>
+          );
+        })}
+
+        {activeCategory &&
+          !visibleBaseCategories.some((c) => c.slug.toLowerCase() === activeCategory.toLowerCase()) &&
+          !customCategories.some(
+            (c) =>
+              c.toLowerCase() === activeCategory.toLowerCase() ||
+              c.toLowerCase().replace(/\s+/g, "-") === activeCategory.toLowerCase()
+          ) && (
+            <span className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border bg-brand text-white border-brand shadow-sm capitalize">
               <Layers className="w-4 h-4" />
               <span>{decodeURIComponent(activeCategory).replace(/-/g, " ")}</span>
             </span>

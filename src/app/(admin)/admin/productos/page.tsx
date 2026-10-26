@@ -12,9 +12,10 @@ import {
   ExternalLink, LogOut, Lock, User, RefreshCw, Image as ImageIcon,
   CheckCircle2, ArrowLeft, Filter, Sparkles, X, ChevronRight, ChevronLeft,
   Video, Play, Star, Palette, Layers, Film, Calculator, ArrowRightLeft,
-  Percent, DollarSign, Eye, ArrowUpDown, HelpCircle, Activity
+  Percent, DollarSign, Eye, ArrowUpDown, HelpCircle, Activity, Settings
 } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { useTheme } from "@/lib/theme/ThemeContext";
 
 interface UploadPhotoItem {
   id: string;
@@ -253,19 +254,210 @@ export default function AdminProductosPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [createActiveTab, setCreateActiveTab] = useState<"general" | "variants" | "photos">("general");
   const [creatingProduct, setCreatingProduct] = useState(false);
+  const { theme, updateTheme } = useTheme();
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [isProcessingCategoryDelete, setIsProcessingCategoryDelete] = useState(false);
+  const [newCategoryManagerInput, setNewCategoryManagerInput] = useState("");
+  const [inlineNewCatInput, setInlineNewCatInput] = useState("");
+  const [inlineEditCatInput, setInlineEditCatInput] = useState("");
+
   const DEFAULT_CATEGORIES = useMemo(() => ["Envases", "Bolsas", "Cubiertos", "Papel"], []);
   const availableCategories = useMemo(() => {
-    const cats = new Set(DEFAULT_CATEGORIES);
+    const deleted = new Set((theme?.deletedCategories || []).map((c) => c.toLowerCase()));
+    const cats = new Set<string>();
+
+    DEFAULT_CATEGORIES.forEach((c) => {
+      if (!deleted.has(c.toLowerCase())) cats.add(c);
+    });
+
+    (theme?.customCategories || []).forEach((c) => {
+      if (c && !deleted.has(c.toLowerCase())) cats.add(c);
+    });
+
     products.forEach((p) => {
-      if (p.categoria && p.categoria.trim()) {
-        cats.add(p.categoria.trim());
+      if (p.categoria) {
+        p.categoria.split(",").forEach((raw) => {
+          const clean = raw.trim();
+          if (clean && !deleted.has(clean.toLowerCase())) {
+            cats.add(clean);
+          }
+        });
       }
     });
-    return Array.from(cats);
-  }, [DEFAULT_CATEGORIES, products]);
 
-  const [isCustomNewCategory, setIsCustomNewCategory] = useState(false);
-  const [isCustomEditCategory, setIsCustomEditCategory] = useState(false);
+    return Array.from(cats);
+  }, [DEFAULT_CATEGORIES, theme?.deletedCategories, theme?.customCategories, products]);
+
+  // Selección múltiple para Nuevo Producto
+  const newProductSelectedCategories = useMemo(() => {
+    return (newProduct?.categoria || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+  }, [newProduct?.categoria]);
+
+  const handleToggleNewCategory = (cat: string) => {
+    const current = (newProduct.categoria || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+    let updated: string[];
+    if (current.includes(cat)) {
+      updated = current.filter((c) => c !== cat);
+    } else {
+      updated = [...current, cat];
+    }
+    setNewProduct({ ...newProduct, categoria: updated.join(", ") });
+  };
+
+  const handleRemoveNewCategory = (cat: string) => {
+    const current = (newProduct.categoria || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+    const updated = current.filter((c) => c !== cat);
+    setNewProduct({ ...newProduct, categoria: updated.join(", ") });
+  };
+
+  // Selección múltiple para Editar Producto
+  const editProductSelectedCategories = useMemo(() => {
+    return (editingProduct?.categoria || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+  }, [editingProduct?.categoria]);
+
+  const handleToggleEditCategory = (cat: string) => {
+    if (!editingProduct) return;
+    const current = (editingProduct.categoria || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+    let updated: string[];
+    if (current.includes(cat)) {
+      updated = current.filter((c) => c !== cat);
+    } else {
+      updated = [...current, cat];
+    }
+    setEditingProduct({ ...editingProduct, categoria: updated.join(", ") });
+  };
+
+  const handleRemoveEditCategory = (cat: string) => {
+    if (!editingProduct) return;
+    const current = (editingProduct.categoria || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+    const updated = current.filter((c) => c !== cat);
+    setEditingProduct({ ...editingProduct, categoria: updated.join(", ") });
+  };
+
+  // Agregar categoría inline desde el modal de producto
+  const handleAddInlineNewCategory = async (forEdit: boolean = false) => {
+    const raw = forEdit ? inlineEditCatInput : inlineNewCatInput;
+    const clean = raw.trim();
+    if (!clean) return;
+
+    const updatedDeleted = (theme?.deletedCategories || []).filter(
+      (c) => c.toLowerCase() !== clean.toLowerCase()
+    );
+    const updatedCustom = Array.from(
+      new Set([...(theme?.customCategories || []), clean])
+    );
+
+    try {
+      await updateTheme({
+        deletedCategories: updatedDeleted,
+        customCategories: updatedCustom,
+      });
+    } catch {}
+
+    if (forEdit && editingProduct) {
+      const current = (editingProduct.categoria || "")
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      if (!current.includes(clean)) {
+        setEditingProduct({
+          ...editingProduct,
+          categoria: [...current, clean].join(", "),
+        });
+      }
+      setInlineEditCatInput("");
+    } else {
+      const current = (newProduct.categoria || "")
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      if (!current.includes(clean)) {
+        setNewProduct({
+          ...newProduct,
+          categoria: [...current, clean].join(", "),
+        });
+      }
+      setInlineNewCatInput("");
+    }
+    showToast(`Categoría "${clean}" agregada y vinculada`);
+  };
+
+  // Eliminar categoría globalmente
+  const handleDeleteCategory = async (catToDelete: string) => {
+    const affected = products.filter((p) =>
+      (p.categoria || "")
+        .split(",")
+        .map((c) => c.trim().toLowerCase())
+        .includes(catToDelete.toLowerCase())
+    );
+
+    const confirmMsg =
+      affected.length > 0
+        ? `¿Eliminar la categoría "${catToDelete}"? Está presente en ${affected.length} producto(s). Se removerá automáticamente de dichos productos.`
+        : `¿Eliminar la categoría "${catToDelete}" del catálogo?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsProcessingCategoryDelete(true);
+    try {
+      for (const p of affected) {
+        const remaining = (p.categoria || "")
+          .split(",")
+          .map((c) => c.trim())
+          .filter((c) => c.toLowerCase() !== catToDelete.toLowerCase());
+        const newCatString = remaining.length > 0 ? remaining.join(", ") : "General";
+
+        await fetch(`/api/products/${p.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre: p.nombre,
+            categoria: newCatString,
+          }),
+        });
+      }
+
+      const currentDeleted = theme?.deletedCategories || [];
+      const updatedDeleted = Array.from(new Set([...currentDeleted, catToDelete]));
+      const updatedCustom = (theme?.customCategories || []).filter(
+        (c) => c.toLowerCase() !== catToDelete.toLowerCase()
+      );
+
+      await updateTheme({
+        deletedCategories: updatedDeleted,
+        customCategories: updatedCustom,
+      });
+
+      if (selectedCategory.toLowerCase() === catToDelete.toLowerCase()) {
+        setSelectedCategory("todas");
+      }
+
+      await loadProducts();
+      showToast(`Categoría "${catToDelete}" eliminada correctamente`, "success");
+    } catch (err: any) {
+      showToast(err.message || "Error al eliminar categoría", "error");
+    } finally {
+      setIsProcessingCategoryDelete(false);
+    }
+  };
 
   const [newProduct, setNewProduct] = useState({
     nombre: "",
@@ -1129,7 +1321,10 @@ export default function AdminProductosPage() {
 
       const matchesCategory =
         selectedCategory === "todas" ||
-        p.categoria.toLowerCase() === selectedCategory.toLowerCase();
+        (p.categoria || "")
+          .split(",")
+          .map((c) => c.trim().toLowerCase())
+          .includes(selectedCategory.toLowerCase());
 
       const hasValidPhoto = (p.fotos || []).some(
         (f) => !f.url.includes("placehold.co")
@@ -1443,6 +1638,16 @@ export default function AdminProductosPage() {
                 {cat === "todas" ? "Todas las categorías" : cat}
               </button>
             ))}
+
+            <button
+              type="button"
+              onClick={() => setShowCategoryManager(true)}
+              className="py-1.5 px-3 rounded-lg text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 hover:text-brand flex items-center gap-1.5 whitespace-nowrap shadow-2xs transition-all flex-shrink-0 ml-auto"
+              title="Administrar o eliminar categorías"
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-500" />
+              <span>Gestionar / Eliminar Categorías</span>
+            </button>
           </div>
         </div>
 
@@ -1496,9 +1701,18 @@ export default function AdminProductosPage() {
 
                       {/* Badges superiores: Categoría, Fotos y Video */}
                       <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap z-10 max-w-[65%]">
-                        <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs">
-                          {p.categoria}
-                        </span>
+                        {(p.categoria || "")
+                          .split(",")
+                          .map((c) => c.trim())
+                          .filter(Boolean)
+                          .map((cat) => (
+                            <span
+                              key={cat}
+                              className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs"
+                            >
+                              {cat}
+                            </span>
+                          ))}
                         <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
                           <ImageIcon className="w-3 h-3 text-emerald-400" />
                           <span>{realPhotos.length}/10 fotos</span>
@@ -2139,69 +2353,114 @@ export default function AdminProductosPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block font-bold text-slate-700">Categoría *</label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const next = !isCustomNewCategory;
-                            setIsCustomNewCategory(next);
-                            if (next) {
-                              setNewProduct({ ...newProduct, categoria: "" });
-                            } else {
-                              setNewProduct({ ...newProduct, categoria: availableCategories[0] || "Envases" });
-                            }
-                          }}
-                          className="text-xs font-bold text-brand hover:underline"
-                        >
-                          {isCustomNewCategory ? "← Elegir existente" : "+ Nueva categoría"}
-                        </button>
-                      </div>
-                      {isCustomNewCategory ? (
-                        <input
-                          type="text"
-                          value={newProduct.categoria}
-                          onChange={(e) => setNewProduct({ ...newProduct, categoria: e.target.value })}
-                          placeholder="Escribe la nueva categoría (ej: Vasos, Limpieza)"
-                          className="w-full h-10 px-3.5 rounded-xl border-2 border-brand/50 bg-white font-bold text-xs sm:text-sm focus:border-brand focus:outline-none"
-                          autoFocus
-                          required
-                        />
+                  {/* Selector múltiple de Categorías */}
+                  <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-slate-800 text-xs">
+                        Categorías del Producto * <span className="font-normal text-slate-500">(Puedes asignarle varias categorías)</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryManager(true)}
+                        className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                        <span>Gestionar / Eliminar Categorías</span>
+                      </button>
+                    </div>
+
+                    {/* Chips de categorías asignadas actualmente */}
+                    <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[42px] items-center">
+                      {newProductSelectedCategories.length > 0 ? (
+                        newProductSelectedCategories.map((cat) => (
+                          <span
+                            key={cat}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white font-bold text-xs shadow-2xs animate-fadeIn"
+                          >
+                            <span>{cat}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveNewCategory(cat)}
+                              className="hover:bg-white/20 rounded p-0.5 transition-colors"
+                              title={`Quitar ${cat}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))
                       ) : (
-                        <select
-                          value={newProduct.categoria}
-                          onChange={(e) => {
-                            if (e.target.value === "__NEW__") {
-                              setIsCustomNewCategory(true);
-                              setNewProduct({ ...newProduct, categoria: "" });
-                            } else {
-                              setNewProduct({ ...newProduct, categoria: e.target.value });
-                            }
-                          }}
-                          className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs sm:text-sm"
-                        >
-                          {availableCategories.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                          <option value="__NEW__">+ Crear nueva categoría...</option>
-                        </select>
+                        <span className="text-xs text-amber-600 font-semibold italic">
+                          ⚠️ Haz clic en una o más categorías abajo para asignarlas al producto
+                        </span>
                       )}
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Unidad de Venta *</label>
+                    {/* Botones de selección rápida */}
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-bold text-slate-500">
+                        Categorías disponibles (haz clic para activar o desactivar):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
+                        {availableCategories.map((cat) => {
+                          const isSelected = newProductSelectedCategories.includes(cat);
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => handleToggleNewCategory(cat)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                isSelected
+                                  ? "bg-brand text-white shadow-2xs ring-2 ring-brand/40"
+                                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                              }`}
+                            >
+                              {isSelected ? (
+                                <Check className="w-3.5 h-3.5 text-white" />
+                              ) : (
+                                <Plus className="w-3.5 h-3.5 text-slate-400" />
+                              )}
+                              <span>{cat}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Crear nueva categoría en el momento */}
+                    <div className="flex items-center gap-2 pt-1">
                       <input
                         type="text"
-                        value={newProduct.unidad_venta}
-                        onChange={(e) => setNewProduct({ ...newProduct, unidad_venta: e.target.value })}
-                        placeholder="ej. Unidad, 50 Und, Bulto, Paquete"
-                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
+                        value={inlineNewCatInput}
+                        onChange={(e) => setInlineNewCatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddInlineNewCategory(false);
+                          }
+                        }}
+                        placeholder="+ Escribir nueva categoría (ej. Vasos, Limpieza) y presionar Enter..."
+                        className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
                       />
+                      <button
+                        type="button"
+                        onClick={() => handleAddInlineNewCategory(false)}
+                        className="h-9 px-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1 flex-shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Crear y Asignar</span>
+                      </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Unidad de Venta *</label>
+                    <input
+                      type="text"
+                      value={newProduct.unidad_venta}
+                      onChange={(e) => setNewProduct({ ...newProduct, unidad_venta: e.target.value })}
+                      placeholder="ej. Unidad, 50 Und, Bulto, Paquete"
+                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
+                    />
                   </div>
 
                   <div>
@@ -3077,69 +3336,114 @@ export default function AdminProductosPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block font-bold text-slate-700">Categoría *</label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const next = !isCustomEditCategory;
-                            setIsCustomEditCategory(next);
-                            if (next) {
-                              setEditingProduct({ ...editingProduct, categoria: "" });
-                            } else {
-                              setEditingProduct({ ...editingProduct, categoria: availableCategories[0] || "Envases" });
-                            }
-                          }}
-                          className="text-xs font-bold text-brand hover:underline"
-                        >
-                          {isCustomEditCategory ? "← Elegir existente" : "+ Nueva categoría"}
-                        </button>
-                      </div>
-                      {isCustomEditCategory ? (
-                        <input
-                          type="text"
-                          value={editingProduct.categoria || ""}
-                          onChange={(e) => setEditingProduct({ ...editingProduct, categoria: e.target.value })}
-                          placeholder="Escribe la categoría (ej: Vasos, Limpieza)"
-                          className="w-full h-10 px-3.5 rounded-xl border-2 border-brand/50 bg-white font-bold text-xs sm:text-sm focus:border-brand focus:outline-none"
-                          autoFocus
-                          required
-                        />
+                  {/* Selector múltiple de Categorías */}
+                  <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-slate-800 text-xs">
+                        Categorías del Producto * <span className="font-normal text-slate-500">(Puedes asignarle varias categorías)</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryManager(true)}
+                        className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                        <span>Gestionar / Eliminar Categorías</span>
+                      </button>
+                    </div>
+
+                    {/* Chips de categorías asignadas actualmente */}
+                    <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[42px] items-center">
+                      {editProductSelectedCategories.length > 0 ? (
+                        editProductSelectedCategories.map((cat) => (
+                          <span
+                            key={cat}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white font-bold text-xs shadow-2xs animate-fadeIn"
+                          >
+                            <span>{cat}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEditCategory(cat)}
+                              className="hover:bg-white/20 rounded p-0.5 transition-colors"
+                              title={`Quitar ${cat}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))
                       ) : (
-                        <select
-                          value={editingProduct.categoria}
-                          onChange={(e) => {
-                            if (e.target.value === "__NEW__") {
-                              setIsCustomEditCategory(true);
-                              setEditingProduct({ ...editingProduct, categoria: "" });
-                            } else {
-                              setEditingProduct({ ...editingProduct, categoria: e.target.value });
-                            }
-                          }}
-                          className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs sm:text-sm"
-                        >
-                          {Array.from(new Set([...availableCategories, editingProduct.categoria].filter(Boolean))).map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                          <option value="__NEW__">+ Crear nueva categoría...</option>
-                        </select>
+                        <span className="text-xs text-amber-600 font-semibold italic">
+                          ⚠️ Haz clic en una o más categorías abajo para asignarlas al producto
+                        </span>
                       )}
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Unidad de Venta</label>
+                    {/* Botones de selección rápida */}
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-bold text-slate-500">
+                        Categorías disponibles (haz clic para activar o desactivar):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
+                        {Array.from(new Set([...availableCategories, ...editProductSelectedCategories])).map((cat) => {
+                          const isSelected = editProductSelectedCategories.includes(cat);
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => handleToggleEditCategory(cat)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                isSelected
+                                  ? "bg-brand text-white shadow-2xs ring-2 ring-brand/40"
+                                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                              }`}
+                            >
+                              {isSelected ? (
+                                <Check className="w-3.5 h-3.5 text-white" />
+                              ) : (
+                                <Plus className="w-3.5 h-3.5 text-slate-400" />
+                              )}
+                              <span>{cat}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Crear nueva categoría en el momento */}
+                    <div className="flex items-center gap-2 pt-1">
                       <input
                         type="text"
-                        value={editingProduct.unidadVenta || ""}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, unidadVenta: e.target.value })}
-                        placeholder="ej. Unidad, 50 Und, Bulto"
-                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
+                        value={inlineEditCatInput}
+                        onChange={(e) => setInlineEditCatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddInlineNewCategory(true);
+                          }
+                        }}
+                        placeholder="+ Escribir nueva categoría (ej. Vasos, Limpieza) y presionar Enter..."
+                        className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
                       />
+                      <button
+                        type="button"
+                        onClick={() => handleAddInlineNewCategory(true)}
+                        className="h-9 px-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1 flex-shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Crear y Asignar</span>
+                      </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Unidad de Venta</label>
+                    <input
+                      type="text"
+                      value={editingProduct.unidadVenta || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, unidadVenta: e.target.value })}
+                      placeholder="ej. Unidad, 50 Und, Bulto"
+                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
+                    />
                   </div>
 
                   <div>
@@ -3914,6 +4218,167 @@ export default function AdminProductosPage() {
                   {savingEdit ? "Guardando..." : "Guardar Cambios"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          MODAL: GESTIÓN Y ELIMINACIÓN DE CATEGORÍAS
+          ───────────────────────────────────────────────────────────── */}
+      {showCategoryManager && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            {/* Header del Modal */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-brand/10 text-brand flex items-center justify-center font-black">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                    Gestión de Categorías
+                  </h3>
+                  <span className="text-[11px] text-slate-500">
+                    Crea, administra y elimina categorías del catálogo
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCategoryManager(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              {/* Formulario para agregar nueva categoría */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+                <label className="block font-bold text-slate-700 text-xs">
+                  Crear Nueva Categoría
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryManagerInput}
+                    onChange={(e) => setNewCategoryManagerInput(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const clean = newCategoryManagerInput.trim();
+                        if (!clean) return;
+                        const updatedDeleted = (theme?.deletedCategories || []).filter(
+                          (c) => c.toLowerCase() !== clean.toLowerCase()
+                        );
+                        const updatedCustom = Array.from(
+                          new Set([...(theme?.customCategories || []), clean])
+                        );
+                        await updateTheme({
+                          deletedCategories: updatedDeleted,
+                          customCategories: updatedCustom,
+                        });
+                        setNewCategoryManagerInput("");
+                        showToast(`Categoría "${clean}" agregada con éxito`);
+                      }
+                    }}
+                    placeholder="Nombre de la nueva categoría (ej. Vasos, Limpieza, Cajas)..."
+                    className="flex-1 h-10 px-3.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const clean = newCategoryManagerInput.trim();
+                      if (!clean) return;
+                      const updatedDeleted = (theme?.deletedCategories || []).filter(
+                        (c) => c.toLowerCase() !== clean.toLowerCase()
+                      );
+                      const updatedCustom = Array.from(
+                        new Set([...(theme?.customCategories || []), clean])
+                      );
+                      await updateTheme({
+                        deletedCategories: updatedDeleted,
+                        customCategories: updatedCustom,
+                      });
+                      setNewCategoryManagerInput("");
+                      showToast(`Categoría "${clean}" agregada con éxito`);
+                    }}
+                    className="h-10 px-4 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 flex-shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Agregar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista de categorías activas */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-slate-500">
+                  <span className="font-bold text-xs">
+                    Categorías Activas ({availableCategories.length})
+                  </span>
+                  <span className="text-[11px]">Productos asociados</span>
+                </div>
+
+                {availableCategories.length === 0 ? (
+                  <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    No hay categorías activas. Crea una arriba.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 overflow-hidden bg-white">
+                    {availableCategories.map((cat) => {
+                      const count = products.filter((p) =>
+                        (p.categoria || "")
+                          .split(",")
+                          .map((c) => c.trim().toLowerCase())
+                          .includes(cat.toLowerCase())
+                      ).length;
+
+                      return (
+                        <div
+                          key={cat}
+                          className="flex items-center justify-between p-3 sm:px-4 hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-2 h-2 rounded-full bg-brand" />
+                            <div>
+                              <span className="font-black text-slate-800 text-xs block">
+                                {cat}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {count === 0 ? "Sin productos asignados" : `${count} producto${count > 1 ? "s" : ""}`}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={isProcessingCategoryDelete}
+                            onClick={() => handleDeleteCategory(cat)}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-50"
+                            title={`Eliminar categoría ${cat}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer del Modal */}
+            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-end bg-slate-50/80 text-xs">
+              <button
+                type="button"
+                onClick={() => setShowCategoryManager(false)}
+                className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold transition-all shadow-xs"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

@@ -55,6 +55,8 @@ export interface StoreSettings {
   navLabelCarrito: string;
   navLabelBuscar: string;
   navLabelDespachos: string;
+  customCategories?: string[];
+  deletedCategories?: string[];
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -98,4 +100,6 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   navLabelCarrito: "Carrito",
   navLabelBuscar: "Buscar",
   navLabelDespachos: "Despachos",
+  customCategories: [],
+  deletedCategories: [],
 };

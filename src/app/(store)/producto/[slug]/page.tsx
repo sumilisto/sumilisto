@@ -51,10 +51,22 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Productos relacionados en la misma categoría
-  const relatedProducts = allProducts.filter(
-    (p) => p.categoria.toLowerCase() === product.categoria.toLowerCase() && p.slug !== product.slug
-  ).slice(0, 4);
+  // Productos relacionados en cualquiera de sus categorías
+  const productCats = (product.categoria || "")
+    .split(",")
+    .map((c) => c.trim().toLowerCase())
+    .filter(Boolean);
+
+  const relatedProducts = allProducts
+    .filter((p) => {
+      if (p.slug === product.slug) return false;
+      const pCats = (p.categoria || "")
+        .split(",")
+        .map((c) => c.trim().toLowerCase())
+        .filter(Boolean);
+      return pCats.some((c) => productCats.includes(c));
+    })
+    .slice(0, 4);
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -88,6 +100,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     },
   };
 
+  const categoryList = (product.categoria || "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-8">
       {/* Datos Estructurados JSON-LD para Google Rich Snippets */}
@@ -102,12 +119,19 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           Inicio
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <Link
-          href={`/categoria/${product.categoria.toLowerCase()}`}
-          className="hover:text-slate-900 font-semibold text-slate-700 transition-colors uppercase tracking-wider"
-        >
-          {product.categoria}
-        </Link>
+        {categoryList.map((cat, idx) => (
+          <React.Fragment key={cat}>
+            <Link
+              href={`/categoria/${cat.toLowerCase().replace(/\s+/g, "-")}`}
+              className="hover:text-slate-900 font-semibold text-slate-700 transition-colors uppercase tracking-wider"
+            >
+              {cat}
+            </Link>
+            {idx < categoryList.length - 1 && (
+              <span className="text-slate-300">/</span>
+            )}
+          </React.Fragment>
+        ))}
       </nav>
 
       {/* Componente Interactivo de Ficha de Producto con Variantes de Color */}
@@ -120,15 +144,17 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-brand" />
               <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-                Productos Relacionados en {product.categoria}
+                Productos Relacionados {categoryList.length > 0 ? `(${categoryList.join(" · ")})` : ""}
               </h2>
             </div>
-            <Link
-              href={`/categoria/${product.categoria.toLowerCase()}`}
-              className="text-xs sm:text-sm font-bold text-brand hover:underline"
-            >
-              Ver todos en {product.categoria}
-            </Link>
+            {categoryList.length > 0 && (
+              <Link
+                href={`/categoria/${categoryList[0].toLowerCase().replace(/\s+/g, "-")}`}
+                className="text-xs sm:text-sm font-bold text-brand hover:underline"
+              >
+                Ver más en {categoryList[0]}
+              </Link>
+            )}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">

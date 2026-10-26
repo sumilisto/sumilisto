@@ -132,7 +132,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               style={{ fontSize: categorySize }}
               className="font-bold text-brand leading-tight"
             >
-              {product.categoria}
+              {product.categoria.split(",").map((c) => c.trim()).filter(Boolean).join(" · ")}
             </p>
           )}
 
