@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
 import { ProductCard } from "@/components/store/ProductCard";
-import { Sparkles, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface FeaturedCarouselProps {
   products: Product[];
@@ -63,10 +63,6 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
             <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
               Recomendado para ti
             </h2>
-            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-              <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" />
-              <span>{products.length} productos</span>
-            </span>
           </div>
         </div>
 
