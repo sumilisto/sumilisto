@@ -74,12 +74,17 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
         {/* Barra Superior: Logo Oficial de la Marca / Título + Accesos Rápidos */}
         <div className="h-14 flex items-center justify-between gap-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <Link href="/admin" className="flex items-center group">
-              <div>
-                <span className="font-black text-sm sm:text-base tracking-tight text-white block leading-tight group-hover:text-emerald-200 transition-colors">
+            <Link href="/admin" className="flex items-center gap-2.5 group">
+              <img
+                src={theme.logoUrl || "/logo.png"}
+                alt="Sumilisto"
+                className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105"
+              />
+              <div className="border-l border-white/20 pl-2.5">
+                <span className="font-black text-xs sm:text-sm tracking-tight text-white block leading-tight">
                   Admin
                 </span>
-                <span className="text-[10px] text-emerald-200/90 font-medium block leading-tight">
+                <span className="text-[10px] text-emerald-200 font-medium block leading-tight">
                   Panel de Control
                 </span>
               </div>

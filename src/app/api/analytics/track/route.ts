@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { resolveVenezuelaState } from "@/lib/analytics/geo";
+import { resolveLocation } from "@/lib/analytics/geo";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,18 +34,7 @@ export async function POST(req: NextRequest) {
     const rawRegion = req.headers.get("x-vercel-ip-country-region") || req.headers.get("cf-region");
     const rawCityHeader = req.headers.get("x-vercel-ip-city") || req.headers.get("cf-ipcity");
 
-    const pais = rawCountry === "VE" ? "Venezuela" : rawCountry;
-    let ciudad = rawCityHeader ? decodeURIComponent(rawCityHeader) : "";
-    let estado = resolveVenezuelaState(rawRegion, ciudad);
-
-    // Si estamos en entorno de prueba / local sin geolocalización de red
-    if (!ciudad || ciudad === "Unknown") {
-      if (estado === "Distrito Capital") ciudad = "Caracas";
-      else if (estado === "Miranda") ciudad = "Guarenas / Guatire";
-      else if (estado === "Carabobo") ciudad = "Valencia";
-      else if (estado === "Zulia") ciudad = "Maracaibo";
-      else ciudad = "Caracas";
-    }
+    const { pais, estado, ciudad } = resolveLocation(rawCountry, rawRegion, rawCityHeader);
 
     // Dispositivo y Navegador (detectar si no vino en el body)
     const userAgent = req.headers.get("user-agent") || "";
