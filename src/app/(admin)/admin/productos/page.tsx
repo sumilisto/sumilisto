@@ -288,6 +288,17 @@ export default function AdminProductosPage() {
     return Array.from(cats);
   }, [DEFAULT_CATEGORIES, theme?.deletedCategories, theme?.customCategories, products]);
 
+  const [newProduct, setNewProduct] = useState({
+    nombre: "",
+    categoria: "Envases",
+    unidad_venta: "Unidad",
+    descripcion: "",
+    activo: true,
+    destacado: false,
+  });
+
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
   // Selección múltiple para Nuevo Producto
   const newProductSelectedCategories = useMemo(() => {
     return (newProduct?.categoria || "")
@@ -459,15 +470,6 @@ export default function AdminProductosPage() {
     }
   };
 
-  const [newProduct, setNewProduct] = useState({
-    nombre: "",
-    categoria: "Envases",
-    unidad_venta: "Unidad",
-    descripcion: "",
-    activo: true,
-    destacado: false,
-  });
-
   // Lista de todos los SKUs para el nuevo producto
   const [newProductVariants, setNewProductVariants] = useState<NewProductVariantItem[]>([
     {
@@ -500,7 +502,6 @@ export default function AdminProductosPage() {
   const [newProductVideo, setNewProductVideo] = useState<File | null>(null);
 
   // Modal: Edición de Producto (Completa con Información General, Variantes/SKUs y Fotos)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editActiveTab, setEditActiveTab] = useState<"general" | "variants" | "photos">("general");
   const [savingEdit, setSavingEdit] = useState(false);
 

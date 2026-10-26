@@ -83,24 +83,108 @@ export async function GET(req: NextRequest) {
     const productoVisitas = allVisitas.filter((v) => Boolean(v.producto_sku || v.producto_nombre));
     const vistasProductos = productoVisitas.length;
 
-    // Agregación por Estado
-    const estadosMap: Record<string, number> = {};
-    const ciudadesMap: Record<string, { estado: string; count: number }> = {};
+    // Agregación por Estado y Ciudad con Visitantes Únicos y Total Visitas
+    const estadosMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {};
+    const ciudadesMap: Record<string, { estado: string; count: number; uniqueSessions: Set<string> }> = {};
     const dispositivosMap: Record<string, number> = { Móvil: 0, Escritorio: 0, Tablet: 0 };
     const navegadoresMap: Record<string, number> = {};
     const productosMap: Record<string, { nombre: string; sku: string; views: number; uniqueVisitors: Set<string> }> = {};
 
+    // Agrupación por visitantes únicos individuales (session_id)
+    const visitorsMap = new Map<string, {
+      sessionId: string;
+      ciudad: string;
+      estado: string;
+      pais: string;
+      dispositivo: string;
+      navegador: string;
+      primeraActividad: string;
+      ultimaActividad: string;
+      totalPaginasVistas: number;
+      ultimaRuta: string;
+      ultimoProductoNombre?: string;
+      ultimoProductoSku?: string;
+      productosVistos: string[];
+      rutasVistas: string[];
+      historial: Array<{
+        hora: string;
+        ruta: string;
+        productoNombre?: string;
+        productoSku?: string;
+      }>;
+    }>();
+
     allVisitas.forEach((v) => {
+      const sid = v.session_id || v.id;
+
+      // Agrupación de visitante único
+      if (!visitorsMap.has(sid)) {
+        visitorsMap.set(sid, {
+          sessionId: sid,
+          ciudad: v.ciudad || "Caracas",
+          estado: v.estado || "Distrito Capital",
+          pais: v.pais || "Venezuela",
+          dispositivo: v.dispositivo || "Móvil",
+          navegador: v.navegador || "Chrome",
+          primeraActividad: v.created_at,
+          ultimaActividad: v.created_at,
+          totalPaginasVistas: 0,
+          ultimaRuta: v.ruta || "/",
+          ultimoProductoNombre: v.producto_nombre,
+          ultimoProductoSku: v.producto_sku,
+          productosVistos: [],
+          rutasVistas: [],
+          historial: [],
+        });
+      }
+
+      const visitor = visitorsMap.get(sid)!;
+      visitor.totalPaginasVistas += 1;
+
+      if (new Date(v.created_at) > new Date(visitor.ultimaActividad)) {
+        visitor.ultimaActividad = v.created_at;
+        visitor.ultimaRuta = v.ruta || "/";
+        if (v.producto_nombre) {
+          visitor.ultimoProductoNombre = v.producto_nombre;
+          visitor.ultimoProductoSku = v.producto_sku;
+        }
+      }
+
+      if (new Date(v.created_at) < new Date(visitor.primeraActividad)) {
+        visitor.primeraActividad = v.created_at;
+      }
+
+      if (v.producto_nombre && !visitor.productosVistos.includes(v.producto_nombre)) {
+        visitor.productosVistos.push(v.producto_nombre);
+      }
+      if (v.ruta && !visitor.rutasVistas.includes(v.ruta)) {
+        visitor.rutasVistas.push(v.ruta);
+      }
+
+      if (visitor.historial.length < 8) {
+        visitor.historial.push({
+          hora: v.created_at,
+          ruta: v.ruta || "/",
+          productoNombre: v.producto_nombre,
+          productoSku: v.producto_sku,
+        });
+      }
+
       // Estado
       const est = v.estado || "Distrito Capital";
-      estadosMap[est] = (estadosMap[est] || 0) + 1;
+      if (!estadosMap[est]) {
+        estadosMap[est] = { total: 0, uniqueSessions: new Set() };
+      }
+      estadosMap[est].total += 1;
+      estadosMap[est].uniqueSessions.add(sid);
 
       // Ciudad
       const c = v.ciudad || "Caracas";
       if (!ciudadesMap[c]) {
-        ciudadesMap[c] = { estado: est, count: 0 };
+        ciudadesMap[c] = { estado: est, count: 0, uniqueSessions: new Set() };
       }
       ciudadesMap[c].count += 1;
+      ciudadesMap[c].uniqueSessions.add(sid);
 
       // Dispositivo
       const d = v.dispositivo || "Móvil";
@@ -121,28 +205,30 @@ export async function GET(req: NextRequest) {
           };
         }
         productosMap[v.producto_sku].views += 1;
-        productosMap[v.producto_sku].uniqueVisitors.add(v.session_id);
+        productosMap[v.producto_sku].uniqueVisitors.add(sid);
       }
     });
 
-    // Formatear Estados ordenados
+    // Formatear Estados ordenados por Visitantes Únicos
     const topEstados = Object.entries(estadosMap)
-      .map(([nombre, total]) => ({
+      .map(([nombre, data]) => ({
         nombre,
-        total,
-        porcentaje: totalVisitas > 0 ? Math.round((total / totalVisitas) * 1000) / 10 : 0,
+        total: data.total,
+        visitantesUnicos: data.uniqueSessions.size,
+        porcentaje: visitantesUnicos > 0 ? Math.round((data.uniqueSessions.size / visitantesUnicos) * 1000) / 10 : 0,
       }))
-      .sort((a, b) => b.total - a.total);
+      .sort((a, b) => b.visitantesUnicos - a.visitantesUnicos);
 
-    // Formatear Ciudades ordenadas
+    // Formatear Ciudades ordenadas por Visitantes Únicos
     const topCiudades = Object.entries(ciudadesMap)
       .map(([ciudad, data]) => ({
         ciudad,
         estado: data.estado,
         total: data.count,
-        porcentaje: totalVisitas > 0 ? Math.round((data.count / totalVisitas) * 1000) / 10 : 0,
+        visitantesUnicos: data.uniqueSessions.size,
+        porcentaje: visitantesUnicos > 0 ? Math.round((data.uniqueSessions.size / visitantesUnicos) * 1000) / 10 : 0,
       }))
-      .sort((a, b) => b.total - a.total)
+      .sort((a, b) => b.visitantesUnicos - a.visitantesUnicos)
       .slice(0, 10);
 
     // Cruzar productos con catálogo para foto y slug
@@ -163,23 +249,23 @@ export async function GET(req: NextRequest) {
           porcentaje: totalVisitas > 0 ? Math.round((p.views / totalVisitas) * 1000) / 10 : 0,
         };
       })
-      .sort((a, b) => b.views - a.views);
+      .sort((a, b) => b.uniqueVisitors - a.uniqueVisitors);
 
-    // Agrupación de series temporales (Timeline)
-    const timelineMap: Record<string, number> = {};
+    // Agrupación de series temporales (Timeline) con visitantes únicos y páginas vistas
+    const timelineMap: Record<string, { visitas: number; sessions: Set<string> }> = {};
     if (range === "hoy" || range === "ayer") {
       // 24 Horas
       for (let h = 0; h < 24; h++) {
         const key = `${String(h).padStart(2, "0")}:00`;
-        timelineMap[key] = 0;
+        timelineMap[key] = { visitas: 0, sessions: new Set() };
       }
       allVisitas.forEach((v) => {
         const d = new Date(v.created_at);
-        // Ajustar a hora VE
         const veHour = new Date(d.getTime() + (d.getTimezoneOffset() + veOffset) * 60000).getHours();
         const key = `${String(veHour).padStart(2, "0")}:00`;
-        if (timelineMap[key] !== undefined) {
-          timelineMap[key] += 1;
+        if (timelineMap[key]) {
+          timelineMap[key].visitas += 1;
+          timelineMap[key].sessions.add(v.session_id);
         }
       });
     } else {
@@ -192,7 +278,7 @@ export async function GET(req: NextRequest) {
         const m = String(day.getMonth() + 1).padStart(2, "0");
         const dt = String(day.getDate()).padStart(2, "0");
         const key = `${y}-${m}-${dt}`;
-        timelineMap[key] = 0;
+        timelineMap[key] = { visitas: 0, sessions: new Set() };
       }
 
       allVisitas.forEach((v) => {
@@ -202,18 +288,32 @@ export async function GET(req: NextRequest) {
         const m = String(localD.getMonth() + 1).padStart(2, "0");
         const dt = String(localD.getDate()).padStart(2, "0");
         const key = `${y}-${m}-${dt}`;
-        if (timelineMap[key] !== undefined) {
-          timelineMap[key] += 1;
+        if (timelineMap[key]) {
+          timelineMap[key].visitas += 1;
+          timelineMap[key].sessions.add(v.session_id);
         }
       });
     }
 
-    const timeline = Object.entries(timelineMap).map(([label, count]) => ({
+    const timeline = Object.entries(timelineMap).map(([label, data]) => ({
       label,
-      visitas: count,
+      visitas: data.visitas,
+      visitantesUnicos: data.sessions.size,
     }));
 
-    // Feed de últimas visitas en vivo (últimas 30)
+    // Feed de últimos VISITANTES ÚNICOS en vivo
+    const ultimosVisitantes = Array.from(visitorsMap.values())
+      .map((visitor) => {
+        const isOnline = (now.getTime() - new Date(visitor.ultimaActividad).getTime()) <= 5 * 60 * 1000;
+        return {
+          ...visitor,
+          isOnline,
+        };
+      })
+      .sort((a, b) => new Date(b.ultimaActividad).getTime() - new Date(a.ultimaActividad).getTime())
+      .slice(0, 30);
+
+    // Feed de últimos eventos brutos (retrocompatibilidad)
     const ultimasVisitas = allVisitas.slice(0, 30).map((v) => ({
       id: v.id,
       fecha: v.created_at,
@@ -241,6 +341,7 @@ export async function GET(req: NextRequest) {
       dispositivos: dispositivosMap,
       navegadores: navegadoresMap,
       timeline,
+      ultimosVisitantes,
       ultimasVisitas,
       generatedAt: new Date().toISOString(),
     });
