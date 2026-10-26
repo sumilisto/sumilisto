@@ -31,22 +31,9 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
             <span className="font-bold text-white">{formatVes(bcvRate)}</span>
             <span className="opacity-80 hidden md:inline">· Precios en Bs. calculados al cambio oficial</span>
           </div>
-          <div className="flex items-center gap-3 text-[11px] justify-center opacity-90">
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-pink-200 transition-colors font-semibold"
-              title="Síguenos en Instagram @sumilisto_"
-            >
-              <Instagram className="w-3.5 h-3.5 text-pink-300" />
-              <span>@{instagramHandle}</span>
-            </a>
-            <span className="opacity-50 hidden sm:inline">•</span>
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Despachos en Caracas, Guarenas y Guatire</span>
-            </div>
+          <div className="flex items-center gap-1.5 text-[11px] justify-center opacity-90">
+            <MapPin className="w-3.5 h-3.5" />
+            <span>Despachos en Caracas, Guarenas y Guatire</span>
           </div>
         </div>
       </div>
@@ -92,16 +79,16 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
               <Search className="w-5 h-5" />
             </button>
 
-            {/* Enlace de Instagram directo */}
+            {/* Enlace de Instagram (solo logo en color blanco) */}
             <a
               href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Seguir en Instagram @sumilisto_"
-              className="hidden lg:flex items-center gap-1.5 h-11 px-3.5 rounded-xl bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-95 text-white font-semibold text-xs transition-all shadow-sm hover:scale-[1.02]"
+              aria-label="Instagram @sumilisto_"
+              title="Instagram @sumilisto_"
+              className="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all hover:scale-105"
             >
-              <Instagram className="w-4 h-4" />
-              <span>@{instagramHandle}</span>
+              <Instagram className="w-5 h-5 text-white" />
             </a>
 
             {/* Enlace de WhatsApp directo */}

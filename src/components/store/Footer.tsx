@@ -82,9 +82,9 @@ export const Footer: React.FC = () => {
                 href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-95 text-white font-semibold text-sm transition-all shadow-sm hover:scale-[1.01]"
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm transition-all shadow-sm hover:scale-[1.01]"
               >
-                <Instagram className="w-4 h-4 flex-shrink-0" />
+                <Instagram className="w-4 h-4 flex-shrink-0 text-white" />
                 <span>Instagram: @{instagramHandle}</span>
               </a>
             </div>
@@ -101,11 +101,11 @@ export const Footer: React.FC = () => {
               href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-pink-400 transition-colors font-semibold"
+              className="inline-flex items-center gap-1.5 hover:text-white transition-colors font-semibold"
               style={{ color: footerText }}
               title="Síguenos en Instagram @sumilisto_"
             >
-              <Instagram className="w-3.5 h-3.5 text-pink-400" />
+              <Instagram className="w-3.5 h-3.5 text-white" />
               <span>@{instagramHandle}</span>
             </a>
             <Link href="/terminos" className="hover:text-white transition-colors" style={{ color: footerText }}>
