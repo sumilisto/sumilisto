@@ -120,6 +120,10 @@ export async function GET(req: NextRequest) {
       if (new Date(v.created_at) > new Date(visitor.ultimaActividad)) {
         visitor.ultimaActividad = v.created_at;
         visitor.ultimaRuta = v.ruta || "/";
+        if (v.dispositivo) visitor.dispositivo = v.dispositivo;
+        if (v.navegador) visitor.navegador = v.navegador;
+        if (v.ciudad) visitor.ciudad = v.ciudad;
+        if (v.estado) visitor.estado = v.estado;
         if (v.producto_nombre) {
           visitor.ultimoProductoNombre = v.producto_nombre;
           visitor.ultimoProductoSku = v.producto_sku;
@@ -181,57 +185,53 @@ export async function GET(req: NextRequest) {
 
     // Métricas clave
     const totalVisitas = allVisitas.length;
-    const uniqueSessions = new Set(allVisitas.map((v) => v.session_id));
-    const visitantesUnicos = uniqueSessions.size;
+    const visitantesUnicos = visitorsMap.size;
 
     const productoVisitas = allVisitas.filter((v) => Boolean(v.producto_sku || v.producto_nombre));
     const vistasProductos = productoVisitas.length;
 
-    // Agregación por Estado y Ciudad con Visitantes Únicos y Total Visitas
-    const estadosMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {};
-    const ciudadesMap: Record<string, { estado: string; count: number; uniqueSessions: Set<string> }> = {};
-    const dispositivosMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {
-      Móvil: { total: 0, uniqueSessions: new Set() },
-      Escritorio: { total: 0, uniqueSessions: new Set() },
-      Tablet: { total: 0, uniqueSessions: new Set() },
+    // Agregación por Estado, Ciudad, Dispositivo y Navegador
+    const estadosMap: Record<string, { total: number; visitantesUnicos: number }> = {};
+    const ciudadesMap: Record<string, { estado: string; count: number; visitantesUnicos: number }> = {};
+    const dispositivosMap: Record<string, { total: number; visitantesUnicos: number }> = {
+      Móvil: { total: 0, visitantesUnicos: 0 },
+      Escritorio: { total: 0, visitantesUnicos: 0 },
+      Tablet: { total: 0, visitantesUnicos: 0 },
     };
-    const navegadoresMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {};
+    const navegadoresMap: Record<string, { total: number; visitantesUnicos: number }> = {};
     const productosMap: Record<string, { nombre: string; sku: string; views: number; uniqueVisitors: Set<string> }> = {};
 
+    // 1. Contar eventos / páginas vistas brutas
     allVisitas.forEach((v) => {
       const sid = v.session_id || v.id;
 
       // Estado
       const est = v.estado || "Distrito Capital";
       if (!estadosMap[est]) {
-        estadosMap[est] = { total: 0, uniqueSessions: new Set() };
+        estadosMap[est] = { total: 0, visitantesUnicos: 0 };
       }
       estadosMap[est].total += 1;
-      estadosMap[est].uniqueSessions.add(sid);
 
       // Ciudad
       const c = v.ciudad || "Caracas";
       if (!ciudadesMap[c]) {
-        ciudadesMap[c] = { estado: est, count: 0, uniqueSessions: new Set() };
+        ciudadesMap[c] = { estado: est, count: 0, visitantesUnicos: 0 };
       }
       ciudadesMap[c].count += 1;
-      ciudadesMap[c].uniqueSessions.add(sid);
 
-      // Dispositivo
+      // Dispositivo (total vistas)
       const d = v.dispositivo || "Móvil";
       if (!dispositivosMap[d]) {
-        dispositivosMap[d] = { total: 0, uniqueSessions: new Set() };
+        dispositivosMap[d] = { total: 0, visitantesUnicos: 0 };
       }
       dispositivosMap[d].total += 1;
-      dispositivosMap[d].uniqueSessions.add(sid);
 
-      // Navegador
+      // Navegador (total vistas)
       const n = v.navegador || "Chrome";
       if (!navegadoresMap[n]) {
-        navegadoresMap[n] = { total: 0, uniqueSessions: new Set() };
+        navegadoresMap[n] = { total: 0, visitantesUnicos: 0 };
       }
       navegadoresMap[n].total += 1;
-      navegadoresMap[n].uniqueSessions.add(sid);
 
       // Productos
       if (v.producto_sku) {
@@ -248,13 +248,44 @@ export async function GET(req: NextRequest) {
       }
     });
 
+    // 2. Atribuir cada visitante único exactamente a su dimensión principal (garantiza que sume al 100%)
+    visitorsMap.forEach((visitor) => {
+      // Estado
+      const est = visitor.estado || "Distrito Capital";
+      if (!estadosMap[est]) {
+        estadosMap[est] = { total: 0, visitantesUnicos: 0 };
+      }
+      estadosMap[est].visitantesUnicos += 1;
+
+      // Ciudad
+      const c = visitor.ciudad || "Caracas";
+      if (!ciudadesMap[c]) {
+        ciudadesMap[c] = { estado: est, count: 0, visitantesUnicos: 0 };
+      }
+      ciudadesMap[c].visitantesUnicos += 1;
+
+      // Dispositivo principal del visitante
+      const d = visitor.dispositivo || "Móvil";
+      if (!dispositivosMap[d]) {
+        dispositivosMap[d] = { total: 0, visitantesUnicos: 0 };
+      }
+      dispositivosMap[d].visitantesUnicos += 1;
+
+      // Navegador principal del visitante
+      const n = visitor.navegador || "Chrome";
+      if (!navegadoresMap[n]) {
+        navegadoresMap[n] = { total: 0, visitantesUnicos: 0 };
+      }
+      navegadoresMap[n].visitantesUnicos += 1;
+    });
+
     // Formatear Estados ordenados por Visitantes Únicos
     const topEstados = Object.entries(estadosMap)
       .map(([nombre, data]) => ({
         nombre,
         total: data.total,
-        visitantesUnicos: data.uniqueSessions.size,
-        porcentaje: visitantesUnicos > 0 ? Math.round((data.uniqueSessions.size / visitantesUnicos) * 1000) / 10 : 0,
+        visitantesUnicos: data.visitantesUnicos,
+        porcentaje: visitantesUnicos > 0 ? Math.round((data.visitantesUnicos / visitantesUnicos) * 1000) / 10 : 0,
       }))
       .sort((a, b) => b.visitantesUnicos - a.visitantesUnicos);
 
@@ -264,8 +295,8 @@ export async function GET(req: NextRequest) {
         ciudad,
         estado: data.estado,
         total: data.count,
-        visitantesUnicos: data.uniqueSessions.size,
-        porcentaje: visitantesUnicos > 0 ? Math.round((data.uniqueSessions.size / visitantesUnicos) * 1000) / 10 : 0,
+        visitantesUnicos: data.visitantesUnicos,
+        porcentaje: visitantesUnicos > 0 ? Math.round((data.visitantesUnicos / visitantesUnicos) * 1000) / 10 : 0,
       }))
       .sort((a, b) => b.visitantesUnicos - a.visitantesUnicos)
       .slice(0, 10);
@@ -370,18 +401,18 @@ export async function GET(req: NextRequest) {
     const dispositivos = {
       Móvil: {
         total: dispositivosMap["Móvil"]?.total || 0,
-        visitantesUnicos: dispositivosMap["Móvil"]?.uniqueSessions.size || 0,
-        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Móvil"]?.uniqueSessions.size || 0) / visitantesUnicos) * 100) : 0,
+        visitantesUnicos: dispositivosMap["Móvil"]?.visitantesUnicos || 0,
+        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Móvil"]?.visitantesUnicos || 0) / visitantesUnicos) * 100) : 0,
       },
       Escritorio: {
         total: dispositivosMap["Escritorio"]?.total || 0,
-        visitantesUnicos: dispositivosMap["Escritorio"]?.uniqueSessions.size || 0,
-        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Escritorio"]?.uniqueSessions.size || 0) / visitantesUnicos) * 100) : 0,
+        visitantesUnicos: dispositivosMap["Escritorio"]?.visitantesUnicos || 0,
+        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Escritorio"]?.visitantesUnicos || 0) / visitantesUnicos) * 100) : 0,
       },
       Tablet: {
         total: dispositivosMap["Tablet"]?.total || 0,
-        visitantesUnicos: dispositivosMap["Tablet"]?.uniqueSessions.size || 0,
-        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Tablet"]?.uniqueSessions.size || 0) / visitantesUnicos) * 100) : 0,
+        visitantesUnicos: dispositivosMap["Tablet"]?.visitantesUnicos || 0,
+        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Tablet"]?.visitantesUnicos || 0) / visitantesUnicos) * 100) : 0,
       },
     };
 
@@ -390,8 +421,8 @@ export async function GET(req: NextRequest) {
       .map(([nombre, data]) => ({
         nombre,
         total: data.total,
-        visitantesUnicos: data.uniqueSessions.size,
-        porcentaje: visitantesUnicos > 0 ? Math.round((data.uniqueSessions.size / visitantesUnicos) * 100) : 0,
+        visitantesUnicos: data.visitantesUnicos,
+        porcentaje: visitantesUnicos > 0 ? Math.round((data.visitantesUnicos / visitantesUnicos) * 100) : 0,
       }))
       .sort((a, b) => b.visitantesUnicos - a.visitantesUnicos);
 
