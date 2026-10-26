@@ -69,18 +69,18 @@ export async function POST(req: NextRequest) {
 
     // Insertar visita en analitica_visitas
     const { error: insertError } = await supabaseAdmin.from("analitica_visitas").insert({
-      session_id: sessionId,
+      session_id: String(sessionId).slice(0, 80),
       ip: ip.length > 45 ? ip.substring(0, 45) : ip,
-      pais,
-      estado,
-      ciudad,
-      dispositivo: deviceResolved,
-      navegador: browserResolved,
-      ruta,
-      producto_id: productoId || null,
-      producto_sku: productoSku || null,
-      producto_nombre: productoNombre || null,
-      referrer: referrer ? referrer.substring(0, 255) : null,
+      pais: String(pais).slice(0, 50),
+      estado: String(estado).slice(0, 60),
+      ciudad: String(ciudad).slice(0, 60),
+      dispositivo: String(deviceResolved).slice(0, 20),
+      navegador: String(browserResolved).slice(0, 30),
+      ruta: String(ruta).slice(0, 255),
+      producto_id: productoId ? String(productoId).slice(0, 50) : null,
+      producto_sku: productoSku ? String(productoSku).slice(0, 80) : null,
+      producto_nombre: productoNombre ? String(productoNombre).slice(0, 150) : null,
+      referrer: referrer ? String(referrer).substring(0, 255) : null,
     });
 
     if (insertError) {

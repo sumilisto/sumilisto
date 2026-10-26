@@ -8,11 +8,17 @@ import {
   setPhotoVariant,
   reorderProductPhotos,
 } from "@/lib/supabase/queries";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
 // POST /api/upload — Subir foto o video de producto
 export async function POST(request: NextRequest) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const action = formData.get("action") as string;
 
@@ -93,6 +99,11 @@ export async function POST(request: NextRequest) {
 // DELETE /api/upload — Eliminar foto o video de producto
 export async function DELETE(request: NextRequest) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { tipo, producto_id, foto_id, storage_url } = body;
 

@@ -15,19 +15,19 @@ export async function POST(req: Request) {
       totalUsd,
     } = body;
 
-    if (!sessionId) {
+    if (!sessionId || typeof sessionId !== "string") {
       return NextResponse.json({ error: "sessionId es requerido" }, { status: 400 });
     }
 
     const cartPayload = {
-      session_id: sessionId,
-      nombre: nombre || "",
-      telefono: telefono || "",
-      zona_entrega: zonaEntrega || "",
-      direccion: direccion || "",
-      metodo_pago: metodoPago || "",
-      items: items || [],
-      total_usd: Number(totalUsd) || 0,
+      session_id: String(sessionId).slice(0, 100),
+      nombre: String(nombre || "").slice(0, 100),
+      telefono: String(telefono || "").slice(0, 50),
+      zona_entrega: String(zonaEntrega || "").slice(0, 100),
+      direccion: String(direccion || "").slice(0, 255),
+      metodo_pago: String(metodoPago || "").slice(0, 50),
+      items: Array.isArray(items) ? items.slice(0, 100) : [],
+      total_usd: Math.max(0, Math.min(Number(totalUsd) || 0, 1000000)),
       updated_at: new Date().toISOString(),
     };
 

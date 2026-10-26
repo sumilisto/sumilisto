@@ -8,6 +8,7 @@ import {
   deleteVariant,
 } from "@/lib/supabase/queries";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
 // GET /api/products/[id] — Obtener un producto por ID
@@ -41,6 +42,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -111,6 +117,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { id } = await params;
 
     // Obtener fotos para limpiar Storage

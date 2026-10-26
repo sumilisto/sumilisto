@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { formatVes } from "@/lib/currency/format";
-import { Search, ShoppingBag, MessageCircle, MapPin, Sparkles } from "lucide-react";
+import { Search, ShoppingBag, MessageCircle, MapPin, Sparkles, Instagram } from "lucide-react";
 import { InstantSearchModal } from "@/components/search/InstantSearchModal";
 
 interface HeaderProps {
@@ -17,6 +17,8 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
   const { itemCount } = useCart();
   const { theme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const instagramUrl = theme.instagramUrl || "https://www.instagram.com/sumilisto_/";
+  const instagramHandle = theme.instagramHandle || "sumilisto_";
 
   return (
     <>
@@ -29,9 +31,22 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
             <span className="font-bold text-white">{formatVes(bcvRate)}</span>
             <span className="opacity-80 hidden md:inline">· Precios en Bs. calculados al cambio oficial</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] justify-center opacity-90">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>Despachos en Caracas, Guarenas y Guatire</span>
+          <div className="flex items-center gap-3 text-[11px] justify-center opacity-90">
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-pink-200 transition-colors font-semibold"
+              title="Síguenos en Instagram @sumilisto_"
+            >
+              <Instagram className="w-3.5 h-3.5 text-pink-300" />
+              <span>@{instagramHandle}</span>
+            </a>
+            <span className="opacity-50 hidden sm:inline">•</span>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Despachos en Caracas, Guarenas y Guatire</span>
+            </div>
           </div>
         </div>
       </div>
@@ -76,6 +91,18 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
             >
               <Search className="w-5 h-5" />
             </button>
+
+            {/* Enlace de Instagram directo */}
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Seguir en Instagram @sumilisto_"
+              className="hidden lg:flex items-center gap-1.5 h-11 px-3.5 rounded-xl bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-95 text-white font-semibold text-xs transition-all shadow-sm hover:scale-[1.02]"
+            >
+              <Instagram className="w-4 h-4" />
+              <span>@{instagramHandle}</span>
+            </a>
 
             {/* Enlace de WhatsApp directo */}
             <a

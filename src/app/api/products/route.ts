@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllProductsAdmin, createProduct, createVariant } from "@/lib/supabase/queries";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
 // GET /api/products — Lista todos los productos (admin)
 export async function GET() {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const products = await getAllProductsAdmin();
     return NextResponse.json(products);
   } catch (error: any) {
@@ -15,6 +21,10 @@ export async function GET() {
 // POST /api/products — Crear un producto nuevo
 export async function POST(request: NextRequest) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
     const body = await request.json();
 
     const resolvedSku = (body.sku || (Array.isArray(body.variantes) && body.variantes[0]?.sku) || "").trim();

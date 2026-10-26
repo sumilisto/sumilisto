@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 
 export async function GET() {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
     // 1. Intentar leer de tabla dedicada
     const { data: rows, error: tableError } = await supabaseAdmin
       .from("carritos_abandonados")
@@ -30,6 +35,11 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { sessionId, estado } = await req.json();
 
     if (!sessionId) {

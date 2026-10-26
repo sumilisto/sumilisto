@@ -34,6 +34,8 @@ export default function AdminSettingsPage() {
   const [colors, setColors] = useState<Record<string, string>>({});
   const [logoUrl, setLogoUrl] = useState(theme.logoUrl || "");
   const [whatsappNumber, setWhatsappNumber] = useState(theme.whatsappNumber || "");
+  const [instagramHandle, setInstagramHandle] = useState(theme.instagramHandle || DEFAULT_SETTINGS.instagramHandle || "sumilisto_");
+  const [instagramUrl, setInstagramUrl] = useState(theme.instagramUrl || DEFAULT_SETTINGS.instagramUrl || "https://www.instagram.com/sumilisto_/");
   const [heroTitle, setHeroTitle] = useState(theme.heroTitle || "");
   const [heroSubtitle, setHeroSubtitle] = useState(theme.heroSubtitle || "");
   const [heroHeight, setHeroHeight] = useState<"sm"|"md"|"lg"|"xl">(theme.heroHeight || "md");
@@ -153,6 +155,8 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     setLogoUrl(theme.logoUrl || "");
     setWhatsappNumber(theme.whatsappNumber || "");
+    setInstagramHandle(theme.instagramHandle || DEFAULT_SETTINGS.instagramHandle || "sumilisto_");
+    setInstagramUrl(theme.instagramUrl || DEFAULT_SETTINGS.instagramUrl || "https://www.instagram.com/sumilisto_/");
     setHeroTitle(theme.heroTitle || DEFAULT_SETTINGS.heroTitle);
     setHeroSubtitle(theme.heroSubtitle || DEFAULT_SETTINGS.heroSubtitle);
     setHeroHeight(theme.heroHeight || "md");
@@ -233,6 +237,8 @@ export default function AdminSettingsPage() {
     await updateTheme({
       logoUrl: logoUrl.trim() === "" ? null : logoUrl.trim(),
       whatsappNumber: whatsappNumber.trim().replace(/[^0-9]/g, ""),
+      instagramHandle: instagramHandle.trim().replace(/^@/, ""),
+      instagramUrl: instagramUrl.trim(),
       heroTitle: heroTitle.trim(),
       heroSubtitle: heroSubtitle.trim(),
       heroHeight,
@@ -495,6 +501,33 @@ export default function AdminSettingsPage() {
               className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
               placeholder="584XXXXXXXXX" />
             <p className="text-[11px] text-slate-400 mt-1">Con código de país, sin símbolo + ni espacios.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1 block">Usuario de Instagram</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
+                <input type="text" value={instagramHandle}
+                  onChange={e => {
+                    const handle = e.target.value.replace(/^@/, "");
+                    setInstagramHandle(handle);
+                    setInstagramUrl(`https://www.instagram.com/${handle}/`);
+                  }}
+                  className="w-full h-11 pl-8 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+                  placeholder="sumilisto_" />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Nombre de usuario sin el símbolo @.</p>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1 block">Enlace directo a Instagram</label>
+              <input type="url" value={instagramUrl}
+                onChange={e => setInstagramUrl(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+                placeholder="https://www.instagram.com/sumilisto_/" />
+              <p className="text-[11px] text-slate-400 mt-1">Enlace completo que se abrirá al hacer clic.</p>
+            </div>
           </div>
 
           <div>

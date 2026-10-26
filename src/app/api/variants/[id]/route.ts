@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateVariant, deleteVariant } from "@/lib/supabase/queries";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
 // PUT /api/variants/[id] — Modificar una variante
@@ -8,6 +9,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -36,6 +42,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { id } = await params;
     await deleteVariant(id);
     revalidateTag("products");

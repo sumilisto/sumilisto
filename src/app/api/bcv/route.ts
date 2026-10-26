@@ -4,6 +4,7 @@ import {
   fetchBcvOfficialDirect,
   saveBcvToSupabase,
 } from "@/lib/currency/bcv";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
 // GET /api/bcv — Consulta la tasa oficial directamente de bcv.org.ve
@@ -12,7 +13,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get("refresh") === "true";
 
-    if (forceRefresh) {
+    // Solo un administrador autenticado puede forzar el raspado directo y escritura en BD
+    if (forceRefresh && (await isAdminAuthenticated())) {
       const direct = await fetchBcvOfficialDirect();
 
       if (direct.rate && direct.rate > 0) {
@@ -56,6 +58,11 @@ export async function GET(request: NextRequest) {
 // POST /api/bcv — Permite ajustar manualmente la tasa si se requiere
 export async function POST(request: NextRequest) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await request.json();
     const rate = Number(body.rate);
 

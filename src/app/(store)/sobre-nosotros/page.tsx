@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ChevronRight, Award, ShieldCheck, Truck, Users } from "lucide-react";
+import { ChevronRight, Award, ShieldCheck, Truck, Users, Instagram } from "lucide-react";
 
 export const metadata = {
   title: "Sobre Nosotros | Sumilisto Venezuela",
@@ -46,6 +46,21 @@ export default function AboutPage() {
             <h3 className="font-bold text-sm text-slate-900">Atención Personalizada</h3>
             <p className="text-xs text-slate-500 mt-1">Asesoría comercial directa e inmediata vía WhatsApp.</p>
           </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-500 text-center sm:text-left">
+            Conoce nuestras novedades, fotos de catálogo y despachos en tiempo real en nuestra cuenta oficial.
+          </p>
+          <a
+            href="https://www.instagram.com/sumilisto_/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-95 text-white font-bold text-xs shadow-sm transition-all hover:scale-[1.02]"
+          >
+            <Instagram className="w-4 h-4" />
+            <span>Seguir en Instagram @sumilisto_</span>
+          </a>
         </div>
       </div>
     </div>

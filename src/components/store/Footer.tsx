@@ -5,11 +5,13 @@ import Link from "next/link";
 import { DEFAULT_STORE_CONFIG, STORE_CATEGORIES } from "@/lib/constants/brand";
 import { DEFAULT_SETTINGS } from "@/lib/constants/settings";
 import { useTheme } from "@/lib/theme/ThemeContext";
-import { MessageCircle, MapPin, Clock, ShieldCheck, Truck, Phone } from "lucide-react";
+import { MessageCircle, MapPin, Clock, ShieldCheck, Truck, Phone, Instagram } from "lucide-react";
 
 export const Footer: React.FC = () => {
   const { theme } = useTheme();
   const whatsappNum = theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber;
+  const instagramUrl = theme.instagramUrl || "https://www.instagram.com/sumilisto_/";
+  const instagramHandle = theme.instagramHandle || "sumilisto_";
   const footerBg = theme.footerBgColor || "#0f172a";
   const footerText = theme.footerTextColor || "#94a3b8";
 
@@ -57,23 +59,35 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Columna 3: Contacto Directo */}
+          {/* Columna 3: Contacto Directo y Redes */}
           <div>
             <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
-              Atención al Cliente
+              Atención y Redes Sociales
             </h4>
-            <p className="text-sm mb-3" style={{ color: footerText }}>
+            <p className="text-sm mb-3.5" style={{ color: footerText }}>
               ¿Requieres cotización para gran volumen o tienes dudas sobre un pedido?
             </p>
-            <a
-              href={`https://wa.me/${whatsappNum}?text=Hola%20Sumilisto,%20deseo%20atención%20para%20mi%20negocio`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-sm transition-colors shadow-sm"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>WhatsApp: +{whatsappNum}</span>
-            </a>
+            <div className="flex flex-col gap-2.5">
+              <a
+                href={`https://wa.me/${whatsappNum}?text=Hola%20Sumilisto,%20deseo%20atención%20para%20mi%20negocio`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-sm transition-all shadow-sm hover:scale-[1.01]"
+              >
+                <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                <span>WhatsApp: +{whatsappNum}</span>
+              </a>
+
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-95 text-white font-semibold text-sm transition-all shadow-sm hover:scale-[1.01]"
+              >
+                <Instagram className="w-4 h-4 flex-shrink-0" />
+                <span>Instagram: @{instagramHandle}</span>
+              </a>
+            </div>
           </div>
         </div>
 
@@ -83,6 +97,17 @@ export const Footer: React.FC = () => {
             © {new Date().getFullYear()} Sumilisto. Todos los derechos reservados. Suministros para restaurantes en Venezuela.
           </div>
           <div className="flex items-center gap-4">
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-pink-400 transition-colors font-semibold"
+              style={{ color: footerText }}
+              title="Síguenos en Instagram @sumilisto_"
+            >
+              <Instagram className="w-3.5 h-3.5 text-pink-400" />
+              <span>@{instagramHandle}</span>
+            </a>
             <Link href="/terminos" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Términos
             </Link>

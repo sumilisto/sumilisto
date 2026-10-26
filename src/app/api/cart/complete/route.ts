@@ -5,10 +5,11 @@ export async function POST(req: Request) {
   try {
     const { sessionId } = await req.json();
 
-    if (!sessionId) {
+    if (!sessionId || typeof sessionId !== "string") {
       return NextResponse.json({ error: "sessionId es requerido" }, { status: 400 });
     }
 
+    const cleanSessionId = String(sessionId).slice(0, 100);
     const now = new Date().toISOString();
 
     // 1. Intentar actualizar en tabla dedicada
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
         estado: "completado",
         updated_at: now,
       })
-      .eq("session_id", sessionId);
+      .eq("session_id", cleanSessionId);
 
     if (!tableError) {
       return NextResponse.json({ success: true });

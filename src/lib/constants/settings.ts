@@ -24,9 +24,11 @@ export interface StoreSettings {
   cardPaddingY?: string;
   cardPaddingX?: string;
   cardLineSpacing?: string;
-  // Logo y WhatsApp
+  // Logo, WhatsApp e Instagram
   logoUrl: string | null;
   whatsappNumber: string;
+  instagramHandle?: string;
+  instagramUrl?: string;
   // Hero section
   heroTitle: string;
   heroSubtitle: string;
@@ -74,6 +76,8 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   cardLineSpacing: "3px",
   logoUrl: null,
   whatsappNumber: "584227864547",
+  instagramHandle: "sumilisto_",
+  instagramUrl: "https://www.instagram.com/sumilisto_/",
   heroTitle: "Suministros y Empaques al Mayor para tu Restaurante",
   heroSubtitle: "Envases térmicos, bolsas kraft, cubiertos y papel antigrasa con escala de descuento al Gran Mayor. Despachos rápidos en Caracas, Guarenas y Guatire.",
   heroHeight: "md",

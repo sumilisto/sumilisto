@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSettings, updateSettings } from "@/lib/supabase/queries";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
 // GET /api/settings — Obtener configuración
@@ -15,6 +16,11 @@ export async function GET() {
 // PUT /api/settings — Actualizar configuración
 export async function PUT(request: NextRequest) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await request.json();
     const ok = await updateSettings(body);
 

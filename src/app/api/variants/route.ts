@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createVariant } from "@/lib/supabase/queries";
+import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
 // POST /api/variants — Crear una nueva variante de producto
 export async function POST(request: NextRequest) {
   try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     if (!body.producto_id || !body.sku || !body.color) {
