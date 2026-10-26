@@ -159,15 +159,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <span className="text-[11px] font-medium text-slate-500 block leading-tight">
                   Mayor: {minMayor}Und
                 </span>
-                <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
+                <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap overflow-hidden">
                   <span
                     style={{ fontSize: mayorSize }}
-                    className="font-bold text-brand leading-tight"
+                    className="font-bold text-brand leading-tight shrink-0"
                   >
                     {formatUsd(priceMayor)}
                   </span>
                   {bcvRate > 0 && (
-                    <span className="text-xs font-normal text-slate-900 leading-tight">
+                    <span className="text-[10px] sm:text-xs font-normal text-slate-900 leading-tight shrink-0">
                       / {formatVes(calculateVesTotal(priceMayor, bcvRate))}
                     </span>
                   )}
@@ -180,30 +180,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 const savings = regularEquivalent - priceGranMayor;
                 return (
                   <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[11px] font-medium text-slate-700 block leading-tight">
+                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                      <span className="text-[10.5px] sm:text-[11px] font-semibold text-slate-700 whitespace-nowrap leading-tight">
                         Gran Mayor: {minGranMayor}Und
                       </span>
                       {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg text-center shrink-0">
-                          <span className="text-[10px] font-bold block leading-tight text-amber-800">
-                            Ahorras
-                          </span>
-                          <span className="text-[11px] font-black block leading-tight text-amber-950">
-                            {formatUsd(savings)}
-                          </span>
-                        </div>
+                        <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-amber-900 bg-amber-100/90 border border-amber-300/80 px-1.5 py-0.5 rounded whitespace-nowrap shrink-0 leading-none">
+                          Ahorras {formatUsd(savings)}
+                        </span>
                       )}
                     </div>
-                    <div className="flex items-baseline gap-1 flex-wrap mt-0.5">
+                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap overflow-hidden">
                       <span
                         style={{ fontSize: granMayorSize }}
-                        className="font-bold text-brand leading-tight"
+                        className="font-bold text-brand leading-tight shrink-0"
                       >
                         {formatUsd(priceGranMayor)}
                       </span>
                       {bcvRate > 0 && (
-                        <span className="text-xs font-normal text-emerald-800 leading-tight">
+                        <span className="text-[10px] sm:text-xs font-normal text-emerald-800 leading-tight shrink-0">
                           / {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
                         </span>
                       )}

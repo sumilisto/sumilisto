@@ -110,7 +110,7 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
         {products.map((product) => (
           <div
             key={product.sku}
-            className="w-[160px] sm:w-[220px] md:w-[240px] flex-shrink-0 [scroll-snap-align:start] flex flex-col"
+            className="w-[172px] sm:w-[220px] md:w-[240px] flex-shrink-0 [scroll-snap-align:start] flex flex-col"
           >
             <ProductCard product={product} bcvRate={bcvRate} />
           </div>
