@@ -57,6 +57,9 @@ export const metadata: Metadata = {
     description:
       "Catálogo mayorista de envases, bolsas, cubiertos y papel para gastronomía en Venezuela. Despacho rápido y pedidos directos por WhatsApp.",
   },
+  verification: {
+    google: "googleabd0cc64cc0da3d2",
+  },
 };
 
 export const viewport: Viewport = {
