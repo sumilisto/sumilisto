@@ -14,35 +14,41 @@ interface CategoryPageProps {
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const category = STORE_CATEGORIES.find((c) => c.slug.toLowerCase() === slug.toLowerCase());
+  const decodedSlug = decodeURIComponent(slug).trim();
+  const category = STORE_CATEGORIES.find((c) => c.slug.toLowerCase() === decodedSlug.toLowerCase());
 
-  if (!category) {
-    return {
-      title: "Categoría no encontrada",
-    };
-  }
+  const catName = category ? category.nombre : (decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1).replace(/-/g, " "));
+  const catDesc = category ? category.descripcion : `Compre productos de ${catName.toLowerCase()} al mayor y gran mayor en Venezuela con Sumilisto`;
 
   return {
-    title: `${category.nombre} al Mayor | Sumilisto Venezuela`,
-    description: `Compre ${category.nombre.toLowerCase()} al mayor y gran mayor en Venezuela: ${category.descripcion}`,
+    title: `${catName} al Mayor | Sumilisto Venezuela`,
+    description: catDesc,
   };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const category = STORE_CATEGORIES.find((c) => c.slug.toLowerCase() === slug.toLowerCase());
-
-  if (!category) {
-    notFound();
-  }
+  const decodedSlug = decodeURIComponent(slug).trim();
+  const category = STORE_CATEGORIES.find((c) => c.slug.toLowerCase() === decodedSlug.toLowerCase());
 
   const [allProducts, bcvRate] = await Promise.all([
     getProducts(),
     getBcvRate(),
   ]);
+
+  const catName = category ? category.nombre : (decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1).replace(/-/g, " "));
+  const catDesc = category ? category.descripcion : `Catálogo mayorista de ${catName.toLowerCase()} con precios competitivos y despacho en Venezuela.`;
+
   const products = allProducts.filter(
-    (p) => p.categoria.toLowerCase() === category.nombre.toLowerCase()
+    (p) =>
+      (category && p.categoria.toLowerCase() === category.nombre.toLowerCase()) ||
+      p.categoria.toLowerCase() === decodedSlug.toLowerCase() ||
+      p.categoria.toLowerCase().replace(/\s+/g, "-") === decodedSlug.toLowerCase()
   );
+
+  if (!category && products.length === 0) {
+    notFound();
+  }
 
   // Extraer subcategorías únicas
   const subcategories = Array.from(
@@ -57,7 +63,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           Inicio
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <span className="font-semibold text-slate-900">{category.nombre}</span>
+        <span className="font-semibold text-slate-900">{catName}</span>
       </nav>
 
       {/* Cabecera de la Categoría */}
@@ -70,10 +76,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             <span className="text-xs text-slate-400">· {products.length} productos</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            {category.nombre}
+            {catName}
           </h1>
           <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-            {category.descripcion}
+            {catDesc}
           </p>
         </div>
 
@@ -87,7 +93,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </div>
 
       {/* Selector de categorías para navegación rápida */}
-      <CategoryChips activeCategory={category.slug} />
+      <CategoryChips activeCategory={category ? category.slug : decodedSlug} />
 
       {/* Subcategorías si existen */}
       {subcategories.length > 0 && (

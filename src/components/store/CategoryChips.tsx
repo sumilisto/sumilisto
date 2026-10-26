@@ -60,6 +60,16 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
             </Link>
           );
         })}
+
+        {activeCategory &&
+          !STORE_CATEGORIES.some((c) => c.slug.toLowerCase() === activeCategory.toLowerCase()) && (
+            <span
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border bg-brand text-white border-brand shadow-sm capitalize"
+            >
+              <Layers className="w-4 h-4" />
+              <span>{decodeURIComponent(activeCategory).replace(/-/g, " ")}</span>
+            </span>
+          )}
       </div>
     </div>
   );

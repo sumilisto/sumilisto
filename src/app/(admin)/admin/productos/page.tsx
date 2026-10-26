@@ -253,6 +253,20 @@ export default function AdminProductosPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [createActiveTab, setCreateActiveTab] = useState<"general" | "variants" | "photos">("general");
   const [creatingProduct, setCreatingProduct] = useState(false);
+  const DEFAULT_CATEGORIES = useMemo(() => ["Envases", "Bolsas", "Cubiertos", "Papel"], []);
+  const availableCategories = useMemo(() => {
+    const cats = new Set(DEFAULT_CATEGORIES);
+    products.forEach((p) => {
+      if (p.categoria && p.categoria.trim()) {
+        cats.add(p.categoria.trim());
+      }
+    });
+    return Array.from(cats);
+  }, [DEFAULT_CATEGORIES, products]);
+
+  const [isCustomNewCategory, setIsCustomNewCategory] = useState(false);
+  const [isCustomEditCategory, setIsCustomEditCategory] = useState(false);
+
   const [newProduct, setNewProduct] = useState({
     nombre: "",
     categoria: "Envases",
@@ -1416,7 +1430,7 @@ export default function AdminProductosPage() {
 
           {/* Categorías */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
-            {["todas", "Envases", "Bolsas", "Cubiertos", "Papel"].map((cat) => (
+            {["todas", ...availableCategories].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
@@ -2127,17 +2141,55 @@ export default function AdminProductosPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1">Categoría *</label>
-                      <select
-                        value={newProduct.categoria}
-                        onChange={(e) => setNewProduct({ ...newProduct, categoria: e.target.value })}
-                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
-                      >
-                        <option value="Envases">Envases</option>
-                        <option value="Bolsas">Bolsas</option>
-                        <option value="Cubiertos">Cubiertos</option>
-                        <option value="Papel">Papel</option>
-                      </select>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-bold text-slate-700">Categoría *</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = !isCustomNewCategory;
+                            setIsCustomNewCategory(next);
+                            if (next) {
+                              setNewProduct({ ...newProduct, categoria: "" });
+                            } else {
+                              setNewProduct({ ...newProduct, categoria: availableCategories[0] || "Envases" });
+                            }
+                          }}
+                          className="text-xs font-bold text-brand hover:underline"
+                        >
+                          {isCustomNewCategory ? "← Elegir existente" : "+ Nueva categoría"}
+                        </button>
+                      </div>
+                      {isCustomNewCategory ? (
+                        <input
+                          type="text"
+                          value={newProduct.categoria}
+                          onChange={(e) => setNewProduct({ ...newProduct, categoria: e.target.value })}
+                          placeholder="Escribe la nueva categoría (ej: Vasos, Limpieza)"
+                          className="w-full h-10 px-3.5 rounded-xl border-2 border-brand/50 bg-white font-bold text-xs sm:text-sm focus:border-brand focus:outline-none"
+                          autoFocus
+                          required
+                        />
+                      ) : (
+                        <select
+                          value={newProduct.categoria}
+                          onChange={(e) => {
+                            if (e.target.value === "__NEW__") {
+                              setIsCustomNewCategory(true);
+                              setNewProduct({ ...newProduct, categoria: "" });
+                            } else {
+                              setNewProduct({ ...newProduct, categoria: e.target.value });
+                            }
+                          }}
+                          className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs sm:text-sm"
+                        >
+                          {availableCategories.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                          <option value="__NEW__">+ Crear nueva categoría...</option>
+                        </select>
+                      )}
                     </div>
 
                     <div>
@@ -3027,17 +3079,55 @@ export default function AdminProductosPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block font-bold text-slate-700 mb-1">Categoría</label>
-                      <select
-                        value={editingProduct.categoria}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, categoria: e.target.value })}
-                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
-                      >
-                        <option value="Envases">Envases</option>
-                        <option value="Bolsas">Bolsas</option>
-                        <option value="Cubiertos">Cubiertos</option>
-                        <option value="Papel">Papel</option>
-                      </select>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-bold text-slate-700">Categoría *</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = !isCustomEditCategory;
+                            setIsCustomEditCategory(next);
+                            if (next) {
+                              setEditingProduct({ ...editingProduct, categoria: "" });
+                            } else {
+                              setEditingProduct({ ...editingProduct, categoria: availableCategories[0] || "Envases" });
+                            }
+                          }}
+                          className="text-xs font-bold text-brand hover:underline"
+                        >
+                          {isCustomEditCategory ? "← Elegir existente" : "+ Nueva categoría"}
+                        </button>
+                      </div>
+                      {isCustomEditCategory ? (
+                        <input
+                          type="text"
+                          value={editingProduct.categoria || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, categoria: e.target.value })}
+                          placeholder="Escribe la categoría (ej: Vasos, Limpieza)"
+                          className="w-full h-10 px-3.5 rounded-xl border-2 border-brand/50 bg-white font-bold text-xs sm:text-sm focus:border-brand focus:outline-none"
+                          autoFocus
+                          required
+                        />
+                      ) : (
+                        <select
+                          value={editingProduct.categoria}
+                          onChange={(e) => {
+                            if (e.target.value === "__NEW__") {
+                              setIsCustomEditCategory(true);
+                              setEditingProduct({ ...editingProduct, categoria: "" });
+                            } else {
+                              setEditingProduct({ ...editingProduct, categoria: e.target.value });
+                            }
+                          }}
+                          className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs sm:text-sm"
+                        >
+                          {Array.from(new Set([...availableCategories, editingProduct.categoria].filter(Boolean))).map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                          <option value="__NEW__">+ Crear nueva categoría...</option>
+                        </select>
+                      )}
                     </div>
 
                     <div>
