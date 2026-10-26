@@ -89,8 +89,8 @@ interface AnalyticsData {
   topEstados: StatItem[];
   topCiudades: StatItem[];
   topProductos: ProductStat[];
-  dispositivos: Record<string, number>;
-  navegadores: Record<string, number>;
+  dispositivos: Record<string, { total: number; visitantesUnicos: number; porcentaje: number }>;
+  navegadores: Array<{ nombre: string; total: number; visitantesUnicos: number; porcentaje: number }>;
   timeline: TimelinePoint[];
   ultimosVisitantes?: UniqueVisitorLive[];
   ultimasVisitas: LiveVisit[];
@@ -1151,52 +1151,114 @@ export default function AdminEstadisticasPage() {
         )}
       </div>
 
-      {/* ── DISPOSITIVOS Y NAVEGADORES ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
+      {/* ── DISPOSITIVOS Y NAVEGADORES (POR VISITANTES ÚNICOS) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
         {/* Dispositivos */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-3">
-          <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-            <Smartphone className="w-4 h-4 text-brand" />
-            Dispositivos de Acceso
-          </h3>
+        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div>
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-brand" />
+                Dispositivos de Acceso
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Distribución por personas únicas</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+              Visitantes Únicos
+            </span>
+          </div>
+
           <div className="grid grid-cols-3 gap-3 pt-1">
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
-              <Smartphone className="w-5 h-5 text-emerald-700 mx-auto mb-1" />
-              <span className="text-[11px] font-bold text-slate-600 block">Teléfonos</span>
-              <span className="text-lg font-black text-slate-900">
-                {data?.dispositivos?.["Móvil"] ?? 0}
+            {/* Teléfonos */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-200/80 text-center space-y-1">
+              <Smartphone className="w-5 h-5 text-emerald-700 mx-auto" />
+              <span className="text-[11px] font-bold text-slate-700 block">Teléfonos</span>
+              <div className="text-xl font-black text-slate-900">
+                {data?.dispositivos?.["Móvil"]?.visitantesUnicos ?? 0}
+              </div>
+              <div className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 rounded-md py-0.5 px-1.5 inline-block">
+                {data?.dispositivos?.["Móvil"]?.porcentaje ?? 0}%
+              </div>
+              <span className="text-[9px] text-slate-400 block font-medium">
+                ({data?.dispositivos?.["Móvil"]?.total ?? 0} vistas)
               </span>
             </div>
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
-              <Monitor className="w-5 h-5 text-blue-700 mx-auto mb-1" />
-              <span className="text-[11px] font-bold text-slate-600 block">Computadoras</span>
-              <span className="text-lg font-black text-slate-900">
-                {data?.dispositivos?.["Escritorio"] ?? 0}
+
+            {/* Computadoras */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-200/80 text-center space-y-1">
+              <Monitor className="w-5 h-5 text-blue-700 mx-auto" />
+              <span className="text-[11px] font-bold text-slate-700 block">Computadoras</span>
+              <div className="text-xl font-black text-slate-900">
+                {data?.dispositivos?.["Escritorio"]?.visitantesUnicos ?? 0}
+              </div>
+              <div className="text-[10px] font-bold text-blue-700 bg-blue-100/70 rounded-md py-0.5 px-1.5 inline-block">
+                {data?.dispositivos?.["Escritorio"]?.porcentaje ?? 0}%
+              </div>
+              <span className="text-[9px] text-slate-400 block font-medium">
+                ({data?.dispositivos?.["Escritorio"]?.total ?? 0} vistas)
               </span>
             </div>
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
-              <Layers className="w-5 h-5 text-purple-700 mx-auto mb-1" />
-              <span className="text-[11px] font-bold text-slate-600 block">Tablets</span>
-              <span className="text-lg font-black text-slate-900">
-                {data?.dispositivos?.["Tablet"] ?? 0}
+
+            {/* Tablets */}
+            <div className="p-3.5 rounded-2xl bg-purple-50/50 border border-purple-200/80 text-center space-y-1">
+              <Layers className="w-5 h-5 text-purple-700 mx-auto" />
+              <span className="text-[11px] font-bold text-slate-700 block">Tablets</span>
+              <div className="text-xl font-black text-slate-900">
+                {data?.dispositivos?.["Tablet"]?.visitantesUnicos ?? 0}
+              </div>
+              <div className="text-[10px] font-bold text-purple-700 bg-purple-100/70 rounded-md py-0.5 px-1.5 inline-block">
+                {data?.dispositivos?.["Tablet"]?.porcentaje ?? 0}%
+              </div>
+              <span className="text-[9px] text-slate-400 block font-medium">
+                ({data?.dispositivos?.["Tablet"]?.total ?? 0} vistas)
               </span>
             </div>
           </div>
         </div>
 
         {/* Navegadores */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-3">
-          <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-blue-600" />
-            Navegadores Utilizados
-          </h3>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {data?.navegadores && Object.entries(data.navegadores).map(([nav, count]) => (
-              <div key={nav} className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold flex items-center gap-2">
-                <span className="text-slate-700">{nav}:</span>
-                <span className="text-brand font-black">{count} visitas</span>
-              </div>
-            ))}
+        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div>
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-blue-600" />
+                Navegadores Utilizados
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Preferencia de navegación de clientes</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+              Visitantes Únicos
+            </span>
+          </div>
+
+          <div className="space-y-3 pt-1">
+            {data?.navegadores && Array.isArray(data.navegadores) && data.navegadores.length > 0 ? (
+              data.navegadores.map((nav) => (
+                <div key={nav.nombre} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      {nav.nombre}
+                    </span>
+                    <div className="flex items-center gap-2 font-black">
+                      <span className="text-slate-900">{nav.visitantesUnicos} persona{nav.visitantesUnicos !== 1 ? "s" : ""}</span>
+                      <span className="text-[11px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">
+                        {nav.porcentaje}%
+                      </span>
+                    </div>
+                  </div>
+                  {/* Barra de progreso */}
+                  <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      style={{ width: `${Math.min(100, Math.max(4, nav.porcentaje))}%` }}
+                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full transition-all duration-500"
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-slate-400 text-center py-6">Sin datos de navegadores registrados</p>
+            )}
           </div>
         </div>
       </div>

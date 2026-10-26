@@ -190,8 +190,12 @@ export async function GET(req: NextRequest) {
     // Agregación por Estado y Ciudad con Visitantes Únicos y Total Visitas
     const estadosMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {};
     const ciudadesMap: Record<string, { estado: string; count: number; uniqueSessions: Set<string> }> = {};
-    const dispositivosMap: Record<string, number> = { Móvil: 0, Escritorio: 0, Tablet: 0 };
-    const navegadoresMap: Record<string, number> = {};
+    const dispositivosMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {
+      Móvil: { total: 0, uniqueSessions: new Set() },
+      Escritorio: { total: 0, uniqueSessions: new Set() },
+      Tablet: { total: 0, uniqueSessions: new Set() },
+    };
+    const navegadoresMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {};
     const productosMap: Record<string, { nombre: string; sku: string; views: number; uniqueVisitors: Set<string> }> = {};
 
     allVisitas.forEach((v) => {
@@ -215,11 +219,19 @@ export async function GET(req: NextRequest) {
 
       // Dispositivo
       const d = v.dispositivo || "Móvil";
-      dispositivosMap[d] = (dispositivosMap[d] || 0) + 1;
+      if (!dispositivosMap[d]) {
+        dispositivosMap[d] = { total: 0, uniqueSessions: new Set() };
+      }
+      dispositivosMap[d].total += 1;
+      dispositivosMap[d].uniqueSessions.add(sid);
 
       // Navegador
       const n = v.navegador || "Chrome";
-      navegadoresMap[n] = (navegadoresMap[n] || 0) + 1;
+      if (!navegadoresMap[n]) {
+        navegadoresMap[n] = { total: 0, uniqueSessions: new Set() };
+      }
+      navegadoresMap[n].total += 1;
+      navegadoresMap[n].uniqueSessions.add(sid);
 
       // Productos
       if (v.producto_sku) {
@@ -354,6 +366,35 @@ export async function GET(req: NextRequest) {
       navegador: v.navegador || "Chrome",
     }));
 
+    // Formatear Dispositivos con desglose de Visitantes Únicos y vistas
+    const dispositivos = {
+      Móvil: {
+        total: dispositivosMap["Móvil"]?.total || 0,
+        visitantesUnicos: dispositivosMap["Móvil"]?.uniqueSessions.size || 0,
+        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Móvil"]?.uniqueSessions.size || 0) / visitantesUnicos) * 100) : 0,
+      },
+      Escritorio: {
+        total: dispositivosMap["Escritorio"]?.total || 0,
+        visitantesUnicos: dispositivosMap["Escritorio"]?.uniqueSessions.size || 0,
+        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Escritorio"]?.uniqueSessions.size || 0) / visitantesUnicos) * 100) : 0,
+      },
+      Tablet: {
+        total: dispositivosMap["Tablet"]?.total || 0,
+        visitantesUnicos: dispositivosMap["Tablet"]?.uniqueSessions.size || 0,
+        porcentaje: visitantesUnicos > 0 ? Math.round(((dispositivosMap["Tablet"]?.uniqueSessions.size || 0) / visitantesUnicos) * 100) : 0,
+      },
+    };
+
+    // Formatear Navegadores ordenados por Visitantes Únicos
+    const navegadores = Object.entries(navegadoresMap)
+      .map(([nombre, data]) => ({
+        nombre,
+        total: data.total,
+        visitantesUnicos: data.uniqueSessions.size,
+        porcentaje: visitantesUnicos > 0 ? Math.round((data.uniqueSessions.size / visitantesUnicos) * 100) : 0,
+      }))
+      .sort((a, b) => b.visitantesUnicos - a.visitantesUnicos);
+
     return NextResponse.json({
       range,
       filtro,
@@ -369,8 +410,8 @@ export async function GET(req: NextRequest) {
       topEstados,
       topCiudades,
       topProductos,
-      dispositivos: dispositivosMap,
-      navegadores: navegadoresMap,
+      dispositivos,
+      navegadores,
       timeline,
       ultimosVisitantes,
       ultimasVisitas,
