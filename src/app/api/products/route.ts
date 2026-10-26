@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllProductsAdmin, createProduct, createVariant } from "@/lib/supabase/queries";
+import { getAllProductsAdmin, createProduct, createVariant, deleteProduct } from "@/lib/supabase/queries";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
@@ -20,6 +20,7 @@ export async function GET() {
 
 // POST /api/products — Crear un producto nuevo
 export async function POST(request: NextRequest) {
+  let createdProductId: string | null = null;
   try {
     const isAuth = await isAdminAuthenticated();
     if (!isAuth) {
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
       activo: body.activo ?? true,
       destacado: body.destacado ?? false,
     });
+
+    createdProductId = product?.id || null;
 
     if (product && product.id) {
       if (Array.isArray(body.variantes) && body.variantes.length > 0) {
@@ -88,6 +91,10 @@ export async function POST(request: NextRequest) {
     revalidateTag("products");
     return NextResponse.json(product, { status: 201 });
   } catch (error: any) {
+    if (createdProductId) {
+      // Rollback: limpiar el producto huérfano si falló la creación de variantes para evitar bloqueos de sku_key
+      await deleteProduct(createdProductId).catch(() => {});
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

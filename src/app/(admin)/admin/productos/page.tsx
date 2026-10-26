@@ -879,6 +879,19 @@ export default function AdminProductosPage() {
         };
       });
 
+      // Validar que no haya SKUs repetidos entre las variantes ingresadas
+      const seenSkus = new Set<string>();
+      for (let i = 0; i < finalVariants.length; i++) {
+        const skuUpper = finalVariants[i].sku.toUpperCase();
+        if (seenSkus.has(skuUpper)) {
+          showToast(`El SKU "${finalVariants[i].sku}" está repetido. Cada variante debe tener un SKU único diferente (ej. DOY-ROJ-500, DOY-DOR-500).`, "error");
+          setCreateActiveTab("variants");
+          setCreatingProduct(false);
+          return;
+        }
+        seenSkus.add(skuUpper);
+      }
+
       // 1. Crear producto con sus variantes en Supabase
       const res = await fetch("/api/products", {
         method: "POST",
