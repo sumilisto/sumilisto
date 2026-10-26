@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "@/lib/theme/ThemeContext";
 import { logoutAdmin } from "@/lib/actions/auth";
 import {
   Package,
@@ -20,6 +21,7 @@ interface AdminNavProps {
 
 export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
   const pathname = usePathname();
+  const { theme } = useTheme();
 
   const handleLogout = async () => {
     await logoutAdmin();
@@ -61,23 +63,32 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
     },
   ];
 
+  const brandBg = theme.navBgColor || "#14532D";
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-slate-900 border-b border-slate-800 text-white shadow-md">
+    <header
+      className="sticky top-0 z-40 w-full text-white shadow-md border-b border-emerald-950/20"
+      style={{ backgroundColor: brandBg }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Barra Superior: Logo / Título + Accesos Rápidos */}
-        <div className="h-14 flex items-center justify-between gap-4 border-b border-slate-800/80">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-xs">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-black text-sm tracking-tight text-white block leading-tight">
-                Sumilisto Admin
-              </span>
-              <span className="text-[10px] text-emerald-400 font-semibold block leading-tight">
-                Panel Unificado de Control
-              </span>
-            </div>
+        {/* Barra Superior: Logo Oficial de la Marca / Título + Accesos Rápidos */}
+        <div className="h-14 flex items-center justify-between gap-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <Link href="/admin" className="flex items-center gap-2.5 group">
+              <img
+                src={theme.logoUrl || "/logo.png"}
+                alt="Sumilisto"
+                className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105"
+              />
+              <div className="border-l border-white/20 pl-2.5">
+                <span className="font-black text-xs sm:text-sm tracking-tight text-white block leading-tight">
+                  Admin
+                </span>
+                <span className="text-[10px] text-emerald-200 font-medium block leading-tight">
+                  Panel de Control
+                </span>
+              </div>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2">
@@ -85,7 +96,7 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Ver Tienda</span>
@@ -94,7 +105,7 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-500 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-100 hover:text-white bg-rose-500/20 hover:bg-rose-600 border border-rose-400/30 transition-all cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Cerrar Sesión</span>
@@ -102,10 +113,10 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
           </div>
         </div>
 
-        {/* Pestañas Principales Unificadas */}
+        {/* Pestañas Principales con Colores de la Marca */}
         <nav
           aria-label="Pestañas de Administración"
-          className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-none"
+          className="flex items-center gap-1.5 overflow-x-auto py-2.5 scrollbar-none"
         >
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -115,13 +126,13 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
                 href={item.href}
                 className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
                   item.active
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/80"
+                    ? "bg-white text-emerald-900 shadow-sm font-black"
+                    : "text-white/85 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Icon
                   className={`w-4 h-4 ${
-                    item.active ? "text-white" : "text-slate-400"
+                    item.active ? "text-emerald-800" : "text-white/70"
                   }`}
                 />
                 <span className="hidden md:inline">{item.label}</span>
