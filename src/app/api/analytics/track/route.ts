@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { resolveLocation } from "@/lib/analytics/geo";
+import { isBotUserAgent } from "@/lib/analytics/botDetection";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,6 +32,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: true, reason: "admin_excluded" });
     }
 
+    const userAgent = req.headers.get("user-agent") || "";
+
+    // Filtrar y descartar bots, rastreadores y scrapers de inmediato
+    if (isBotUserAgent(userAgent)) {
+      return NextResponse.json({ skipped: true, reason: "bot_detected" });
+    }
+
     // Obtener IP del visitante
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip") || "127.0.0.1";
@@ -43,7 +51,6 @@ export async function POST(req: NextRequest) {
     const { pais, estado, ciudad } = resolveLocation(rawCountry, rawRegion, rawCityHeader);
 
     // Dispositivo y Navegador (detectar si no vino en el body)
-    const userAgent = req.headers.get("user-agent") || "";
     let deviceResolved = dispositivo;
     if (!deviceResolved) {
       if (/mobile|iphone|android|ipad/i.test(userAgent)) {

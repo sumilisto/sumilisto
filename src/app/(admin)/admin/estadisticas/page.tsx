@@ -65,6 +65,7 @@ interface UniqueVisitorLive {
   productosVistos: string[];
   rutasVistas: string[];
   isOnline: boolean;
+  esHumano?: boolean;
   historial?: Array<{
     hora: string;
     ruta: string;
@@ -75,12 +76,15 @@ interface UniqueVisitorLive {
 
 interface AnalyticsData {
   range: string;
+  filtro?: "humanos" | "todos";
   resumen: {
     totalVisitas: number;
     visitantesUnicos: number;
     activosAhora: number;
     vistasProductos: number;
     promedioPorUsuario: string;
+    totalBotsExcluidos?: number;
+    visitasBotsExcluidas?: number;
   };
   topEstados: StatItem[];
   topCiudades: StatItem[];
@@ -102,6 +106,7 @@ export default function AdminEstadisticasPage() {
   const [authError, setAuthError] = useState("");
 
   const [range, setRange] = useState<"hoy" | "ayer" | "7d" | "30d" | "todo">("7d");
+  const [trafficFilter, setTrafficFilter] = useState<"humanos" | "todos">("humanos");
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -111,6 +116,22 @@ export default function AdminEstadisticasPage() {
   const [timelineMetric, setTimelineMetric] = useState<"visitantesUnicos" | "visitas">("visitantesUnicos");
   const [expandedVisitorId, setExpandedVisitorId] = useState<string | null>(null);
   const [isDeviceExcluded, setIsDeviceExcluded] = useState(true);
+
+  const loadStats = useCallback(async (selectedRange: string, selectedFilter: "humanos" | "todos" = trafficFilter) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/analytics/stats?range=${selectedRange}&filtro=${selectedFilter}`, { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error("Error al cargar analítica:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [trafficFilter]);
 
   // Verificar autenticación y marcar dispositivo para no sumar visitas
   useEffect(() => {
@@ -127,7 +148,7 @@ export default function AdminEstadisticasPage() {
             setIsDeviceExcluded(false);
           }
         } catch {}
-        loadStats(range);
+        loadStats(range, trafficFilter);
       }
     });
   }, []);
@@ -140,21 +161,10 @@ export default function AdminEstadisticasPage() {
     } catch {}
   };
 
-  const loadStats = useCallback(async (selectedRange: string) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/analytics/stats?range=${selectedRange}`, { cache: "no-store" });
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-        setLastUpdated(new Date());
-      }
-    } catch (err) {
-      console.error("Error al cargar analítica:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const handleTrafficFilterChange = (newFilter: "humanos" | "todos") => {
+    setTrafficFilter(newFilter);
+    loadStats(range, newFilter);
+  };
 
   // Intervalo de auto-refresco (cada 15 segundos si está activado)
   useEffect(() => {
@@ -447,37 +457,92 @@ export default function AdminEstadisticasPage() {
         </div>
       </div>
 
-      {/* ── SELECTOR DE FILTRO DE TIEMPO ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs print:hidden">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400 ml-1" />
-          <span className="text-xs font-bold text-slate-600">Período de Análisis:</span>
+      {/* ── SELECTOR DE FILTRO DE TIEMPO Y AUDIENCIA (ANTI-BOTS) ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs print:hidden">
+        {/* Período */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 pl-1 pr-1">
+            <Filter className="w-4 h-4 text-slate-400" />
+            <span>Período:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(
+              [
+                { id: "hoy", label: "Hoy" },
+                { id: "ayer", label: "Ayer" },
+                { id: "7d", label: "Últimos 7 días" },
+                { id: "30d", label: "Últimos 30 días" },
+                { id: "todo", label: "Histórico Total" },
+              ] as const
+            ).map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleRangeChange(t.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  range === t.id
+                    ? "bg-brand text-white shadow-xs font-black"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {(
-            [
-              { id: "hoy", label: "Hoy" },
-              { id: "ayer", label: "Ayer" },
-              { id: "7d", label: "Últimos 7 días" },
-              { id: "30d", label: "Últimos 30 días" },
-              { id: "todo", label: "Histórico Total" },
-            ] as const
-          ).map((t) => (
+
+        {/* Filtro de Audiencia (Humanos vs Bots / Datacenters) */}
+        <div className="flex items-center gap-2 border-t lg:border-t-0 lg:border-l border-slate-200 pt-2 lg:pt-0 lg:pl-3">
+          <span className="text-xs font-bold text-slate-500 hidden sm:inline">Audiencia:</span>
+          <div className="inline-flex p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold w-full sm:w-auto">
             <button
-              key={t.id}
               type="button"
-              onClick={() => handleRangeChange(t.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                range === t.id
-                  ? "bg-brand text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+              onClick={() => handleTrafficFilterChange("humanos")}
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                trafficFilter === "humanos"
+                  ? "bg-white text-emerald-800 shadow-xs font-black"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
+              title="Aisla y muestra únicamente clientes y personas reales, descartando bots, rastreadores y servidores en la nube"
             >
-              {t.label}
+              <Shield className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Solo Humanos Reales</span>
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => handleTrafficFilterChange("todos")}
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                trafficFilter === "todos"
+                  ? "bg-white text-brand shadow-xs font-black"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              title="Muestra todo el tráfico de red, incluyendo rastreadores de Google, WhatsApp y servidores de centros de datos"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-600" />
+              <span>Todo el Tráfico</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Banner de estado del Filtro Anti-Bots */}
+      {trafficFilter === "humanos" && (data?.resumen.totalBotsExcluidos ?? 0) > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 text-xs text-emerald-950 font-medium shadow-xs print:hidden">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-700 shrink-0" />
+            <span>
+              <strong>Filtro Anti-Bots activo:</strong> Se han aislado y excluido <strong>{data?.resumen.totalBotsExcluidos} rastreadores y servidores de nube</strong> ({data?.resumen.visitasBotsExcluidas} eventos de fondo). Tus métricas reflejan exclusivamente personas reales.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleTrafficFilterChange("todos")}
+            className="text-[11px] underline font-bold text-emerald-800 hover:text-emerald-950 shrink-0 self-end sm:self-center"
+          >
+            Ver tráfico completo
+          </button>
+        </div>
+      )}
 
       {/* ── 4 TARJETAS KPI PRINCIPALES CON LEYENDA EXPLICATIVA AL POSICIONARSE ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1243,6 +1308,16 @@ export default function AdminEstadisticasPage() {
                               <span className="text-[11px] text-slate-400 font-medium">
                                 · {v.dispositivo} ({v.navegador})
                               </span>
+
+                              {v.esHumano === false ? (
+                                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                                  🤖 Bot / Servidor
+                                </span>
+                              ) : (v.totalPaginasVistas >= 2 || (v.productosVistos && v.productosVistos.length > 0)) ? (
+                                <span className="text-[10px] font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                                  🔥 Cliente Activo
+                                </span>
+                              ) : null}
                             </div>
 
                             {/* Actividad actual */}

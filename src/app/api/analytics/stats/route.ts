@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getProducts } from "@/lib/api/store";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
+import { isHumanTraffic } from "@/lib/analytics/botDetection";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const range = searchParams.get("range") || "7d";
+    const filtro = searchParams.get("filtro") || "humanos"; // "humanos" | "todos"
 
     const now = new Date();
     // Hora de Venezuela es UTC-4 (240 minutos)
@@ -64,34 +66,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const allVisitas = rows || [];
+    const allRawVisitas = rows || [];
 
-    // Calcular Activos Ahora (últimos 5 minutos)
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-    const { data: activeNowRows } = await supabaseAdmin
-      .from("analitica_visitas")
-      .select("session_id")
-      .gte("created_at", fiveMinutesAgo);
-
-    const activeUsersNow = new Set((activeNowRows || []).map((r) => r.session_id)).size;
-
-    // Métricas clave
-    const totalVisitas = allVisitas.length;
-    const uniqueSessions = new Set(allVisitas.map((v) => v.session_id));
-    const visitantesUnicos = uniqueSessions.size;
-
-    const productoVisitas = allVisitas.filter((v) => Boolean(v.producto_sku || v.producto_nombre));
-    const vistasProductos = productoVisitas.length;
-
-    // Agregación por Estado y Ciudad con Visitantes Únicos y Total Visitas
-    const estadosMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {};
-    const ciudadesMap: Record<string, { estado: string; count: number; uniqueSessions: Set<string> }> = {};
-    const dispositivosMap: Record<string, number> = { Móvil: 0, Escritorio: 0, Tablet: 0 };
-    const navegadoresMap: Record<string, number> = {};
-    const productosMap: Record<string, { nombre: string; sku: string; views: number; uniqueVisitors: Set<string> }> = {};
-
-    // Agrupación por visitantes únicos individuales (session_id)
-    const visitorsMap = new Map<string, {
+    // 1. Agrupar primero por sesión individual para evaluar comportamiento e interacción
+    const initialVisitorsMap = new Map<string, {
       sessionId: string;
       ciudad: string;
       estado: string;
@@ -114,12 +92,10 @@ export async function GET(req: NextRequest) {
       }>;
     }>();
 
-    allVisitas.forEach((v) => {
+    allRawVisitas.forEach((v) => {
       const sid = v.session_id || v.id;
-
-      // Agrupación de visitante único
-      if (!visitorsMap.has(sid)) {
-        visitorsMap.set(sid, {
+      if (!initialVisitorsMap.has(sid)) {
+        initialVisitorsMap.set(sid, {
           sessionId: sid,
           ciudad: v.ciudad || "Caracas",
           estado: v.estado || "Distrito Capital",
@@ -138,7 +114,7 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      const visitor = visitorsMap.get(sid)!;
+      const visitor = initialVisitorsMap.get(sid)!;
       visitor.totalPaginasVistas += 1;
 
       if (new Date(v.created_at) > new Date(visitor.ultimaActividad)) {
@@ -169,6 +145,57 @@ export async function GET(req: NextRequest) {
           productoSku: v.producto_sku,
         });
       }
+    });
+
+    // 2. Identificar cuáles sesiones corresponden a bots o centros de datos
+    const botSessionIds = new Set<string>();
+    initialVisitorsMap.forEach((visitor, sid) => {
+      if (!isHumanTraffic(visitor)) {
+        botSessionIds.add(sid);
+      }
+    });
+
+    const totalBotsExcluidos = botSessionIds.size;
+    const visitasBotsExcluidas = allRawVisitas.filter((v) => botSessionIds.has(v.session_id || v.id)).length;
+
+    // 3. Determinar el conjunto activo según el filtro seleccionado ("humanos" o "todos")
+    const allVisitas = filtro === "todos"
+      ? allRawVisitas
+      : allRawVisitas.filter((v) => !botSessionIds.has(v.session_id || v.id));
+
+    const visitorsMap = new Map<string, typeof initialVisitorsMap extends Map<any, infer T> ? T : never>();
+    initialVisitorsMap.forEach((v, sid) => {
+      if (filtro === "todos" || !botSessionIds.has(sid)) {
+        visitorsMap.set(sid, v);
+      }
+    });
+
+    // Calcular Activos Ahora (últimos 5 minutos)
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+    const { data: activeNowRows } = await supabaseAdmin
+      .from("analitica_visitas")
+      .select("session_id")
+      .gte("created_at", fiveMinutesAgo);
+
+    const activeUsersNow = new Set((activeNowRows || []).map((r) => r.session_id)).size;
+
+    // Métricas clave
+    const totalVisitas = allVisitas.length;
+    const uniqueSessions = new Set(allVisitas.map((v) => v.session_id));
+    const visitantesUnicos = uniqueSessions.size;
+
+    const productoVisitas = allVisitas.filter((v) => Boolean(v.producto_sku || v.producto_nombre));
+    const vistasProductos = productoVisitas.length;
+
+    // Agregación por Estado y Ciudad con Visitantes Únicos y Total Visitas
+    const estadosMap: Record<string, { total: number; uniqueSessions: Set<string> }> = {};
+    const ciudadesMap: Record<string, { estado: string; count: number; uniqueSessions: Set<string> }> = {};
+    const dispositivosMap: Record<string, number> = { Móvil: 0, Escritorio: 0, Tablet: 0 };
+    const navegadoresMap: Record<string, number> = {};
+    const productosMap: Record<string, { nombre: string; sku: string; views: number; uniqueVisitors: Set<string> }> = {};
+
+    allVisitas.forEach((v) => {
+      const sid = v.session_id || v.id;
 
       // Estado
       const est = v.estado || "Distrito Capital";
@@ -308,6 +335,7 @@ export async function GET(req: NextRequest) {
         return {
           ...visitor,
           isOnline,
+          esHumano: !botSessionIds.has(visitor.sessionId),
         };
       })
       .sort((a, b) => new Date(b.ultimaActividad).getTime() - new Date(a.ultimaActividad).getTime())
@@ -328,12 +356,15 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       range,
+      filtro,
       resumen: {
         totalVisitas,
         visitantesUnicos,
         activosAhora: activeUsersNow,
         vistasProductos,
         promedioPorUsuario: visitantesUnicos > 0 ? (totalVisitas / visitantesUnicos).toFixed(1) : "0",
+        totalBotsExcluidos,
+        visitasBotsExcluidas,
       },
       topEstados,
       topCiudades,
