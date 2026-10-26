@@ -7,7 +7,7 @@ import {
   Activity, Users, Eye, Package, MapPin, Globe, Smartphone, Monitor,
   Download, Printer, RefreshCw, ArrowLeft, Lock, User, LogOut,
   ExternalLink, TrendingUp, CheckCircle2, AlertCircle, Compass, Shield,
-  Layers, ShoppingBag, Clock, Sparkles, Filter, ChevronRight
+  Layers, ShoppingBag, Clock, Sparkles, Filter, ChevronRight, HelpCircle, Info
 } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
 
@@ -79,6 +79,7 @@ export default function AdminEstadisticasPage() {
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   // Verificar autenticación
   useEffect(() => {
@@ -401,16 +402,63 @@ export default function AdminEstadisticasPage() {
         </div>
       </div>
 
-      {/* ── 4 TARJETAS KPI PRINCIPALES ── */}
+      {/* ── 4 TARJETAS KPI PRINCIPALES CON LEYENDA EXPLICATIVA AL POSICIONARSE ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Visitas Totales */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group hover:border-emerald-300 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -z-0 opacity-60 group-hover:scale-110 transition-transform" />
+        <div
+          className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative transition-all cursor-pointer group hover:border-emerald-400 hover:shadow-md"
+          onClick={() => setActiveTooltip(activeTooltip === "visitas" ? null : "visitas")}
+          onMouseEnter={() => setActiveTooltip("visitas")}
+          onMouseLeave={() => setActiveTooltip(null)}
+          title="Haz clic o pasa el cursor para ver la explicación detallada"
+        >
+          {/* Fondo decorativo recortado */}
+          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full opacity-60 group-hover:scale-110 transition-transform" />
+          </div>
+
+          {/* Leyenda Flotante Explicativa */}
+          <div
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+              activeTooltip === "visitas"
+                ? "opacity-100 visible translate-y-0"
+                : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
+            }`}
+            style={{ pointerEvents: activeTooltip === "visitas" ? "auto" : "none" }}
+          >
+            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-800">
+              <div className="flex items-center gap-1.5 font-bold text-emerald-400 text-xs">
+                <Eye className="w-4 h-4 shrink-0" />
+                <span>Páginas Vistas (Tráfico)</span>
+              </div>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40">
+                Métrica
+              </span>
+            </div>
+            <p className="text-slate-200 text-xs leading-relaxed mb-2">
+              Suma total de todas las pantallas, categorías y productos que los usuarios han abierto en la tienda.
+            </p>
+            <div className="space-y-1.5 text-[11px] bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60">
+              <div className="flex items-start gap-1.5 text-slate-300">
+                <span className="font-bold text-emerald-400 shrink-0">📊 Cálculo:</span>
+                <span>Un mismo cliente que ve 3 productos y su carrito suma 4 páginas vistas.</span>
+              </div>
+              <div className="flex items-start gap-1.5 text-emerald-300 pt-1 border-t border-slate-700/40">
+                <span className="font-bold shrink-0">💡 Utilidad:</span>
+                <span>Mide el nivel global de interacción y exploración de la tienda.</span>
+              </div>
+            </div>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-8 border-transparent border-t-slate-900/95" />
+          </div>
+
           <div className="relative z-10 flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block mb-1">
-                Páginas Vistas
-              </span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                  Páginas Vistas
+                </span>
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+              </div>
               <div className="text-3xl font-black text-slate-900 tracking-tight">
                 {loading ? "..." : (data?.resumen.totalVisitas ?? 0).toLocaleString("es-VE")}
               </div>
@@ -428,13 +476,60 @@ export default function AdminEstadisticasPage() {
         </div>
 
         {/* KPI 2: Visitantes Únicos */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group hover:border-blue-300 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -z-0 opacity-60 group-hover:scale-110 transition-transform" />
+        <div
+          className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative transition-all cursor-pointer group hover:border-blue-400 hover:shadow-md"
+          onClick={() => setActiveTooltip(activeTooltip === "visitantes" ? null : "visitantes")}
+          onMouseEnter={() => setActiveTooltip("visitantes")}
+          onMouseLeave={() => setActiveTooltip(null)}
+          title="Haz clic o pasa el cursor para ver la explicación detallada"
+        >
+          {/* Fondo decorativo recortado */}
+          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full opacity-60 group-hover:scale-110 transition-transform" />
+          </div>
+
+          {/* Leyenda Flotante Explicativa */}
+          <div
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+              activeTooltip === "visitantes"
+                ? "opacity-100 visible translate-y-0"
+                : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
+            }`}
+            style={{ pointerEvents: activeTooltip === "visitantes" ? "auto" : "none" }}
+          >
+            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-800">
+              <div className="flex items-center gap-1.5 font-bold text-blue-400 text-xs">
+                <Users className="w-4 h-4 shrink-0" />
+                <span>Visitantes Únicos</span>
+              </div>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800/40">
+                Audiencia
+              </span>
+            </div>
+            <p className="text-slate-200 text-xs leading-relaxed mb-2">
+              Cantidad de personas o clientes distintos que ingresaron a la tienda, identificados por su dispositivo o navegador.
+            </p>
+            <div className="space-y-1.5 text-[11px] bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60">
+              <div className="flex items-start gap-1.5 text-slate-300">
+                <span className="font-bold text-blue-400 shrink-0">📊 Cálculo:</span>
+                <span>Si el mismo cliente entra 5 veces al día desde su teléfono, cuenta como 1 visitante único.</span>
+              </div>
+              <div className="flex items-start gap-1.5 text-blue-300 pt-1 border-t border-slate-700/40">
+                <span className="font-bold shrink-0">💡 Utilidad:</span>
+                <span>Refleja tu alcance real de clientes sin duplicar visitas de la misma persona.</span>
+              </div>
+            </div>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-8 border-transparent border-t-slate-900/95" />
+          </div>
+
           <div className="relative z-10 flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block mb-1">
-                Visitantes Únicos
-              </span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                  Visitantes Únicos
+                </span>
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+              </div>
               <div className="text-3xl font-black text-slate-900 tracking-tight">
                 {loading ? "..." : (data?.resumen.visitantesUnicos ?? 0).toLocaleString("es-VE")}
               </div>
@@ -450,8 +545,52 @@ export default function AdminEstadisticasPage() {
         </div>
 
         {/* KPI 3: Activos Ahora (En Vivo) */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group hover:border-emerald-400 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-100/50 rounded-bl-full -z-0 opacity-70 group-hover:scale-110 transition-transform" />
+        <div
+          className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative transition-all cursor-pointer group hover:border-emerald-500 hover:shadow-md"
+          onClick={() => setActiveTooltip(activeTooltip === "activos" ? null : "activos")}
+          onMouseEnter={() => setActiveTooltip("activos")}
+          onMouseLeave={() => setActiveTooltip(null)}
+          title="Haz clic o pasa el cursor para ver la explicación detallada"
+        >
+          {/* Fondo decorativo recortado */}
+          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-100/50 rounded-bl-full opacity-70 group-hover:scale-110 transition-transform" />
+          </div>
+
+          {/* Leyenda Flotante Explicativa */}
+          <div
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+              activeTooltip === "activos"
+                ? "opacity-100 visible translate-y-0"
+                : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
+            }`}
+            style={{ pointerEvents: activeTooltip === "activos" ? "auto" : "none" }}
+          >
+            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-800">
+              <div className="flex items-center gap-1.5 font-bold text-emerald-400 text-xs">
+                <Activity className="w-4 h-4 shrink-0" />
+                <span>Usuarios Activos en Vivo</span>
+              </div>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40">
+                Tiempo Real
+              </span>
+            </div>
+            <p className="text-slate-200 text-xs leading-relaxed mb-2">
+              Clientes que están navegando por la tienda o armando su pedido en este momento exacto.
+            </p>
+            <div className="space-y-1.5 text-[11px] bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60">
+              <div className="flex items-start gap-1.5 text-slate-300">
+                <span className="font-bold text-emerald-400 shrink-0">📊 Ventana:</span>
+                <span>Actividad registrada en los últimos 5 minutos navegando.</span>
+              </div>
+              <div className="flex items-start gap-1.5 text-emerald-300 pt-1 border-t border-slate-700/40">
+                <span className="font-bold shrink-0">💡 Utilidad:</span>
+                <span>Te avisa en vivo si hay personas revisando empaques antes de enviarte el WhatsApp.</span>
+              </div>
+            </div>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-8 border-transparent border-t-slate-900/95" />
+          </div>
+
           <div className="relative z-10 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
@@ -459,6 +598,7 @@ export default function AdminEstadisticasPage() {
                   Activos Ahora
                 </span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <HelpCircle className="w-3.5 h-3.5 text-emerald-600 group-hover:text-emerald-800 transition-colors" />
               </div>
               <div className="text-3xl font-black text-emerald-900 tracking-tight flex items-baseline gap-2">
                 <span>{loading ? "..." : (data?.resumen.activosAhora ?? 0)}</span>
@@ -475,13 +615,60 @@ export default function AdminEstadisticasPage() {
         </div>
 
         {/* KPI 4: Vistas a Productos */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group hover:border-purple-300 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-full -z-0 opacity-60 group-hover:scale-110 transition-transform" />
+        <div
+          className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative transition-all cursor-pointer group hover:border-purple-400 hover:shadow-md"
+          onClick={() => setActiveTooltip(activeTooltip === "productos" ? null : "productos")}
+          onMouseEnter={() => setActiveTooltip("productos")}
+          onMouseLeave={() => setActiveTooltip(null)}
+          title="Haz clic o pasa el cursor para ver la explicación detallada"
+        >
+          {/* Fondo decorativo recortado */}
+          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-full opacity-60 group-hover:scale-110 transition-transform" />
+          </div>
+
+          {/* Leyenda Flotante Explicativa */}
+          <div
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+              activeTooltip === "productos"
+                ? "opacity-100 visible translate-y-0"
+                : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
+            }`}
+            style={{ pointerEvents: activeTooltip === "productos" ? "auto" : "none" }}
+          >
+            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-800">
+              <div className="flex items-center gap-1.5 font-bold text-purple-400 text-xs">
+                <Package className="w-4 h-4 shrink-0" />
+                <span>Vistas a Productos</span>
+              </div>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/40">
+                Demanda
+              </span>
+            </div>
+            <p className="text-slate-200 text-xs leading-relaxed mb-2">
+              Número de veces que los visitantes abrieron la ficha detallada de un producto para ver sus fotos y precios.
+            </p>
+            <div className="space-y-1.5 text-[11px] bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/60">
+              <div className="flex items-start gap-1.5 text-slate-300">
+                <span className="font-bold text-purple-400 shrink-0">📊 Interés:</span>
+                <span>Refleja la intención comercial de compra y qué empaques llaman más la atención.</span>
+              </div>
+              <div className="flex items-start gap-1.5 text-purple-300 pt-1 border-t border-slate-700/40">
+                <span className="font-bold shrink-0">💡 Utilidad:</span>
+                <span>Te ayuda a detectar qué empaques tienen alta demanda para mantener stock al día.</span>
+              </div>
+            </div>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-8 border-transparent border-t-slate-900/95" />
+          </div>
+
           <div className="relative z-10 flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block mb-1">
-                Vistas a Productos
-              </span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                  Vistas a Productos
+                </span>
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 transition-colors" />
+              </div>
               <div className="text-3xl font-black text-slate-900 tracking-tight">
                 {loading ? "..." : (data?.resumen.vistasProductos ?? 0).toLocaleString("es-VE")}
               </div>
