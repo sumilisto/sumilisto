@@ -211,6 +211,7 @@ export default function AdminProductosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("todas");
   const [filterNoPhoto, setFilterNoPhoto] = useState(false);
+  const [filterDestacados, setFilterDestacados] = useState(false);
 
   // Notificaciones flotantes
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
@@ -1119,10 +1120,11 @@ export default function AdminProductosPage() {
         (f) => !f.url.includes("placehold.co")
       );
       const matchesNoPhoto = filterNoPhoto ? !hasValidPhoto : true;
+      const matchesDestacados = filterDestacados ? Boolean(p.destacado) : true;
 
-      return matchesSearch && matchesCategory && matchesNoPhoto;
+      return matchesSearch && matchesCategory && matchesNoPhoto && matchesDestacados;
     });
-  }, [products, searchQuery, selectedCategory, filterNoPhoto]);
+  }, [products, searchQuery, selectedCategory, filterNoPhoto, filterDestacados]);
 
   const stats = useMemo(() => {
     const total = products.length;
@@ -1130,9 +1132,52 @@ export default function AdminProductosPage() {
       (p.fotos || []).some((f) => !f.url.includes("placehold.co"))
     ).length;
     const conVideo = products.filter((p) => Boolean(p.videoUrl)).length;
+    const destacados = products.filter((p) => Boolean(p.destacado)).length;
     const sinFoto = total - conFoto;
-    return { total, conFoto, conVideo, sinFoto };
+    return { total, conFoto, conVideo, sinFoto, destacados };
   }, [products]);
+
+  const handleToggleDestacado = async (p: Product) => {
+    const currentDestacadosCount = products.filter((prod) => prod.destacado).length;
+    const newDestacado = !p.destacado;
+
+    if (newDestacado && currentDestacadosCount >= 15) {
+      showToast("Ya alcanzaste el límite de 15 productos destacados para el carrusel", "error");
+      return;
+    }
+
+    setProducts((prev) =>
+      prev.map((item) =>
+        item.id === p.id ? { ...item, destacado: newDestacado } : item
+      )
+    );
+
+    try {
+      const res = await fetch(`/api/products/${p.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ destacado: newDestacado }),
+      });
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      showToast(
+        newDestacado
+          ? `⭐ "${p.nombre}" agregado al carrusel (${currentDestacadosCount + 1}/15)`
+          : `"${p.nombre}" quitado del carrusel`,
+        "success"
+      );
+    } catch {
+      setProducts((prev) =>
+        prev.map((item) =>
+          item.id === p.id ? { ...item, destacado: !newDestacado } : item
+        )
+      );
+      showToast("Error al actualizar estado destacado", "error");
+    }
+  };
 
   // Pantalla de carga
   if (!authChecked) {
@@ -1310,7 +1355,7 @@ export default function AdminProductosPage() {
       {/* Contenido */}
       <div className="space-y-6">
         {/* Métricas rápidas */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
               Total Catálogo
@@ -1343,6 +1388,14 @@ export default function AdminProductosPage() {
               {stats.sinFoto}
             </span>
           </div>
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+            <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Carrusel Destacados
+            </span>
+            <span className="text-xl sm:text-2xl font-black text-amber-900 mt-1 block">
+              {stats.destacados} <span className="text-xs font-semibold text-slate-400">/ 15</span>
+            </span>
+          </div>
         </div>
 
         {/* Buscador y Filtros */}
@@ -1367,17 +1420,33 @@ export default function AdminProductosPage() {
               )}
             </div>
 
-            <button
-              onClick={() => setFilterNoPhoto(!filterNoPhoto)}
-              className={`h-10 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-                filterNoPhoto
-                  ? "bg-amber-500 text-white border-amber-600 shadow-sm"
-                  : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              <ImageIcon className="w-4 h-4" />
-              <span>{filterNoPhoto ? "Mostrando: Sin Foto" : "Filtrar: Sin Foto"}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setFilterDestacados(!filterDestacados)}
+                className={`h-10 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                  filterDestacados
+                    ? "bg-amber-400 text-amber-950 border-amber-500 shadow-sm"
+                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                <Star className={`w-3.5 h-3.5 ${filterDestacados ? "fill-amber-950 text-amber-950" : "text-amber-500 fill-amber-500"}`} />
+                <span>{filterDestacados ? "Mostrando: Destacados" : `Destacados (${stats.destacados}/15)`}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFilterNoPhoto(!filterNoPhoto)}
+                className={`h-10 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                  filterNoPhoto
+                    ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>{filterNoPhoto ? "Mostrando: Sin Foto" : "Sin Foto"}</span>
+              </button>
+            </div>
           </div>
 
           {/* Categorías */}
@@ -1447,7 +1516,7 @@ export default function AdminProductosPage() {
                       )}
 
                       {/* Badges superiores: Categoría, Fotos y Video */}
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap z-10">
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap z-10 max-w-[65%]">
                         <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs">
                           {p.categoria}
                         </span>
@@ -1462,6 +1531,24 @@ export default function AdminProductosPage() {
                           </span>
                         )}
                       </div>
+
+                      {/* Botón rápido para Destacar en el Carrusel (hasta 15) */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleDestacado(p);
+                        }}
+                        title={p.destacado ? "Quitar del carrusel Recomendado para ti" : "Destacar en carrusel Recomendado para ti"}
+                        className={`absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 ${
+                          p.destacado
+                            ? "bg-amber-400 text-amber-950 hover:bg-amber-300 ring-2 ring-amber-400/50"
+                            : "bg-black/60 hover:bg-black/80 text-white/90 backdrop-blur-xs"
+                        }`}
+                      >
+                        <Star className={`w-3.5 h-3.5 ${p.destacado ? "fill-amber-950 text-amber-950" : "text-amber-400"}`} />
+                        <span>{p.destacado ? "Destacado" : "Destacar"}</span>
+                      </button>
 
                       {/* Botón rápido para abrir gestor multimedia */}
                       <div className="absolute bottom-3 inset-x-3 z-10">
