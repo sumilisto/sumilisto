@@ -179,23 +179,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 const regularEquivalent = minMayor > 0 ? (priceMayor / minMayor) * minGranMayor : priceMayor;
                 const savings = regularEquivalent - priceGranMayor;
                 return (
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80">
-                    <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <span className="text-[10.5px] sm:text-[11px] font-semibold text-slate-700 whitespace-nowrap leading-tight">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80 w-full overflow-hidden">
+                    <div className="flex items-center justify-between gap-1 mb-0.5 w-full min-w-0">
+                      <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-700 truncate leading-tight">
                         Gran Mayor: {minGranMayor}Und
                       </span>
                       {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg text-center shrink-0">
-                          <span className="text-[9.5px] font-bold block leading-tight text-amber-800">
+                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded-md text-center shrink-0">
+                          <span className="text-[8.5px] sm:text-[9px] font-bold block leading-none text-amber-800">
                             Ahorras
                           </span>
-                          <span className="text-[10.5px] font-black block leading-tight text-amber-950">
+                          <span className="text-[9.5px] sm:text-[10.5px] font-black block leading-tight text-amber-950 mt-0.5">
                             {formatUsd(savings)}
                           </span>
                         </div>
                       )}
                     </div>
-                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap overflow-hidden">
+                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap w-full overflow-hidden">
                       <span
                         style={{ fontSize: granMayorSize }}
                         className="font-bold text-brand leading-tight shrink-0"
@@ -203,7 +203,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         {formatUsd(priceGranMayor)}
                       </span>
                       {bcvRate > 0 && (
-                        <span className="text-[10px] sm:text-xs font-normal text-emerald-800 leading-tight shrink-0">
+                        <span className="text-[9.5px] sm:text-xs font-normal text-emerald-800 leading-tight shrink-0">
                           / {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
                         </span>
                       )}
