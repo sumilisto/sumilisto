@@ -74,7 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const lineSpacing = theme.cardLineSpacing || "3px";
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-card transition-all duration-200 overflow-hidden">
+    <div className="group relative flex flex-col bg-white rounded-2xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-200 overflow-hidden">
       {/* Contenedor de la Imagen con Botón '+' o Píldora [- 50 +] */}
       <div className="relative aspect-square w-full bg-slate-50 overflow-hidden">
         <Link href={`/producto/${product.slug}`} className="absolute inset-0 block">

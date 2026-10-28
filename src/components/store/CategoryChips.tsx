@@ -48,10 +48,10 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
         <Link
           href="/"
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150 touch-target border",
+            "flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 touch-target active:scale-95 border",
             !activeCategory
               ? "bg-brand text-white border-brand shadow-sm"
-              : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+              : "bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
           )}
         >
           <AllIcon className="w-4 h-4" />
@@ -66,10 +66,10 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
               key={cat.id}
               href={`/categoria/${cat.slug}`}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150 touch-target border",
+                "flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 touch-target active:scale-95 border",
                 isActive
                   ? "bg-brand text-white border-brand shadow-sm"
-                  : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  : "bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
               )}
             >
               <IconComponent className="w-4 h-4" />
@@ -89,10 +89,10 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({ activeCategory }) 
               key={cat}
               href={`/categoria/${catSlug}`}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150 touch-target border capitalize",
+                "flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 touch-target active:scale-95 border capitalize",
                 isActive
                   ? "bg-brand text-white border-brand shadow-sm"
-                  : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  : "bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
               )}
             >
               <IconComponent className="w-4 h-4" />

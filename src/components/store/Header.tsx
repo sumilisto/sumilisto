@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
       </div>
 
       {/* Header principal */}
-      <header className="sticky top-0 z-30 bg-brand text-white shadow-md">
+      <header className="sticky top-0 z-30 bg-brand/98 backdrop-blur-md text-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Logo de Sumilisto */}
           <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
