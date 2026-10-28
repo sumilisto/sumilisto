@@ -193,13 +193,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div style={{ gap: lineSpacing }} className="flex flex-col">
               {/* 3. Sección Mayor */}
               <div>
-                <span className="text-[11px] font-semibold text-slate-500 block leading-tight">
+                <span className="text-[11.5px] sm:text-xs font-semibold text-slate-500 block leading-tight">
                   Mayor: {minMayor} Und
                 </span>
                 <div className="mt-0.5">
                   <span
-                    style={{ fontSize: mayorSize }}
-                    className="text-lg font-black text-brand leading-tight block"
+                    style={{ fontSize: theme.cardMayorFontSize || undefined }}
+                    className="text-lg sm:text-xl font-black text-brand leading-tight block"
                   >
                     {formatUsd(priceMayor)}
                   </span>
@@ -211,23 +211,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 const regularEquivalent = minMayor > 0 ? (priceMayor / minMayor) * minGranMayor : priceMayor;
                 const savings = regularEquivalent - priceGranMayor;
                 return (
-                  <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
-                    <span className="text-[10.5px] sm:text-xs font-bold text-slate-800 leading-tight block mb-1">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
+                    <span className="text-xs sm:text-[13px] font-bold text-slate-800 leading-tight block mb-1.5">
                       Gran Mayor: {minGranMayor} Und
                     </span>
-                    <div className="flex items-center justify-between gap-1.5 mt-0.5">
+                    <div className="flex items-center justify-between gap-1.5">
                       <span
-                        style={{ fontSize: granMayorSize }}
-                        className="text-lg font-black text-brand leading-tight block"
+                        style={{ fontSize: theme.cardGranMayorFontSize || undefined }}
+                        className="text-lg sm:text-xl font-black text-brand leading-tight block"
                       >
                         {formatUsd(priceGranMayor)}
                       </span>
                       {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 py-0.5 rounded-md text-center shrink-0">
-                          <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-800 leading-tight">
+                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-center shrink-0">
+                          <span className="text-[9.5px] sm:text-[10.5px] font-bold text-amber-800 leading-none">
                             Ahorras
                           </span>
-                          <span className="text-[10px] sm:text-[11px] font-black text-amber-950 leading-tight">
+                          <span className="text-[11px] sm:text-[12.5px] font-black text-amber-950 leading-tight mt-0.5">
                             ${savings.toFixed(2).replace(".", ",")}
                           </span>
                         </div>
