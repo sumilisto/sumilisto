@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
-import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
+import { formatUsd } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { Plus, Minus, AlertCircle } from "lucide-react";
@@ -203,11 +203,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   >
                     {formatUsd(priceMayor)}
                   </span>
-                  {bcvRate > 0 && (
-                    <span className="text-xs sm:text-sm text-slate-600 font-medium leading-tight block truncate mt-0.5">
-                      {formatVes(calculateVesTotal(priceMayor, bcvRate))}
-                    </span>
-                  )}
                 </div>
               </div>
 
@@ -221,19 +216,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                       Gran Mayor: {minGranMayor} Und
                     </span>
                     <div className="flex items-center justify-between gap-1.5 mt-0.5">
-                      <div className="min-w-0">
-                        <span
-                          style={{ fontSize: granMayorSize }}
-                          className="text-lg font-black text-brand leading-tight block"
-                        >
-                          {formatUsd(priceGranMayor)}
-                        </span>
-                        {bcvRate > 0 && (
-                          <span className="text-xs sm:text-sm text-slate-600 font-medium leading-tight block truncate mt-0.5">
-                            {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
-                          </span>
-                        )}
-                      </div>
+                      <span
+                        style={{ fontSize: granMayorSize }}
+                        className="text-lg font-black text-brand leading-tight block"
+                      >
+                        {formatUsd(priceGranMayor)}
+                      </span>
                       {savings > 0.05 && (
                         <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 py-0.5 rounded-md text-center shrink-0">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-800 leading-tight">
