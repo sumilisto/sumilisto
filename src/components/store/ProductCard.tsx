@@ -211,8 +211,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 const regularEquivalent = minMayor > 0 ? (priceMayor / minMayor) * minGranMayor : priceMayor;
                 const savings = regularEquivalent - priceGranMayor;
                 return (
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
-                    <span className="text-xs sm:text-[13px] font-bold text-slate-800 leading-tight block mb-1.5">
+                  <div className="px-2.5 py-1.5 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
+                    <span className="text-xs sm:text-[13px] font-bold text-slate-800 leading-tight block mb-0.5">
                       Gran Mayor: {minGranMayor} Und
                     </span>
                     <div className="flex items-center justify-between gap-1.5">
@@ -223,11 +223,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         {formatUsd(priceGranMayor)}
                       </span>
                       {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-center shrink-0">
-                          <span className="text-[9.5px] sm:text-[10.5px] font-bold text-amber-800 leading-none">
+                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 py-0.5 rounded-md text-center shrink-0">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-amber-800 leading-none">
                             Ahorras
                           </span>
-                          <span className="text-[11px] sm:text-[12.5px] font-black text-amber-950 leading-tight mt-0.5">
+                          <span className="text-[10.5px] sm:text-[11.5px] font-black text-amber-950 leading-tight">
                             ${savings.toFixed(2).replace(".", ",")}
                           </span>
                         </div>
