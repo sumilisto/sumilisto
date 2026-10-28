@@ -69,7 +69,8 @@ export const viewport: Viewport = {
   themeColor: "#166534",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default async function RootLayout({
@@ -78,7 +79,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const [products, bcvRate, settings] = await Promise.all([
-    getProducts(), 
+    getProducts(),
     getBcvRate(),
     getStoreSettings(),
   ]);
