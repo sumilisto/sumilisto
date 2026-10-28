@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 export function HeroSection() {
   const { theme } = useTheme();
@@ -98,8 +99,9 @@ export function HeroSection() {
               href={`https://wa.me/${theme.whatsappNumber}?text=Hola%20Sumilisto,%20deseo%20asesor%C3%ADa%20sobre%20suministros%20para%20mi%20negocio`}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-10 sm:h-11 px-5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-all"
+              className="h-10 sm:h-11 px-5 rounded-xl bg-white text-brand hover:bg-slate-50 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-all"
             >
+              <WhatsAppIcon className="w-4 h-4 text-brand" />
               <span>Consultar por WhatsApp</span>
             </a>
           </div>

@@ -99,7 +99,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Botón '+' redondo cuando quantity===0 o Píldora [- 50 +] cuando quantity>0 */}
+        {/* Botón '+' redondo cuando quantity===0 o Píldora [- 50 +] compacta cuando quantity>0 */}
         {activeVariant.isAvailable ? (
           quantity > 0 ? (
             <div
@@ -107,24 +107,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 e.preventDefault();
                 e.stopPropagation();
               }}
-              className="absolute bottom-2.5 right-2.5 z-20 bg-emerald-800 text-white rounded-full px-2 py-1 shadow-md flex items-center gap-2"
+              className="absolute bottom-2 right-2 z-20 bg-brand text-white rounded-xl p-0.5 shadow-md flex items-center gap-1 border border-white/20"
             >
               <button
                 type="button"
                 onClick={handleDecrement}
                 aria-label={`Disminuir cantidad de ${product.nombre}`}
-                className="w-5 h-5 rounded-full hover:bg-emerald-700 active:scale-90 flex items-center justify-center transition-all touch-target"
+                className="w-7 h-7 rounded-lg hover:bg-white/20 active:scale-90 flex items-center justify-center transition-all text-white"
               >
                 <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
-              <span className="text-xs font-black min-w-[1.2rem] text-center select-none leading-none">
+              <span className="text-xs font-black min-w-[1.4rem] px-0.5 text-center select-none leading-none text-white">
                 {quantity}
               </span>
               <button
                 type="button"
                 onClick={handleIncrement}
                 aria-label={`Aumentar cantidad de ${product.nombre}`}
-                className="w-5 h-5 rounded-full hover:bg-emerald-700 active:scale-90 flex items-center justify-center transition-all touch-target"
+                className="w-7 h-7 rounded-lg hover:bg-white/20 active:scale-90 flex items-center justify-center transition-all text-white"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
@@ -134,9 +134,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               type="button"
               onClick={handleIncrement}
               aria-label={`Agregar ${product.nombre} al pedido`}
-              className="absolute bottom-2.5 right-2.5 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-brand text-white shadow-md hover:bg-brand-hover active:scale-90 transition-all flex items-center justify-center touch-target"
+              className="absolute bottom-2 right-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand text-white shadow-md hover:bg-brand-hover active:scale-90 transition-all flex items-center justify-center"
             >
-              <Plus className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
             </button>
           )
         ) : (
@@ -145,9 +145,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Consultar por WhatsApp"
-            className="absolute bottom-2.5 right-2.5 z-20 w-10 h-10 rounded-2xl bg-white/90 text-emerald-600 shadow-md hover:bg-white flex items-center justify-center touch-target"
+            className="absolute bottom-2 right-2 z-20 w-8 h-8 rounded-xl bg-white/90 text-brand shadow-md hover:bg-white flex items-center justify-center"
           >
-            <WhatsAppIcon className="w-5 h-5 text-emerald-600" />
+            <WhatsAppIcon className="w-4 h-4 text-brand" />
           </a>
         )}
       </div>

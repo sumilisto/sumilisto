@@ -66,11 +66,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#25D366" }}
+                style={{ color: navActive }}
                 className="flex flex-col items-center justify-center py-1.5 px-2 rounded-lg touch-target transition-all hover:opacity-90 active:scale-95"
                 aria-label="Abrir chat de WhatsApp"
               >
-                <Icon className="w-5 h-5 mb-0.5 text-[#25D366]" />
+                <Icon className="w-5 h-5 mb-0.5" />
                 <span className="text-[10px] font-semibold leading-none">{item.label}</span>
               </a>
             );
