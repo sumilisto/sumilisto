@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ChevronRight, Award, ShieldCheck, Truck, Users, Instagram } from "lucide-react";
 
 export const metadata = {
-  title: "Sobre Nosotros | Sumilisto Venezuela",
+  title: "Sobre Nosotros",
   description: "Conoce a Sumilisto, distribuidores de empaques, vasos, descartables, cajas, bolsas y suministros al mayor para negocios, comercios y eventos en Caracas, Guarenas, Guatire y envíos nacionales.",
 };
 

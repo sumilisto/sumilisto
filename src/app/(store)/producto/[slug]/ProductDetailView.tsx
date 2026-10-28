@@ -600,12 +600,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       const savings = regularEquivalent - priceGranMayor;
                       if (savings > 0.05) {
                         return (
-                          <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-0.5 rounded-lg text-center shrink-0">
-                            <span className="text-[10px] font-bold block leading-tight text-amber-800">
+                          <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-lg text-center shrink-0">
+                            <span className="text-[10px] font-bold text-amber-800">
                               Ahorras
                             </span>
-                            <span className="text-[11px] font-black block leading-tight text-amber-950">
-                              $ {savings.toFixed(2).replace(".", ",")}
+                            <span className="text-[11px] font-black text-amber-950">
+                              ${savings.toFixed(2).replace(".", ",")}
                             </span>
                           </div>
                         );

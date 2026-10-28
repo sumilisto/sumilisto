@@ -18,10 +18,10 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const category = STORE_CATEGORIES.find((c) => c.slug.toLowerCase() === decodedSlug.toLowerCase());
 
   const catName = category ? category.nombre : (decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1).replace(/-/g, " "));
-  const catDesc = category ? category.descripcion : `Compre productos de ${catName.toLowerCase()} al mayor y gran mayor en Venezuela con Sumilisto`;
+  const catDesc = category ? category.descripcion : `Catálogo mayorista de ${catName} con venta al mayor y gran mayor para tu negocio.`;
 
   return {
-    title: `${catName} al Mayor | Sumilisto Venezuela`,
+    title: `${catName} al Mayor`,
     description: catDesc,
   };
 }
@@ -37,7 +37,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   ]);
 
   const catName = category ? category.nombre : (decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1).replace(/-/g, " "));
-  const catDesc = category ? category.descripcion : `Catálogo mayorista de ${catName.toLowerCase()} con precios competitivos y despacho en Venezuela.`;
+  const catDesc = category ? category.descripcion : `Catálogo mayorista de ${catName} con venta al mayor y gran mayor para tu negocio.`;
 
   const products = allProducts.filter(
     (p) =>

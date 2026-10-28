@@ -3,6 +3,7 @@ import { getProducts, getBcvRate } from "@/lib/api/store";
 import { ProductCard } from "@/components/store/ProductCard";
 import { HeroSection } from "@/components/store/HeroSection";
 import { FeaturedCarousel } from "@/components/store/FeaturedCarousel";
+import { CategoryChips } from "@/components/store/CategoryChips";
 
 export default async function HomePage() {
   const [products, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
@@ -26,7 +27,10 @@ export default async function HomePage() {
       {/* Hero Banner / Propuesta de Valor */}
       <HeroSection />
 
-      <div id="categorias" />
+      {/* Barra de Categorías Unificada */}
+      <div id="categorias" className="max-w-7xl mx-auto w-full">
+        <CategoryChips />
+      </div>
 
       {/* Carrusel: Más Pedidos por Negocios y Comercios · Recomendado para ti (hasta 15 productos) */}
       <FeaturedCarousel products={featuredProducts} bcvRate={bcvRate} />

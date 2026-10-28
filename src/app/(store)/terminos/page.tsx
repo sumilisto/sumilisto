@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 export const metadata = {
-  title: "Términos y Condiciones | Sumilisto",
+  title: "Términos y Condiciones",
   description: "Términos comerciales y condiciones de compra para suministros mayoristas en Sumilisto.",
 };
 

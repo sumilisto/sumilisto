@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
           <div className="flex items-center gap-1.5 justify-center">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-semibold text-white">Tasa oficial BCV:</span>
+            <span className="font-semibold text-white">Tasa oficial BCV:&nbsp;</span>
             <span className="font-bold text-white">{formatVes(bcvRate)}</span>
             <span className="opacity-80 hidden md:inline">· Precios en Bs. calculados al cambio oficial</span>
           </div>
@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
             >
               <div className="flex items-center gap-2.5">
                 <Search className="w-4 h-4 text-white/70" />
-                <span className="text-white/70">Buscar envases, bolsas, cubiertos, papel...</span>
+                <span className="text-white/70">Buscar bolsas, vasos, empaques, cajas...</span>
               </div>
               <kbd className="hidden lg:inline-block px-2 py-0.5 text-[10px] font-bold bg-white/20 rounded text-white">
                 Buscar

@@ -98,9 +98,9 @@ export const Footer: React.FC = () => {
         {/* Separador y Copyright */}
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 text-center sm:text-left">
           <div style={{ color: footerText }}>
-            © {new Date().getFullYear()} Sumilisto. Todos los derechos reservados. Suministros, empaques y descartables para negocios, comercios y eventos en Venezuela.
+            © {new Date().getFullYear()} Sumilisto. Todos los derechos reservados. Suministros, empaques y descartables al mayor en Venezuela.
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4 text-xs">
             <a
               href={instagramUrl}
               target="_blank"
@@ -112,12 +112,15 @@ export const Footer: React.FC = () => {
               <Instagram className="w-3.5 h-3.5 text-white" />
               <span>{instagramHandle}</span>
             </a>
+            <span className="text-slate-700 select-none">|</span>
             <Link href="/terminos" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Términos
             </Link>
+            <span className="text-slate-700 select-none">|</span>
             <Link href="/privacidad" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Privacidad
             </Link>
+            <span className="text-slate-700 select-none">|</span>
             <Link href="/preguntas-frecuentes" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Preguntas Frecuentes
             </Link>

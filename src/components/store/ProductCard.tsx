@@ -136,11 +136,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           )}
 
-          {/* 2. Nombre del producto en negrita */}
-          <Link href={`/producto/${product.slug}`}>
+          {/* 2. Nombre del producto en negrita con line-clamp-2 y altura uniforme */}
+          <Link href={`/producto/${product.slug}`} className="block">
             <h3
               style={{ fontSize: titleSize, marginTop: lineSpacing }}
-              className="font-bold text-slate-900 leading-snug line-clamp-2 hover:text-brand transition-colors"
+              className="font-bold text-slate-900 leading-snug line-clamp-2 min-h-[2.4em] hover:text-brand transition-colors"
             >
               {product.nombre}
             </h3>
@@ -159,16 +159,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <span className="text-[11px] font-medium text-slate-500 block leading-tight">
                   Mayor: {minMayor}Und
                 </span>
-                <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap overflow-hidden">
+                <div className="mt-0.5">
                   <span
                     style={{ fontSize: mayorSize }}
-                    className="font-bold text-brand leading-tight shrink-0"
+                    className="text-lg font-bold text-brand leading-tight block"
                   >
                     {formatUsd(priceMayor)}
                   </span>
                   {bcvRate > 0 && (
-                    <span className="text-[10px] sm:text-xs font-normal text-slate-900 leading-tight shrink-0">
-                      / {formatVes(calculateVesTotal(priceMayor, bcvRate))}
+                    <span className="text-xs sm:text-sm text-stone-600 font-normal leading-tight block truncate mt-0.5">
+                      Ref. {formatVes(calculateVesTotal(priceMayor, bcvRate))}
                     </span>
                   )}
                 </div>
@@ -180,31 +180,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 const savings = regularEquivalent - priceGranMayor;
                 return (
                   <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80 w-full overflow-hidden">
-                    <div className="flex items-center justify-between gap-1 mb-0.5 w-full min-w-0">
+                    <div className="flex items-center justify-between gap-1 mb-1 w-full min-w-0">
                       <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-700 truncate leading-tight">
                         Gran Mayor: {minGranMayor}Und
                       </span>
                       {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded-md text-center shrink-0">
-                          <span className="text-[8.5px] sm:text-[9px] font-bold block leading-none text-amber-800">
+                        <div className="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded-md text-center shrink-0">
+                          <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-800">
                             Ahorras
                           </span>
-                          <span className="text-[9.5px] sm:text-[10.5px] font-black block leading-tight text-amber-950 mt-0.5">
-                            {formatUsd(savings)}
+                          <span className="text-[9.5px] sm:text-[10.5px] font-black text-amber-950">
+                            ${savings.toFixed(2).replace(".", ",")}
                           </span>
                         </div>
                       )}
                     </div>
-                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap w-full overflow-hidden">
+                    <div className="mt-0.5">
                       <span
                         style={{ fontSize: granMayorSize }}
-                        className="font-bold text-brand leading-tight shrink-0"
+                        className="text-lg font-bold text-brand leading-tight block"
                       >
                         {formatUsd(priceGranMayor)}
                       </span>
                       {bcvRate > 0 && (
-                        <span className="text-[9.5px] sm:text-xs font-normal text-emerald-800 leading-tight shrink-0">
-                          / {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
+                        <span className="text-xs sm:text-sm text-stone-600 font-normal leading-tight block truncate mt-0.5">
+                          Ref. {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
                         </span>
                       )}
                     </div>

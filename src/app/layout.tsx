@@ -23,11 +23,11 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: {
-    default: "Sumilisto | Empaques, Vasos, Descartables y Suministros al Mayor en Venezuela",
+    default: "Sumilisto | Empaques, Vasos, Descartables, Cajas y Bolsas al Mayor en Venezuela",
     template: "%s | Sumilisto",
   },
   description:
-    "Empaques, Vasos, Descartables, Cajas, Bolsas y Suministros al Mayor y Gran Mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
+    "Distribución de empaques, vasos, descartables, cajas y bolsas al mayor y gran mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com"),
   manifest: "/manifest.json?v=6",
   appleWebApp: {
@@ -53,9 +53,9 @@ export const metadata: Metadata = {
     locale: "es_VE",
     url: "https://sumilisto.com",
     siteName: "Sumilisto",
-    title: "Sumilisto | Empaques, Descartables y Suministros al Mayor y Gran Mayor",
+    title: "Sumilisto | Empaques, Vasos, Descartables, Cajas y Bolsas al Mayor en Venezuela",
     description:
-      "Empaques, Vasos, Descartables, Cajas, Bolsas y Suministros al Mayor y Gran Mayor en Caracas, Guarenas, Guatire y envíos nacionales para comercios, emprendimientos y eventos.",
+      "Distribución de empaques, vasos, descartables, cajas y bolsas al mayor y gran mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
   },
   verification: {
     google: "googleabd0cc64cc0da3d2",
@@ -86,7 +86,7 @@ export default async function RootLayout({
     url: process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com",
     logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com"}/logo.png`,
     description:
-      "Distribución de empaques, vasos, descartables, cajas, bolsas y suministros al mayor y gran mayor para negocios, comercios y eventos en Caracas, Guarenas, Guatire y envíos nacionales.",
+      "Distribución de empaques, vasos, descartables, cajas y bolsas al mayor y gran mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
     telephone: settings.whatsappNumber ? `+${settings.whatsappNumber}` : "+584227864547",
     priceRange: "$$",
     address: {

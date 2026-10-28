@@ -167,8 +167,8 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por nombre, SKU o categoría (ej. aluminio, bolsa kraft, 2 oz)..."
-            className="flex-1 bg-transparent border-none outline-none text-slate-900 placeholder:text-slate-400 text-sm sm:text-base"
+            placeholder="Buscar bolsas, vasos, empaques, cajas..."
+            className="flex-1 bg-transparent border-none outline-none text-slate-900 placeholder:text-slate-400 text-base"
           />
           {query && (
             <button

@@ -226,36 +226,61 @@ export default function CartPage() {
   };
 
   const handleSendOrder = () => {
-    if (!nombre.trim() || !telefono.trim() || !zonaEntrega || !direccion.trim() || !metodoPago) {
+    // Sanitización básica de cadenas para remover caracteres de control
+    const cleanStr = (val: string) => val.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim();
+    const cleanNombre = cleanStr(nombre);
+    const cleanTelefono = cleanStr(telefono);
+    const cleanZona = cleanStr(zonaEntrega);
+    const cleanDireccion = cleanStr(direccion);
+    const cleanMetodo = cleanStr(metodoPago);
+    const cleanNotas = cleanStr(notas);
+
+    if (!cleanNombre || !cleanTelefono || !cleanZona || !cleanDireccion || !cleanMetodo) {
       setErrorValidacion(
         'Por favor completa todos los campos obligatorios (*): Nombre, Teléfono, Zona de Entrega, Dirección y Método de Pago.'
       );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+
+    // Validar que las cantidades de productos sean enteros positivos mayores a 0
+    if (lines.length === 0) {
+      setErrorValidacion('Tu pedido no tiene productos.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const hasInvalidQty = lines.some((l) => !Number.isInteger(l.cantidad) || l.cantidad <= 0);
+    if (hasInvalidQty) {
+      setErrorValidacion('Las cantidades de todos los productos deben ser enteros positivos mayores a 0.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setErrorValidacion('');
 
     let message = `🛒 *NUEVO PEDIDO MAYORISTA - SUMILISTO*\n\n`;
-    message += `👤 *Cliente:* ${nombre.trim()}\n`;
-    message += `📞 *Teléfono:* ${telefono.trim()}\n`;
-    message += `📍 *Zona de Entrega:* ${zonaEntrega}\n`;
-    message += `🏠 *Dirección:* ${direccion.trim()}\n`;
+    message += `👤 *Cliente:* ${cleanNombre}\n`;
+    message += `📞 *Teléfono:* ${cleanTelefono}\n`;
+    message += `📍 *Zona de Entrega:* ${cleanZona}\n`;
+    message += `🏠 *Dirección:* ${cleanDireccion}\n`;
 
     const mapsLink = gpsLocation
       ? `https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}`
-      : customMapsUrl.trim() || null;
+      : cleanStr(customMapsUrl) || null;
 
     if (mapsLink) {
       message += `🗺️ *Ubicación GPS:* ${mapsLink}\n`;
     }
-    message += `💳 *Método de Pago:* ${metodoPago}\n`;
-    if (notas) message += `📝 *Notas:* ${notas}\n`;
+    message += `💳 *Método de Pago:* ${cleanMetodo}\n`;
+    if (cleanNotas) message += `📝 *Notas:* ${cleanNotas}\n`;
 
     message += `\n📦 *DETALLE DEL PEDIDO:*\n`;
     lines.forEach((l, index) => {
-      const detalle = l.presentacion ? ` (${l.presentacion})` : '';
+      const cleanProdNombre = cleanStr(l.nombre);
+      const detalle = l.presentacion ? ` (${cleanStr(l.presentacion)})` : '';
       const tarifa = l.nivel === 'gran_mayor' ? 'Gran Mayor' : 'Mayor';
-      message += `${index + 1}. ${l.nombre}${detalle} - ${l.cantidad} unds (${tarifa}) = ${formatUsd(
+      message += `${index + 1}. ${cleanProdNombre}${detalle} - ${l.cantidad} unds (${tarifa}) = ${formatUsd(
         l.subtotal
       )}\n`;
     });
@@ -265,7 +290,8 @@ export default function CartPage() {
       message += `\n💵 *TOTAL VES (BCV):* ${formatVes(totalVes)}`;
     }
 
-    const whatsappNumber = theme.whatsappNumber;
+    const rawWhatsappNumber = theme.whatsappNumber || '';
+    const whatsappNumber = rawWhatsappNumber.replace(/[^0-9]/g, '');
     if (!whatsappNumber) {
       setErrorValidacion('El número de WhatsApp de la tienda no está configurado. Intenta más tarde.');
       window.scrollTo({ top: 0, behavior: 'smooth' });

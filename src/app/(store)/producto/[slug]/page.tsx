@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   return {
-    title: `${product.nombre} al Mayor | Sumilisto`,
+    title: `${product.nombre} al Mayor`,
     description: `Compre ${product.nombre} al mayor y gran mayor en Venezuela. Entrega en Caracas, Guarenas y Guatire.`,
     openGraph: {
       title: `${product.nombre} al Mayor | Sumilisto`,
@@ -118,20 +118,20 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <Link href="/" className="hover:text-slate-900 transition-colors">
           Inicio
         </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        {categoryList.map((cat, idx) => (
+        {categoryList.map((cat) => (
           <React.Fragment key={cat}>
             <Link
               href={`/categoria/${cat.toLowerCase().replace(/\s+/g, "-")}`}
-              className="hover:text-slate-900 font-semibold text-slate-700 transition-colors uppercase tracking-wider"
+              className="hover:text-brand font-semibold text-slate-700 transition-colors tracking-wide"
             >
               {cat}
             </Link>
-            {idx < categoryList.length - 1 && (
-              <span className="text-slate-300">/</span>
-            )}
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
           </React.Fragment>
         ))}
+        <span className="text-slate-400 truncate max-w-[180px] sm:max-w-md" aria-current="page">
+          {product.nombre}
+        </span>
       </nav>
 
       {/* Componente Interactivo de Ficha de Producto con Variantes de Color */}

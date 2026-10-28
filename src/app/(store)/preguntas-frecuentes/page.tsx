@@ -4,7 +4,7 @@ import { ChevronRight, HelpCircle, Truck, DollarSign, Package } from "lucide-rea
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 
 export const metadata = {
-  title: "Preguntas Frecuentes | Sumilisto Venezuela",
+  title: "Preguntas Frecuentes",
   description: "Dudas frecuentes sobre compras al mayor, despachos en Caracas, Guarenas y Guatire, y pedidos por WhatsApp.",
 };
 
@@ -27,7 +27,7 @@ export default function FAQPage() {
     },
     {
       q: "¿Qué métodos de pago aceptan?",
-      a: "Aceptamos Pago Móvil y transferencias bancarias en bolívares a tasa oficial BCV, dólares en efectivo (contra entrega o retiro en almacén), Binance Pay (USDT) y Zelle.",
+      a: "Aceptamos Pago Móvil y transferencias bancarias en bolívares a tasa oficial BCV, dólares en efectivo (contra entrega o retiro en almacén), Binance Pay (USDT) y Zelle. 💥 ¡BENEFICIO ESPECIAL! Todos los pagos realizados en divisas (efectivo, Binance Pay o Zelle) cuentan con un 15% de descuento (15% OFF) directo sobre el total de tu pedido.",
       icon: Package,
     },
   ];
@@ -50,7 +50,7 @@ export default function FAQPage() {
           </h1>
         </div>
         <p className="text-sm text-slate-500 mb-8">
-          Respuestas rápidas para compradores de negocios, comercios, emprendimientos y eventos.
+          Respuestas rápidas para negocios, comercios, emprendedores y compradores al mayor.
         </p>
 
         <div className="divide-y divide-slate-100">
