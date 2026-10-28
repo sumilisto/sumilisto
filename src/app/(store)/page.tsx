@@ -1,7 +1,6 @@
 import React from "react";
 import { getProducts, getBcvRate } from "@/lib/api/store";
 import { HeroSection } from "@/components/store/HeroSection";
-import { AppStoriesBar } from "@/components/store/AppStoriesBar";
 import { FeaturedCarousel } from "@/components/store/FeaturedCarousel";
 import { CategoryChips } from "@/components/store/CategoryChips";
 import { ProductCatalogGrid } from "@/components/store/ProductCatalogGrid";
@@ -18,9 +17,6 @@ export default async function HomePage() {
     <div className="flex flex-col gap-3 sm:gap-6 pb-12">
       {/* Hero Banner / Propuesta de Valor */}
       <HeroSection />
-
-      {/* Historias / Accesos Rápidos estilo App (Yummy / PedidosYa) */}
-      <AppStoriesBar />
 
       {/* Barra de Categorías Unificada */}
       <div id="categorias" className="max-w-7xl mx-auto w-full">

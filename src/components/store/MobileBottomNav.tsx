@@ -50,10 +50,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
 
   return (
     <nav
-      className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-4px_24px_rgba(0,0,0,0.05)] px-3 py-1 safe-area-pb transition-colors"
+      style={{ backgroundColor: navBg }}
+      className="sm:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md border-t border-slate-200/80 shadow-lg px-2 py-1 safe-area-pb transition-colors"
       aria-label="Navegación principal móvil"
     >
-      <div className="grid grid-cols-4 items-center max-w-md mx-auto">
+      <div className="grid grid-cols-4 items-center">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = !item.isExternal && pathname === item.href;
@@ -66,13 +67,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: navActive }}
-                className="flex flex-col items-center justify-center py-2 px-1 rounded-xl touch-target transition-all hover:opacity-90 active:scale-90"
+                className="flex flex-col items-center justify-center py-1.5 px-2 rounded-lg touch-target transition-all hover:opacity-90 active:scale-95"
                 aria-label="Abrir chat de WhatsApp"
               >
-                <div className="relative flex items-center justify-center">
-                  <Icon className="w-5 h-5 mb-1" />
-                </div>
-                <span className="text-[11px] font-bold leading-none tracking-tight">{item.label}</span>
+                <Icon className="w-5 h-5 mb-0.5" />
+                <span className="text-[10px] font-semibold leading-none">{item.label}</span>
               </a>
             );
           }
@@ -83,20 +82,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
               href={item.href}
               style={{ color: isActive ? navActive : navText }}
               className={cn(
-                "relative flex flex-col items-center justify-center py-2 px-1 rounded-xl touch-target transition-all active:scale-90",
-                isActive ? "font-bold" : "font-medium hover:text-slate-900"
+                "relative flex flex-col items-center justify-center py-1.5 px-2 rounded-lg touch-target transition-colors",
+                isActive ? "font-bold" : "font-medium hover:opacity-80"
               )}
             >
-              <div className="relative flex items-center justify-center">
-                <Icon className={cn("w-5 h-5 mb-1 transition-transform", isActive && "scale-110")} />
-              </div>
-              <span className="text-[11px] leading-none tracking-tight">{item.label}</span>
-              {isActive && (
-                <span
-                  style={{ backgroundColor: navActive }}
-                  className="w-1.5 h-1.5 rounded-full mt-1 transition-all"
-                />
-              )}
+              <Icon className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] leading-none">{item.label}</span>
             </Link>
           );
         })}
