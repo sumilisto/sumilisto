@@ -5,6 +5,9 @@ import { FeaturedCarousel } from "@/components/store/FeaturedCarousel";
 import { CategoryChips } from "@/components/store/CategoryChips";
 import { ProductCatalogGrid } from "@/components/store/ProductCatalogGrid";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
   const [products, bcvRate] = await Promise.all([getProducts(), getBcvRate()]);
 

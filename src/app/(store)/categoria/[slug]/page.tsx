@@ -26,6 +26,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug).trim();
