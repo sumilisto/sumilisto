@@ -180,32 +180,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 const savings = regularEquivalent - priceGranMayor;
                 return (
                   <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80 w-full overflow-hidden">
-                    <div className="flex flex-wrap items-center justify-between gap-x-1.5 gap-y-1 mb-1 w-full">
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 leading-tight whitespace-nowrap">
-                        Gran Mayor: {minGranMayor} Und
-                      </span>
+                    <span className="text-[10.5px] sm:text-xs font-bold text-slate-700 leading-tight block mb-1">
+                      Gran Mayor: {minGranMayor} Und
+                    </span>
+                    <div className="flex items-center justify-between gap-1.5 mt-0.5">
+                      <div className="min-w-0">
+                        <span
+                          style={{ fontSize: granMayorSize }}
+                          className="text-lg font-bold text-brand leading-tight block"
+                        >
+                          {formatUsd(priceGranMayor)}
+                        </span>
+                        {bcvRate > 0 && (
+                          <span className="text-xs sm:text-sm text-stone-600 font-normal leading-tight block truncate mt-0.5">
+                            {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
+                          </span>
+                        )}
+                      </div>
                       {savings > 0.05 && (
-                        <div className="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded-md text-center shrink-0">
-                          <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-800">
+                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md text-center shrink-0">
+                          <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-800 leading-tight">
                             Ahorras
                           </span>
-                          <span className="text-[9.5px] sm:text-[10.5px] font-black text-amber-950">
+                          <span className="text-[10px] sm:text-[11px] font-black text-amber-950 leading-tight">
                             ${savings.toFixed(2).replace(".", ",")}
                           </span>
                         </div>
-                      )}
-                    </div>
-                    <div className="mt-0.5">
-                      <span
-                        style={{ fontSize: granMayorSize }}
-                        className="text-lg font-bold text-brand leading-tight block"
-                      >
-                        {formatUsd(priceGranMayor)}
-                      </span>
-                      {bcvRate > 0 && (
-                        <span className="text-xs sm:text-sm text-stone-600 font-normal leading-tight block truncate mt-0.5">
-                          {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
-                        </span>
                       )}
                     </div>
                   </div>
