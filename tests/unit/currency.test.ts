@@ -8,10 +8,10 @@ import {
 
 describe("Formateo de Moneda y Conversión es-VE (Currency Module)", () => {
   it("formatea correctamente montos en USD con coma decimal", () => {
-    expect(formatUsd(12.5)).toBe("$ 12,50");
-    expect(formatUsd(0)).toBe("$ 0,00");
-    expect(formatUsd(1234.99)).toBe("$ 1.234,99");
-    expect(formatUsd(1000000)).toBe("$ 1.000.000,00");
+    expect(formatUsd(12.5)).toBe("$12,50");
+    expect(formatUsd(0)).toBe("$0,00");
+    expect(formatUsd(1234.99)).toBe("$1.234,99");
+    expect(formatUsd(1000000)).toBe("$1.000.000,00");
   });
 
   it("formatea montos en Bs. con prefijo 'Bs.' y separador de miles", () => {

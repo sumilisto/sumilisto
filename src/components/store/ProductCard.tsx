@@ -223,11 +223,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         {formatUsd(priceGranMayor)}
                       </span>
                       {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 py-0.5 rounded-md text-center shrink-0">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-amber-800 leading-none">
+                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 sm:px-2.5 py-0.5 rounded-md text-center shrink-0">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-amber-800 leading-none">
                             Ahorras
                           </span>
-                          <span className="text-[10.5px] sm:text-[11.5px] font-black text-amber-950 leading-tight">
+                          <span className="text-[11.5px] sm:text-[12.5px] font-black text-amber-950 leading-tight mt-0.5">
                             ${savings.toFixed(2).replace(".", ",")}
                           </span>
                         </div>

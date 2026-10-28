@@ -27,14 +27,14 @@ export function parseVenezuelanNumber(input: string | number | null | undefined)
 
 export function formatUsd(amountInUsd: number): string {
   if (!Number.isFinite(amountInUsd) || amountInUsd < 0) {
-    return "$ 0,00";
+    return "$0,00";
   }
 
   const parts = amountInUsd.toFixed(2).split(".");
   const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const decimalPart = parts[1];
 
-  return `$ ${integerPart},${decimalPart}`;
+  return `$${integerPart},${decimalPart}`;
 }
 
 export function formatVes(amountInVes: number): string {
