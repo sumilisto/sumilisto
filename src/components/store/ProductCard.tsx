@@ -74,9 +74,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const lineSpacing = theme.cardLineSpacing || "3px";
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-card transition-all duration-200 overflow-hidden">
+    <div className="group relative flex flex-col bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.025)] hover:border-slate-200 hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-200 overflow-hidden">
       {/* Contenedor de la Imagen con Botón '+' o Píldora [- 50 +] */}
-      <div className="relative aspect-square w-full bg-slate-50 overflow-hidden">
+      <div className="relative aspect-square w-full bg-slate-50/60 overflow-hidden">
         <Link href={`/producto/${product.slug}`} className="absolute inset-0 block">
           <Image
             src={primaryPhoto}
@@ -163,11 +163,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className="flex flex-col flex-1 justify-between"
       >
         <div>
-          {/* 1. Categoría con el color de la marca ($) */}
+          {/* 1. Categoría en gris neutro sutil para no competir con el verde de acción */}
           {product.categoria && (
             <p
               style={{ fontSize: categorySize }}
-              className="font-bold text-brand leading-tight truncate"
+              className="font-semibold text-slate-500 leading-tight truncate uppercase tracking-wider"
             >
               {product.categoria.split(",").map((c) => c.trim()).filter(Boolean).join(" · ")}
             </p>
@@ -193,49 +193,49 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div style={{ gap: lineSpacing }} className="flex flex-col">
               {/* 3. Sección Mayor */}
               <div>
-                <span className="text-[11px] font-medium text-slate-500 block leading-tight">
+                <span className="text-[11px] font-semibold text-slate-500 block leading-tight">
                   Mayor: {minMayor} Und
                 </span>
                 <div className="mt-0.5">
                   <span
                     style={{ fontSize: mayorSize }}
-                    className="text-lg font-bold text-brand leading-tight block"
+                    className="text-lg font-black text-brand leading-tight block"
                   >
                     {formatUsd(priceMayor)}
                   </span>
                   {bcvRate > 0 && (
-                    <span className="text-xs sm:text-sm text-stone-600 font-normal leading-tight block truncate mt-0.5">
+                    <span className="text-xs sm:text-sm text-slate-600 font-medium leading-tight block truncate mt-0.5">
                       {formatVes(calculateVesTotal(priceMayor, bcvRate))}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* 4. Sección Gran Mayor con fondo verde */}
+              {/* 4. Sección Gran Mayor con fondo suave y borde casi invisible */}
               {priceGranMayor > 0 && minGranMayor > 0 && (() => {
                 const regularEquivalent = minMayor > 0 ? (priceMayor / minMayor) * minGranMayor : priceMayor;
                 const savings = regularEquivalent - priceGranMayor;
                 return (
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-100/80 w-full overflow-hidden">
-                    <span className="text-[10.5px] sm:text-xs font-bold text-slate-700 leading-tight block mb-1">
+                  <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
+                    <span className="text-[10.5px] sm:text-xs font-bold text-slate-800 leading-tight block mb-1">
                       Gran Mayor: {minGranMayor} Und
                     </span>
                     <div className="flex items-center justify-between gap-1.5 mt-0.5">
                       <div className="min-w-0">
                         <span
                           style={{ fontSize: granMayorSize }}
-                          className="text-lg font-bold text-brand leading-tight block"
+                          className="text-lg font-black text-brand leading-tight block"
                         >
                           {formatUsd(priceGranMayor)}
                         </span>
                         {bcvRate > 0 && (
-                          <span className="text-xs sm:text-sm text-stone-600 font-normal leading-tight block truncate mt-0.5">
+                          <span className="text-xs sm:text-sm text-slate-600 font-medium leading-tight block truncate mt-0.5">
                             {formatVes(calculateVesTotal(priceGranMayor, bcvRate))}
                           </span>
                         )}
                       </div>
                       {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md text-center shrink-0">
+                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 py-0.5 rounded-md text-center shrink-0">
                           <span className="text-[8.5px] sm:text-[9.5px] font-bold text-amber-800 leading-tight">
                             Ahorras
                           </span>
