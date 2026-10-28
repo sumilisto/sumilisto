@@ -67,8 +67,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const categorySize = theme.cardCategoryFontSize || "11px";
   const titleSize = theme.cardTitleFontSize || "13px";
-  const mayorSize = theme.cardMayorFontSize || "15px";
-  const granMayorSize = theme.cardGranMayorFontSize || "14px";
+  const mayorSize = theme.cardMayorFontSize || "18px";
+  const granMayorSize = theme.cardGranMayorFontSize || "15px";
   const padY = theme.cardPaddingY || "4px";
   const padX = theme.cardPaddingX || "10px";
   const lineSpacing = theme.cardLineSpacing || "3px";
@@ -198,7 +198,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </span>
                 <div className="mt-0.5">
                   <span
-                    style={{ fontSize: theme.cardMayorFontSize || undefined }}
+                    style={{ fontSize: mayorSize }}
                     className="text-lg sm:text-xl font-black text-brand leading-tight block"
                   >
                     {formatUsd(priceMayor)}
@@ -217,8 +217,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     </span>
                     <div className="flex items-center justify-between gap-1.5">
                       <span
-                        style={{ fontSize: theme.cardGranMayorFontSize || undefined }}
-                        className="text-lg sm:text-xl font-black text-brand leading-tight block"
+                        style={{ fontSize: granMayorSize }}
+                        className="text-base sm:text-lg font-black text-brand leading-tight block"
                       >
                         {formatUsd(priceGranMayor)}
                       </span>
