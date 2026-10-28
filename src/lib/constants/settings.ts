@@ -72,7 +72,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   cardCategoryFontSize: "11px",
   cardTitleFontSize: "13px",
   cardMayorFontSize: "18px",
-  cardGranMayorFontSize: "15px",
+  cardGranMayorFontSize: "18px",
   cardPaddingY: "4px",
   cardPaddingX: "10px",
   cardLineSpacing: "3px",

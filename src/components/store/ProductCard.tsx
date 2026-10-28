@@ -68,7 +68,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const categorySize = theme.cardCategoryFontSize || "11px";
   const titleSize = theme.cardTitleFontSize || "13px";
   const mayorSize = theme.cardMayorFontSize || "18px";
-  const granMayorSize = theme.cardGranMayorFontSize || "15px";
+  const granMayorSize = theme.cardGranMayorFontSize || "18px";
   const padY = theme.cardPaddingY || "4px";
   const padX = theme.cardPaddingX || "10px";
   const lineSpacing = theme.cardLineSpacing || "3px";
@@ -193,7 +193,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div style={{ gap: lineSpacing }} className="flex flex-col">
               {/* 3. Sección Mayor */}
               <div>
-                <span className="text-[11.5px] sm:text-xs font-semibold text-slate-500 block leading-tight">
+                <span className="text-[11.5px] sm:text-xs font-bold text-slate-600 block leading-tight">
                   Mayor: {minMayor} Und
                 </span>
                 <div className="mt-0.5">
@@ -212,13 +212,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 const savings = regularEquivalent - priceGranMayor;
                 return (
                   <div className="px-2.5 py-1.5 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
-                    <span className="text-xs sm:text-[13px] font-bold text-slate-800 leading-tight block mb-0.5">
+                    <span className="text-[11.5px] sm:text-xs font-bold text-slate-800 leading-tight block mb-0.5">
                       Gran Mayor: {minGranMayor} Und
                     </span>
                     <div className="flex items-center justify-between gap-1.5">
                       <span
                         style={{ fontSize: granMayorSize }}
-                        className="text-base sm:text-lg font-black text-brand leading-tight block"
+                        className="text-lg sm:text-xl font-black text-brand leading-tight block"
                       >
                         {formatUsd(priceGranMayor)}
                       </span>
