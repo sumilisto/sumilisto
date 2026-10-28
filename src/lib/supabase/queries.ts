@@ -66,16 +66,32 @@ export async function getSettings(): Promise<Record<string, any>> {
     .single();
 
   if (error || !data) return {};
-  return { ...data.data, tasaBcv: Number(data.tasa_bcv) || 880.12 };
+  const settingsData = { ...(data.data || {}) };
+  // SEGURIDAD: Nunca exponer carritos abandonados ni datos personales de clientes en configuraciones públicas
+  delete settingsData.carritos_abandonados;
+  return { ...settingsData, tasaBcv: Number(data.tasa_bcv) || 880.12 };
 }
 
 // ─────────────────────────────────────────────────────────
 // GUARDAR CONFIGURACIÓN / TEMA
 // ─────────────────────────────────────────────────────────
 export async function updateSettings(settings: Record<string, any>): Promise<boolean> {
-  const { tasaBcv, ...themeData } = settings;
+  const { tasaBcv, carritos_abandonados, ...themeData } = settings;
 
-  const updatePayload: Record<string, any> = { data: themeData };
+  // Preservar carritos_abandonados existentes en la base de datos para no sobreescribirlos
+  const { data: currentConfig } = await supabaseAdmin
+    .from("configuracion")
+    .select("data")
+    .eq("id", 1)
+    .single();
+
+  const existingData = currentConfig?.data || {};
+  const mergedData = { ...existingData, ...themeData };
+  if (existingData.carritos_abandonados) {
+    mergedData.carritos_abandonados = existingData.carritos_abandonados;
+  }
+
+  const updatePayload: Record<string, any> = { data: mergedData };
   if (tasaBcv !== undefined) {
     updatePayload.tasa_bcv = Number(tasaBcv);
   }

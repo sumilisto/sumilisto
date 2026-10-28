@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   description:
     "Distribución de empaques, vasos, descartables, cajas y bolsas al mayor y gran mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com"),
+  alternates: {
+    canonical: "./",
+  },
   manifest: "/manifest.json?v=6",
   appleWebApp: {
     capable: true,

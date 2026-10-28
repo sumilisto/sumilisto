@@ -7,7 +7,9 @@ import { revalidateTag } from "next/cache";
 export async function GET() {
   try {
     const settings = await getSettings();
-    return NextResponse.json(settings);
+    // Capa extra de protección: excluir carritos y PII de la respuesta pública
+    const { carritos_abandonados, ...publicSettings } = settings;
+    return NextResponse.json(publicSettings);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

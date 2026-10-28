@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProducts, getBcvRate } from "@/lib/api/store";
+import { getStoreSettings } from "@/lib/actions/settings";
 import { STORE_CATEGORIES } from "@/lib/constants/brand";
 import { ProductCard } from "@/components/store/ProductCard";
 import { CategoryChips } from "@/components/store/CategoryChips";
@@ -12,17 +13,44 @@ interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
+function matchesCategory(
+  productCategory: string | undefined,
+  targetSlug: string,
+  categoryName?: string
+): boolean {
+  if (!productCategory) return false;
+  const cleanTargetSlug = targetSlug.toLowerCase().trim();
+  const cleanTargetName = categoryName?.toLowerCase().trim();
+
+  const parts = productCategory
+    .split(",")
+    .map((c) => c.trim().toLowerCase())
+    .filter(Boolean);
+
+  return parts.some((c) => {
+    const slugified = c.replace(/\s+/g, "-");
+    return (
+      c === cleanTargetSlug ||
+      slugified === cleanTargetSlug ||
+      (cleanTargetName && (c === cleanTargetName || slugified === cleanTargetName.replace(/\s+/g, "-")))
+    );
+  });
+}
+
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug).trim();
   const category = STORE_CATEGORIES.find((c) => c.slug.toLowerCase() === decodedSlug.toLowerCase());
 
   const catName = category ? category.nombre : (decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1).replace(/-/g, " "));
-  const catDesc = category ? category.descripcion : `Catálogo mayorista de ${catName} con venta al mayor y gran mayor para tu negocio.`;
+  const catDesc = category ? category.descripcion : `Catálogo mayorista de ${catName} con venta al mayor y gran mayor para tu negocio en Venezuela.`;
 
   return {
     title: `${catName} al Mayor`,
     description: catDesc,
+    alternates: {
+      canonical: `/categoria/${decodedSlug.toLowerCase().replace(/\s+/g, "-")}`,
+    },
   };
 }
 
@@ -34,22 +62,39 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const decodedSlug = decodeURIComponent(slug).trim();
   const category = STORE_CATEGORIES.find((c) => c.slug.toLowerCase() === decodedSlug.toLowerCase());
 
-  const [allProducts, bcvRate] = await Promise.all([
+  const [allProducts, bcvRate, settings] = await Promise.all([
     getProducts(),
     getBcvRate(),
+    getStoreSettings(),
   ]);
 
-  const catName = category ? category.nombre : (decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1).replace(/-/g, " "));
-  const catDesc = category ? category.descripcion : `Catálogo mayorista de ${catName} con venta al mayor y gran mayor para tu negocio.`;
-
-  const products = allProducts.filter(
-    (p) =>
-      (category && p.categoria.toLowerCase() === category.nombre.toLowerCase()) ||
-      p.categoria.toLowerCase() === decodedSlug.toLowerCase() ||
-      p.categoria.toLowerCase().replace(/\s+/g, "-") === decodedSlug.toLowerCase()
+  const customCategories = (settings?.customCategories || []).map((c) => c.trim());
+  const isCustomCategory = customCategories.some(
+    (c) =>
+      c.toLowerCase() === decodedSlug.toLowerCase() ||
+      c.toLowerCase().replace(/\s+/g, "-") === decodedSlug.toLowerCase()
   );
 
-  if (!category && products.length === 0) {
+  const matchedCustomName = customCategories.find(
+    (c) =>
+      c.toLowerCase() === decodedSlug.toLowerCase() ||
+      c.toLowerCase().replace(/\s+/g, "-") === decodedSlug.toLowerCase()
+  );
+
+  const catName = category
+    ? category.nombre
+    : matchedCustomName || (decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1).replace(/-/g, " "));
+
+  const catDesc = category
+    ? category.descripcion
+    : `Catálogo mayorista de ${catName} con venta al mayor y gran mayor para tu negocio en Venezuela.`;
+
+  const products = allProducts.filter((p) =>
+    matchesCategory(p.categoria, decodedSlug, category?.nombre)
+  );
+
+  // Solo disparar 404 si no es categoría base ni personalizada, Y no tiene ningún producto
+  if (!category && !isCustomCategory && products.length === 0) {
     notFound();
   }
 

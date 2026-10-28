@@ -7,14 +7,23 @@ export const SplashScreen: React.FC = () => {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    // Total 1.5 segundos: 1.1s visible + 0.4s de desvanecimiento suave (fade out)
+    // Si ya se mostró en esta sesión, no volver a bloquear al usuario
+    if (typeof window !== "undefined" && sessionStorage.getItem("sumi_splash_viewed")) {
+      setIsVisible(false);
+      return;
+    }
+
+    // Duración optimizada para no penalizar métricas Core Web Vitals (LCP / FCP)
     const timer = setTimeout(() => {
       setIsFading(true);
       const hideTimer = setTimeout(() => {
         setIsVisible(false);
-      }, 400);
+        try {
+          sessionStorage.setItem("sumi_splash_viewed", "1");
+        } catch {}
+      }, 250);
       return () => clearTimeout(hideTimer);
-    }, 1100);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);
