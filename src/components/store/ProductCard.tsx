@@ -16,13 +16,21 @@ interface ProductCardProps {
   bcvRate?: number;
 }
 
+function formatUnitPrice(amount: number): string {
+  if (!Number.isFinite(amount) || amount <= 0) return "$0,00";
+  if (amount < 0.01) {
+    return `$${amount.toFixed(3).replace(".", ",")}`;
+  }
+  return formatUsd(amount);
+}
+
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   bcvRate = 880.12,
 }) => {
   const { getItemQuantity, addItem, updateQuantity, removeItem } = useCart();
   const { theme } = useTheme();
-  
+
   const [selectedVariantSku] = useState<string>(
     product.variantes && product.variantes.length > 0 ? product.variantes[0].sku : product.sku
   );
@@ -196,46 +204,40 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <span className="text-[11.5px] sm:text-xs font-bold text-slate-600 block leading-tight">
                   Mayor: {minMayor} Und
                 </span>
-                <div className="mt-0.5">
+                <div className="flex items-baseline gap-1.5 mt-0.5">
                   <span
                     style={{ fontSize: mayorSize }}
-                    className="text-lg sm:text-xl font-black text-brand leading-tight block"
+                    className="text-lg sm:text-xl font-black text-brand leading-tight"
                   >
                     {formatUsd(priceMayor)}
                   </span>
+                  {minMayor > 0 && (
+                    <span className="text-[11.5px] sm:text-xs font-normal text-slate-500 leading-tight">
+                      ({formatUnitPrice(priceMayor / minMayor)} Und)
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* 4. Sección Gran Mayor con fondo suave y borde casi invisible */}
-              {priceGranMayor > 0 && minGranMayor > 0 && (() => {
-                const regularEquivalent = minMayor > 0 ? (priceMayor / minMayor) * minGranMayor : priceMayor;
-                const savings = regularEquivalent - priceGranMayor;
-                return (
-                  <div className="px-2.5 py-1.5 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
-                    <span className="text-[11.5px] sm:text-xs font-bold text-slate-800 leading-tight block mb-0.5">
-                      Gran Mayor: {minGranMayor} Und
+              {priceGranMayor > 0 && minGranMayor > 0 && (
+                <div className="px-2.5 py-1.5 rounded-xl bg-emerald-50/50 border border-emerald-100/60 w-full overflow-hidden">
+                  <span className="text-[11.5px] sm:text-xs font-bold text-slate-800 leading-tight block mb-0.5">
+                    Gran Mayor: {minGranMayor} Und
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span
+                      style={{ fontSize: granMayorSize }}
+                      className="text-lg sm:text-xl font-black text-brand leading-tight"
+                    >
+                      {formatUsd(priceGranMayor)}
                     </span>
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span
-                        style={{ fontSize: granMayorSize }}
-                        className="text-lg sm:text-xl font-black text-brand leading-tight block"
-                      >
-                        {formatUsd(priceGranMayor)}
-                      </span>
-                      {savings > 0.05 && (
-                        <div className="flex flex-col items-center justify-center bg-amber-50 text-amber-900 border border-amber-200/80 px-2 sm:px-2.5 py-0.5 rounded-md text-center shrink-0">
-                          <span className="text-[10px] sm:text-[11px] font-bold text-amber-800 leading-none">
-                            Ahorras
-                          </span>
-                          <span className="text-[11.5px] sm:text-[12.5px] font-black text-amber-950 leading-tight mt-0.5">
-                            ${savings.toFixed(2).replace(".", ",")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-[11.5px] sm:text-xs font-normal text-slate-600 leading-tight">
+                      ({formatUnitPrice(priceGranMayor / minGranMayor)} Und)
+                    </span>
                   </div>
-                );
-              })()}
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium bg-slate-50 p-2 rounded-lg border border-slate-200">
