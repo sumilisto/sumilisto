@@ -85,6 +85,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "USD",
+      price: product.precioMayorUsd || 0,
       lowPrice: product.precioGranMayorUsd || product.precioMayorUsd || 0,
       highPrice: product.precioMayorUsd || 0,
       offerCount: product.variantes?.length || 1,

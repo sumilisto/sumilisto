@@ -47,24 +47,25 @@ function ProductGallery({
   // Lista unificada de items multimedia: hasta 10 fotos y 1 video
   const mediaItems: MediaItem[] = React.useMemo(() => {
     const safePhotos = (photos || []).slice(0, 10);
+    const defaultAlt = `${productName} - Venta al Mayor y Gran Mayor en Venezuela | Sumilisto`;
     const items: MediaItem[] = safePhotos.map((p) => ({
       type: "photo",
       url: p.url,
-      alt: p.alt || productName,
+      alt: p.alt || defaultAlt,
       varianteColor: p.varianteColor,
     }));
     if (videoUrl) {
       items.push({
         type: "video",
         url: videoUrl,
-        alt: `Video demostración de ${productName}`,
+        alt: `Video demostración de ${productName} - Venta al Mayor | Sumilisto`,
       });
     }
     if (items.length === 0) {
       items.push({
         type: "photo",
         url: "https://placehold.co/600x600/f1f5f9/94a3b8?text=Sin+Foto",
-        alt: productName,
+        alt: defaultAlt,
       });
     }
     return items;

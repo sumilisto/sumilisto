@@ -9,6 +9,7 @@ import { formatVes } from "@/lib/currency/format";
 import { Search, ShoppingBag, MapPin, Sparkles, Instagram } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import { InstantSearchModal } from "@/components/search/InstantSearchModal";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   bcvRate?: number;
@@ -108,9 +109,14 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
             <Link
               href="/carrito"
               aria-label="Ver carrito de compras"
-              className="relative flex items-center gap-2 h-11 px-3.5 sm:px-4 rounded-xl bg-white text-brand hover:bg-rose-50 active:bg-rose-100 font-bold text-sm transition-all shadow-sm touch-target"
+              className={cn(
+                "h-11 rounded-xl transition-all active:scale-95 touch-target flex items-center gap-2 text-sm",
+                itemCount > 0
+                  ? "relative bg-white text-brand hover:bg-emerald-50 font-bold px-3 sm:px-4 shadow-md"
+                  : "w-11 sm:w-auto px-0 sm:px-3.5 justify-center sm:justify-start bg-white/10 hover:bg-white/20 text-white font-medium"
+              )}
             >
-              <ShoppingBag className="w-5 h-5 text-brand" />
+              <ShoppingBag className={cn("w-5 h-5", itemCount > 0 ? "text-brand" : "text-white")} />
               <span className="hidden sm:inline">Pedido</span>
               {itemCount > 0 && (
                 <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-black bg-brand text-white">
