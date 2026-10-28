@@ -23,13 +23,13 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: {
-    default: "Sumilisto | Suministros y Empaques al Mayor para Restaurantes en Venezuela",
+    default: "Sumilisto | Empaques, Vasos, Descartables y Suministros al Mayor en Venezuela",
     template: "%s | Sumilisto",
   },
   description:
-    "Distribución de envases térmicos, bolsas kraft, cubiertos descartables y papel parafinado para restaurantes y delivery en Caracas, Guarenas y Guatire.",
+    "Empaques, Vasos, Descartables, Cajas, Bolsas y Suministros al Mayor y Gran Mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com"),
-  manifest: "/manifest.json?v=5",
+  manifest: "/manifest.json?v=6",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -53,9 +53,9 @@ export const metadata: Metadata = {
     locale: "es_VE",
     url: "https://sumilisto.com",
     siteName: "Sumilisto",
-    title: "Sumilisto | Suministros y Empaques al Mayor para Restaurantes",
+    title: "Sumilisto | Empaques, Descartables y Suministros al Mayor y Gran Mayor",
     description:
-      "Catálogo mayorista de envases, bolsas, cubiertos y papel para gastronomía en Venezuela. Despacho rápido y pedidos directos por WhatsApp.",
+      "Empaques, Vasos, Descartables, Cajas, Bolsas y Suministros al Mayor y Gran Mayor en Caracas, Guarenas, Guatire y envíos nacionales para comercios, emprendimientos y eventos.",
   },
   verification: {
     google: "googleabd0cc64cc0da3d2",
@@ -86,7 +86,7 @@ export default async function RootLayout({
     url: process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com",
     logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://sumilisto.com"}/logo.png`,
     description:
-      "Distribución de envases térmicos, bolsas kraft, cubiertos descartables y papel parafinado al mayor para restaurantes en Caracas, Guarenas y Guatire.",
+      "Distribución de empaques, vasos, descartables, cajas, bolsas y suministros al mayor y gran mayor para negocios, comercios y eventos en Caracas, Guarenas, Guatire y envíos nacionales.",
     telephone: settings.whatsappNumber ? `+${settings.whatsappNumber}` : "+584227864547",
     priceRange: "$$",
     address: {

@@ -28,7 +28,7 @@ export default async function HomePage() {
 
       <div id="categorias" />
 
-      {/* Carrusel: Más Pedidos por Restaurantes · Recomendado para ti (hasta 15 productos) */}
+      {/* Carrusel: Más Pedidos por Negocios y Comercios · Recomendado para ti (hasta 15 productos) */}
       <FeaturedCarousel products={featuredProducts} bcvRate={bcvRate} />
 
       {/* Catálogo Completo (Ordenado Alfabéticamente de la A a la Z) */}

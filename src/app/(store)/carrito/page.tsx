@@ -423,13 +423,13 @@ export default function CartPage() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Nombre o Empresa / Restaurante <span className="text-red-600 font-bold">*</span>
+              Nombre, Negocio o Empresa <span className="text-red-600 font-bold">*</span>
             </label>
             <input
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Hamburguesería Caracas / Juan Pérez"
+              placeholder="Ej: Inversiones Caracas / Juan Pérez"
               className={inputClass}
             />
           </div>

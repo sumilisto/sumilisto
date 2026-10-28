@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     description: `Compre ${product.nombre} al mayor y gran mayor en Venezuela. Entrega en Caracas, Guarenas y Guatire.`,
     openGraph: {
       title: `${product.nombre} al Mayor | Sumilisto`,
-      description: `Presentación: ${product.presentacion}. Suministros para restaurantes en Venezuela.`,
+      description: `Presentación: ${product.presentacion}. Suministros, empaques y descartables al mayor para tu negocio en Venezuela.`,
       images: [
         {
           url: product.fotos[0]?.url || "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=800&q=80",

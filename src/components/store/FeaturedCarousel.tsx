@@ -57,7 +57,7 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-brand uppercase tracking-wider mb-0.5">
             <TrendingUp className="w-3.5 h-3.5 text-brand flex-shrink-0" />
-            <span>Más Pedidos por Restaurantes</span>
+            <span>Más Pedidos por Negocios y Comercios</span>
           </div>
           <div className="flex items-center gap-2">
             <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">

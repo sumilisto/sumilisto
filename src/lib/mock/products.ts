@@ -433,7 +433,7 @@ export const MOCK_PRODUCTS: Product[] = [
     fotos: [
       {
         url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
-        alt: "Bolsas de hielo resistentes para licorerías y restaurantes",
+        alt: "Bolsas de hielo resistentes para licorerías, comercios y eventos",
         isPrimary: true,
       },
     ],
@@ -460,7 +460,7 @@ export const MOCK_PRODUCTS: Product[] = [
     fotos: [
       {
         url: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80",
-        alt: "Bolsas de basura industriales para restaurantes",
+        alt: "Bolsas de basura industriales para comercios y empresas",
         isPrimary: true,
       },
     ],
@@ -572,7 +572,7 @@ export const MOCK_PRODUCTS: Product[] = [
     fotos: [
       {
         url: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80",
-        alt: "Cucharas de plástico blanco para restaurantes",
+        alt: "Cucharas de plástico blanco para negocios y eventos",
         isPrimary: true,
       },
     ],
@@ -711,7 +711,7 @@ export const MOCK_PRODUCTS: Product[] = [
     fotos: [
       {
         url: "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=800&q=80",
-        alt: "Servilletas dispensador para restaurantes y barras",
+        alt: "Servilletas dispensador para barras, cafeterías y comercios",
         isPrimary: true,
       },
     ],

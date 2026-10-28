@@ -1,8 +1,8 @@
 {
-  "name": "Sumilisto - Suministros para Restaurantes",
+  "name": "Sumilisto - Suministros y Empaques al Mayor",
   "short_name": "Sumilisto",
   "id": "/?v=6",
-  "description": "Distribución mayorista de envases, bolsas, cubiertos y papel para restaurantes en Venezuela",
+  "description": "Empaques, vasos, descartables, cajas, bolsas y suministros al mayor y gran mayor en Venezuela",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#166534",

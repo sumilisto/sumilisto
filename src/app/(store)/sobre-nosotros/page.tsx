@@ -4,7 +4,7 @@ import { ChevronRight, Award, ShieldCheck, Truck, Users, Instagram } from "lucid
 
 export const metadata = {
   title: "Sobre Nosotros | Sumilisto Venezuela",
-  description: "Conoce a Sumilisto, distribuidores de suministros y empaques gastronómicos al mayor en Caracas, Guarenas y Guatire.",
+  description: "Conoce a Sumilisto, distribuidores de empaques, vasos, descartables, cajas, bolsas y suministros al mayor para negocios, comercios y eventos en Caracas, Guarenas, Guatire y envíos nacionales.",
 };
 
 export default function AboutPage() {
@@ -22,24 +22,24 @@ export default function AboutPage() {
             Nuestra Empresa
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
-            Sumilisto: El aliado de la gastronomía en Venezuela
+            Sumilisto: El aliado de los negocios, comercios y eventos en Venezuela
           </h1>
         </div>
 
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          En <strong>Sumilisto</strong> nos especializamos en abastecer a restaurantes, dark kitchens, panaderías, cafeterías y negocios de comida rápida con empaques y desechables de alta calidad a precios competitivos de distribución al Mayor y Gran Mayor.
+          En <strong>Sumilisto</strong> nos especializamos en abastecer a comercios, empresas, emprendimientos, eventos, cafeterías, reposterías y negocios de comida rápida con empaques, vasos, descartables, cajas y bolsas de alta calidad a precios competitivos de distribución al Mayor y Gran Mayor.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
             <Truck className="w-6 h-6 text-brand mb-2" />
             <h3 className="font-bold text-sm text-slate-900">Despachos Eficientes</h3>
-            <p className="text-xs text-slate-500 mt-1">Rutas programadas en Caracas, Guarenas y Guatire.</p>
+            <p className="text-xs text-slate-500 mt-1">Rutas programadas en Caracas, Guarenas, Guatire y envíos nacionales.</p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
             <Award className="w-6 h-6 text-brand mb-2" />
-            <h3 className="font-bold text-sm text-slate-900">Calidad Grado Alimento</h3>
-            <p className="text-xs text-slate-500 mt-1">Materiales certificados para contacto seguro con alimentos.</p>
+            <h3 className="font-bold text-sm text-slate-900">Calidad Certificada</h3>
+            <p className="text-xs text-slate-500 mt-1">Materiales de primera calidad para uso comercial y grado alimenticio.</p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
             <Users className="w-6 h-6 text-brand mb-2" />

@@ -32,7 +32,7 @@ export const ProductDetailActions: React.FC<ProductDetailActionsProps> = ({
       try {
         await navigator.share({
           title: `${product.nombre} al Mayor | Sumilisto`,
-          text: `Mira este suministro para restaurantes en Sumilisto: ${product.nombre}`,
+          text: `Mira este producto al mayor en Sumilisto: ${product.nombre}`,
           url: window.location.href,
         });
         return;

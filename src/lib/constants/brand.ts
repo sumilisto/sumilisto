@@ -42,7 +42,7 @@ export const STORE_CATEGORIES: CategoryInfo[] = [
     nombre: "Bolsas",
     slug: "bolsas",
     icono: "ShoppingBag",
-    descripcion: "Bolsas kraft con y sin asa para delivery, bolsas plásticas tipo camiseta y polietileno.",
+    descripcion: "Bolsas kraft con y sin asa para delivery y compras, bolsas plásticas tipo camiseta y polietileno.",
   },
   {
     id: "cubiertos",
@@ -56,6 +56,6 @@ export const STORE_CATEGORIES: CategoryInfo[] = [
     nombre: "Papel",
     slug: "papel",
     icono: "Scroll",
-    descripcion: "Papel parafinado antigrasa para hamburguesas, servilletas dispensador, film y aluminio.",
+    descripcion: "Papel parafinado antigrasa para alimentos y empaque, servilletas dispensador, film y aluminio.",
   },
 ];

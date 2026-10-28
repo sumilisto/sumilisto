@@ -50,7 +50,7 @@ export default function FAQPage() {
           </h1>
         </div>
         <p className="text-sm text-slate-500 mb-8">
-          Respuestas rápidas para compradores de restaurantes, franquicias y servicios de alimentos.
+          Respuestas rápidas para compradores de negocios, comercios, emprendimientos y eventos.
         </p>
 
         <div className="divide-y divide-slate-100">

@@ -98,7 +98,7 @@ export const Footer: React.FC = () => {
         {/* Separador y Copyright */}
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 text-center sm:text-left">
           <div style={{ color: footerText }}>
-            © {new Date().getFullYear()} Sumilisto. Todos los derechos reservados. Suministros para restaurantes en Venezuela.
+            © {new Date().getFullYear()} Sumilisto. Todos los derechos reservados. Suministros, empaques y descartables para negocios, comercios y eventos en Venezuela.
           </div>
           <div className="flex items-center gap-4">
             <a
