@@ -100,19 +100,7 @@ export const Footer: React.FC = () => {
           <div style={{ color: footerText }}>
             © {new Date().getFullYear()} Sumilisto. Todos los derechos reservados. Suministros, empaques y descartables al mayor en Venezuela.
           </div>
-          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4 text-xs">
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-white transition-colors font-semibold"
-              style={{ color: footerText }}
-              title={`Síguenos en Instagram: ${instagramHandle}`}
-            >
-              <Instagram className="w-3.5 h-3.5 text-white" />
-              <span>{instagramHandle}</span>
-            </a>
-            <span className="text-slate-700 select-none">|</span>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs">
             <Link href="/terminos" className="hover:text-white transition-colors" style={{ color: footerText }}>
               Términos
             </Link>

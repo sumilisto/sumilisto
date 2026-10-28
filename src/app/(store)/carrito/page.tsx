@@ -690,7 +690,7 @@ export default function CartPage() {
             </div>
             {bcvRate > 0 && (
               <div className="flex justify-between items-center text-slate-600 text-sm">
-                <span>Ref. Bolívares (BCV):</span>
+                <span>Bolívares (BCV):</span>
                 <span className="font-bold text-slate-700">
                   {formatVes(totalVes)}
                 </span>
