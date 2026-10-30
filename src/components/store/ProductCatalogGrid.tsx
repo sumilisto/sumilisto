@@ -10,28 +10,20 @@ interface ProductCatalogGridProps {
   bcvRate: number;
 }
 
-type SortOption = "destacados" | "az" | "za" | "precio_asc" | "precio_desc";
+type SortOption = "az" | "za" | "precio_asc" | "precio_desc";
 
 export const ProductCatalogGrid: React.FC<ProductCatalogGridProps> = ({
   products,
   bcvRate,
 }) => {
   // Orden inicial por defecto: "Destacados / Más pedidos"
-  const [sortBy, setSortBy] = useState<SortOption>("destacados");
+  const [sortBy, setSortBy] = useState<SortOption>("az");
 
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
       // Siempre priorizar productos con disponibilidad activa
       if (a.isAvailable !== b.isAvailable) {
         return a.isAvailable ? -1 : 1;
-      }
-
-      if (sortBy === "destacados") {
-        // Priorizar productos marcados como destacados
-        if (a.destacado !== b.destacado) {
-          return a.destacado ? -1 : 1;
-        }
-        return a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" });
       }
 
       if (sortBy === "az") {
@@ -78,7 +70,6 @@ export const ProductCatalogGrid: React.FC<ProductCatalogGridProps> = ({
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="h-9 pl-3 pr-8 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand cursor-pointer appearance-none shadow-xs"
             >
-              <option value="destacados">Destacados / Más pedidos</option>
               <option value="az">Alfabético (A - Z)</option>
               <option value="za">Alfabético (Z - A)</option>
               <option value="precio_asc">Precio: Menor a Mayor</option>
