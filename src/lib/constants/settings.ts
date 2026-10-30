@@ -57,6 +57,7 @@ export interface StoreSettings {
   navLabelDespachos: string;
   customCategories?: string[];
   deletedCategories?: string[];
+  featuredProductIds?: string[];
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -102,4 +103,5 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   navLabelDespachos: "Despachos",
   customCategories: [],
   deletedCategories: [],
+  featuredProductIds: [],
 };

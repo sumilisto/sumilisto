@@ -4,11 +4,12 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { DEFAULT_SETTINGS, HeroSlide } from "@/lib/constants/settings";
+import { Product } from "@/types/product";
 import { loginAdmin, logoutAdmin, isAdminAuthenticated } from "@/lib/actions/auth";
 import {
   Save, RefreshCcw, Image as ImageIcon, Palette, Phone, Lock,
   User, LogOut, CheckCircle2, Type, Layout, Truck, Plus, X, Link as LinkIcon,
-  Coins, ExternalLink, TrendingUp, AlertTriangle, Package, Activity,
+  Coins, ExternalLink, TrendingUp, AlertTriangle, Package, Activity, Star, ArrowUp, ArrowDown, Check, GripVertical,
 } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
 
@@ -42,6 +43,8 @@ export default function AdminSettingsPage() {
   const [heroHeight, setHeroHeight] = useState<"sm"|"md"|"lg"|"xl">(theme.heroHeight || "md");
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(theme.heroSlides || []);
   const [despachoText, setDespachoText] = useState(theme.despachoText || "");
+  const [allStoreProducts, setAllStoreProducts] = useState<Product[]>([]);
+  const [featuredProductIds, setFeaturedProductIds] = useState<string[]>(theme.featuredProductIds || []);
 
   // Footer settings state
   const [footerDescription, setFooterDescription] = useState(theme.footerDescription || DEFAULT_SETTINGS.footerDescription);
@@ -163,6 +166,7 @@ export default function AdminSettingsPage() {
     setHeroHeight(theme.heroHeight || "md");
     setHeroSlides(theme.heroSlides || []);
     setDespachoText(theme.despachoText || DEFAULT_SETTINGS.despachoText);
+    setFeaturedProductIds(theme.featuredProductIds || []);
 
     setFooterDescription(theme.footerDescription || DEFAULT_SETTINGS.footerDescription);
     setFooterSchedule(theme.footerSchedule || DEFAULT_SETTINGS.footerSchedule);
@@ -245,6 +249,7 @@ export default function AdminSettingsPage() {
       heroHeight,
       heroSlides,
       despachoText: despachoText.trim(),
+      featuredProductIds,
       // Footer
       footerDescription: footerDescription.trim(),
       footerSchedule: footerSchedule.trim(),
@@ -279,6 +284,28 @@ export default function AdminSettingsPage() {
     const reader = new FileReader();
     reader.onloadend = () => { if (typeof reader.result === "string") setLogoUrl(reader.result); };
     reader.readAsDataURL(file);
+  };
+
+  const toggleFeaturedProduct = (idOrSku: string) => {
+    setFeaturedProductIds((prev) => {
+      if (prev.includes(idOrSku)) {
+        return prev.filter((id) => id !== idOrSku);
+      } else {
+        return [...prev, idOrSku];
+      }
+    });
+  };
+
+  const moveFeaturedProduct = (index: number, direction: "up" | "down") => {
+    setFeaturedProductIds((prev) => {
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy;
+    });
   };
 
   const addSlide = () => setHeroSlides(prev => [...prev, { imageUrl: "", linkUrl: "", buttonText: "VER OFERTAS" }]);
@@ -670,6 +697,168 @@ export default function AdminSettingsPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECCIÓN CARRUSEL: RECOMENDADO PARA TI ── */}
+        <section className="bg-white rounded-3xl border border-slate-200 p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                  Carrusel: Recomendado para ti
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Elige qué productos mostrar en el carrusel de la página de inicio y define el orden exacto en que se presentarán.
+              </p>
+            </div>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 self-start sm:self-auto">
+              {featuredProductIds.length} seleccionados
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Lista ordenada de productos seleccionados */}
+            <div className="lg:col-span-7 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Orden de aparición en el carrusel
+                </span>
+                {featuredProductIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setFeaturedProductIds([])}
+                    className="text-[11px] font-semibold text-rose-600 hover:underline"
+                  >
+                    Quitar todos
+                  </button>
+                )}
+              </div>
+
+              {featuredProductIds.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-500">
+                  <Star className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-slate-700">No hay productos en Recomendado para ti</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Selecciona productos del listado de la derecha para agregarlos al carrusel. Si está vacío, la sección se oculta de la tienda.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {featuredProductIds.map((idOrSku, idx) => {
+                    const prod = allStoreProducts.find(
+                      (p) => String(p.id) === String(idOrSku) || p.sku.toLowerCase() === String(idOrSku).toLowerCase()
+                    );
+                    const prodName = prod ? prod.nombre : `SKU: ${idOrSku}`;
+                    const prodImg = prod?.fotos?.[0]?.url || "https://placehold.co/100x100?text=Sumi";
+                    const isFirst = idx === 0;
+                    const isLast = idx === featuredProductIds.length - 1;
+
+                    return (
+                      <div
+                        key={idOrSku}
+                        className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all shadow-2xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-900 text-xs font-black flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0">
+                            <img src={prodImg} alt={prodName} className="w-full h-full object-contain" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">{prodName}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{prod?.categoria || "Sin categoría"}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            disabled={isFirst}
+                            onClick={() => moveFeaturedProduct(idx, "up")}
+                            title="Mover antes"
+                            className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isLast}
+                            onClick={() => moveFeaturedProduct(idx, "down")}
+                            title="Mover después"
+                            className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleFeaturedProduct(idOrSku)}
+                            title="Eliminar del carrusel"
+                            className="w-7 h-7 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center ml-1"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Selector para añadir productos del catálogo */}
+            <div className="lg:col-span-5 p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                Catálogo disponible para añadir
+              </span>
+              <div className="max-h-[360px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
+                {allStoreProducts.map((p) => {
+                  const idOrSku = String(p.id || p.sku);
+                  const isSelected = featuredProductIds.some(
+                    (id) => String(id) === idOrSku || String(id).toLowerCase() === p.sku.toLowerCase()
+                  );
+                  const img = p.fotos?.[0]?.url || "https://placehold.co/100x100?text=Sumi";
+
+                  return (
+                    <button
+                      key={p.sku}
+                      type="button"
+                      onClick={() => toggleFeaturedProduct(idOrSku)}
+                      className={`w-full text-left p-2.5 rounded-xl border flex items-center justify-between gap-2.5 transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-amber-50/70 border-amber-300 text-amber-950"
+                          : "bg-white border-slate-200 hover:border-slate-300 text-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-lg overflow-hidden bg-white border border-slate-100 shrink-0">
+                          <img src={img} alt={p.nombre} className="w-full h-full object-contain" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold truncate leading-tight">{p.nombre}</p>
+                          <p className="text-[10px] text-slate-400 truncate leading-tight mt-0.5">{p.categoria}</p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0">
+                        {isSelected ? (
+                          <span className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">
+                            <Check className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
+                          <span className="w-6 h-6 rounded-full border border-slate-200 bg-white text-slate-400 flex items-center justify-center text-xs hover:border-brand hover:text-brand">
+                            <Plus className="w-3.5 h-3.5" />
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
