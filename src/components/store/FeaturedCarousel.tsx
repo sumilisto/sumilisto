@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
 import { ProductCard } from "@/components/store/ProductCard";
-import { TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface FeaturedCarouselProps {
   products: Product[];
@@ -54,16 +54,10 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
     <section className="w-full max-w-7xl mx-auto py-1 sm:py-2">
       {/* Cabecera compacta con márgenes reducidos */}
       <div className="px-4 sm:px-6 mb-3 flex items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-brand uppercase tracking-wider mb-0.5">
-            <TrendingUp className="w-3.5 h-3.5 text-brand flex-shrink-0" />
-            <span>Más Pedidos por Negocios y Comercios</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-              Recomendado para ti
-            </h2>
-          </div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
+            Recomendado para ti
+          </h2>
         </div>
 
         {/* Botones de navegación del carrusel */}
