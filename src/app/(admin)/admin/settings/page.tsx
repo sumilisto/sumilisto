@@ -200,6 +200,16 @@ export default function AdminSettingsPage() {
         if (active) {
           setIsAuthenticated(ok);
           setAuthChecked(true);
+          if (ok) {
+            fetch("/api/products")
+              .then((r) => (r.ok ? r.json() : []))
+              .then((prods) => {
+                if (active && Array.isArray(prods)) {
+                  setAllStoreProducts(prods);
+                }
+              })
+              .catch(() => {});
+          }
         }
       })
       .catch(() => {
@@ -219,6 +229,12 @@ export default function AdminSettingsPage() {
       if (res.ok) {
         setIsAuthenticated(true);
         setPasswordInput("");
+        fetch("/api/products")
+          .then((r) => (r.ok ? r.json() : []))
+          .then((prods) => {
+            if (Array.isArray(prods)) setAllStoreProducts(prods);
+          })
+          .catch(() => {});
       } else {
         setAuthError(res.error || "Usuario o contraseña incorrectos");
       }
