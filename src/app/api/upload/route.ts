@@ -11,6 +11,23 @@ import {
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
 
+// Restricciones de seguridad estrictas para subida de archivos
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+]);
+
+const ALLOWED_VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+]);
+
+const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024; // 8 MB máximo por imagen
+const MAX_VIDEO_SIZE_BYTES = 30 * 1024 * 1024; // 30 MB máximo por video
+
 // POST /api/upload — Subir foto o video de producto
 export async function POST(request: NextRequest) {
   try {
@@ -69,11 +86,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Subida de VIDEO
+    // Validación de seguridad para VIDEO
     if (mediaType === "video") {
+      if (!ALLOWED_VIDEO_TYPES.has(file.type)) {
+        return NextResponse.json(
+          { error: "Tipo de video no permitido. Solo se aceptan formatos MP4 o WebM." },
+          { status: 400 }
+        );
+      }
+      if (file.size > MAX_VIDEO_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: "El archivo de video supera el límite de 30 MB." },
+          { status: 400 }
+        );
+      }
+
       const videoResult = await uploadProductVideo(productoId, file, file.name);
       revalidateTag("products");
       return NextResponse.json(videoResult, { status: 201 });
+    }
+
+    // Validación de seguridad para FOTO
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { error: "Tipo de imagen no permitido. Solo se aceptan archivos WebP, JPG, PNG o AVIF." },
+        { status: 400 }
+      );
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: "La imagen supera el límite máximo de 8 MB." },
+        { status: 400 }
+      );
     }
 
     // Subida de FOTO (hasta 10 fotos)
