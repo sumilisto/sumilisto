@@ -42,17 +42,17 @@ export default async function HomePage() {
       {/* Hero Banner / Propuesta de Valor */}
       <HeroSection />
 
-      {/* Barra de Categorías Unificada */}
-      <div id="categorias" className="max-w-7xl mx-auto w-full">
-        <CategoryChips />
-      </div>
-
-      {/* Carrusel: Más Pedidos por Negocios y Comercios · Recomendado para ti (solo si hay seleccionados) */}
+      {/* 1. Carrusel: Recomendado para ti como sección principal superior */}
       {featuredProducts.length > 0 && (
         <FeaturedCarousel products={featuredProducts} bcvRate={bcvRate} />
       )}
 
-      {/* Catálogo Completo con Selector interactivo */}
+      {/* 2. Barra de Categorías Unificada para filtrar el catálogo */}
+      <div id="categorias" className="max-w-7xl mx-auto w-full">
+        <CategoryChips />
+      </div>
+
+      {/* 3. Catálogo Completo de Productos con Selector interactivo */}
       <ProductCatalogGrid products={products} bcvRate={bcvRate} />
     </div>
   );
