@@ -33,10 +33,13 @@ export async function GET(request: NextRequest) {
 
     let items: GrillaItem[] = [];
     if (diaGuardado?.items && diaGuardado.items.length > 0) {
-      // Normalizar campos (hora vs horarioSugerido)
+      // Normalizar campos (hora vs horarioSugerido, formatoTipo)
       items = diaGuardado.items.map((i: any) => ({
         ...i,
         hora: i.hora || i.horarioSugerido || "08:00 AM",
+        formatoTipo:
+          i.formatoTipo ||
+          (i.tipo?.toLowerCase().includes("historia") ? "historia" : "publicacion"),
       }));
     } else {
       items = getDefaultGrillaItems(fecha);
@@ -94,10 +97,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Normalizar items para que siempre tengan hora
+    // Normalizar items para que siempre tengan hora y formatoTipo
     const cleanItems = items.map((i: any) => ({
       id: i.id,
       canal: i.canal,
+      formatoTipo:
+        i.formatoTipo ||
+        (i.tipo?.toLowerCase().includes("historia") ? "historia" : "publicacion"),
       slotNumber: i.slotNumber,
       tipo: i.tipo,
       hora: i.hora || i.horarioSugerido || "08:00 AM",
