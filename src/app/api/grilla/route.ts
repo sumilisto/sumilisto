@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { getDefaultGrillaItems } from "@/lib/grilla/defaults";
-import { GrillaDia } from "@/types/grilla";
+import { GrillaDia, GrillaItem } from "@/types/grilla";
 
 // GET /api/grilla?fecha=YYYY-MM-DD
 export async function GET(request: NextRequest) {
@@ -31,12 +31,19 @@ export async function GET(request: NextRequest) {
     const grillaContenido = configRow?.data?.grilla_contenido || {};
     const diaGuardado: GrillaDia | undefined = grillaContenido[fecha];
 
-    const items = diaGuardado?.items && diaGuardado.items.length > 0
-      ? diaGuardado.items
-      : getDefaultGrillaItems(fecha);
+    let items: GrillaItem[] = [];
+    if (diaGuardado?.items && diaGuardado.items.length > 0) {
+      // Normalizar campos (hora vs horarioSugerido)
+      items = diaGuardado.items.map((i: any) => ({
+        ...i,
+        hora: i.hora || i.horarioSugerido || "08:00 AM",
+      }));
+    } else {
+      items = getDefaultGrillaItems(fecha);
+    }
 
-    // Calcular estadísticas globales de cumplimiento
-    const fechas = Object.keys(grillaContenido);
+    // Calcular estadísticas globales y racha
+    const fechas = Object.keys(grillaContenido).sort();
     let totalCompletadasGlobal = 0;
     let diasConActividad = 0;
 
@@ -57,6 +64,7 @@ export async function GET(request: NextRequest) {
       notasGenerales: diaGuardado?.notasGenerales || "",
       isDefault: !diaGuardado,
       updatedAt: diaGuardado?.updatedAt,
+      historial: grillaContenido,
       stats: {
         totalCompletadasGlobal,
         diasConActividad,
@@ -86,6 +94,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalizar items para que siempre tengan hora
+    const cleanItems = items.map((i: any) => ({
+      id: i.id,
+      canal: i.canal,
+      slotNumber: i.slotNumber,
+      tipo: i.tipo,
+      hora: i.hora || i.horarioSugerido || "08:00 AM",
+      productoId: i.productoId || null,
+      productoNombre: i.productoNombre || null,
+      productoImagen: i.productoImagen || null,
+      productoCategoria: i.productoCategoria || null,
+      titulo: i.titulo || "",
+      completada: Boolean(i.completada),
+      completadaAt: i.completadaAt || null,
+      notas: i.notas || "",
+    }));
+
     // 1. Obtener data actual para no sobreescribir otros datos de configuración
     const { data: configRow } = await supabaseAdmin
       .from("configuracion")
@@ -100,7 +125,7 @@ export async function POST(request: NextRequest) {
       ...existingGrilla,
       [fecha]: {
         fecha,
-        items,
+        items: cleanItems,
         notasGenerales: notasGenerales || "",
         updatedAt: new Date().toISOString(),
       },
