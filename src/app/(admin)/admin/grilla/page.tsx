@@ -60,7 +60,7 @@ export default function AdminGrillaPage() {
 
   // Filters & Products
   const [selectedCanal, setSelectedCanal] = useState<
-    "todos" | "publicaciones" | "historias" | GrillaCanal | "pendientes"
+    "todos" | "instagram" | "ig_publicaciones" | "ig_historias" | "mercadolibre" | "facebook" | "pendientes"
   >("todos");
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -252,7 +252,7 @@ export default function AdminGrillaPage() {
   };
 
   const handleResetToDefaults = () => {
-    if (confirm("¿Restablecer las 6 publicaciones y 4 historias de este día al orden recomendado?")) {
+    if (confirm("¿Restablecer los 14 contenidos diarios (10 Instagram: 6 publicaciones + 4 historias, 2 ML, 2 Marketplace)?")) {
       const defaults = getDefaultGrillaItems(selectedDate);
       setItems(defaults);
       setHasUnsavedChanges(true);
@@ -262,7 +262,7 @@ export default function AdminGrillaPage() {
 
   const handleAddNewSlot = (canal: GrillaCanal, formato: FormatoContenido) => {
     const isHist = formato === "historia";
-    const sameFormatItems = items.filter((i) => (isHist ? isHistoria(i) : !isHistoria(i)));
+    const sameFormatItems = items.filter((i) => i.canal === canal && (isHist ? isHistoria(i) : !isHistoria(i)));
     const newSlotNumber = sameFormatItems.length + 1;
     const newItem: GrillaItem = {
       id: `${selectedDate}-${canal}-${Date.now()}`,
@@ -270,8 +270,8 @@ export default function AdminGrillaPage() {
       formatoTipo: formato,
       slotNumber: newSlotNumber,
       tipo: isHist
-        ? `Historia Adicional #${newSlotNumber}: Producto / Promoción`
-        : `Publicación Adicional ${canal.toUpperCase()} #${newSlotNumber}`,
+        ? `IG Historia Extra #${newSlotNumber}: Producto / Promoción`
+        : `${canal.toUpperCase()} Publicación Extra #${newSlotNumber}`,
       hora: isHist ? "02:00 PM" : "12:00 PM",
       titulo: isHist ? "Historia Extra" : `Publicación Extra ${canal}`,
       completada: false,
@@ -289,32 +289,45 @@ export default function AdminGrillaPage() {
     }
   };
 
-  // 8. Cálculos diarios (6 Publicaciones y 4 Historias)
+  // 8. Cálculos diarios
+  // Meta: Instagram (10: 6 publicaciones + 4 historias) + MercadoLibre (2) + Marketplace (2) = 14 Total
   const totalItems = items.length;
   const completadas = items.filter((i) => i.completada).length;
   const percent = totalItems > 0 ? Math.round((completadas / totalItems) * 100) : 0;
 
-  const publicaciones = items.filter((i) => !isHistoria(i));
-  const historias = items.filter((i) => isHistoria(i));
-
-  const pubDone = publicaciones.filter((i) => i.completada).length;
-  const histDone = historias.filter((i) => i.completada).length;
-
+  // Instagram: 10 en total (6 Publicaciones y 4 Historias)
   const igItems = items.filter((i) => i.canal === "instagram");
   const igDone = igItems.filter((i) => i.completada).length;
+  const igPubs = igItems.filter((i) => !isHistoria(i));
+  const igPubDone = igPubs.filter((i) => i.completada).length;
+  const igHists = igItems.filter((i) => isHistoria(i));
+  const igHistDone = igHists.filter((i) => i.completada).length;
 
+  // MercadoLibre: 2 publicaciones
   const mlItems = items.filter((i) => i.canal === "mercadolibre");
   const mlDone = mlItems.filter((i) => i.completada).length;
 
+  // Facebook Marketplace: 2 publicaciones
   const fbItems = items.filter((i) => i.canal === "facebook");
   const fbDone = fbItems.filter((i) => i.completada).length;
 
+  // Total de publicaciones fijas globales (6 IG + 2 ML + 2 FB = 10)
+  const allPubs = items.filter((i) => !isHistoria(i));
+  const allPubDone = allPubs.filter((i) => i.completada).length;
+
+  // Total de historias globales (4 IG)
+  const allHists = items.filter((i) => isHistoria(i));
+  const allHistDone = allHists.filter((i) => i.completada).length;
+
   const filteredItems = useMemo(() => {
     if (selectedCanal === "todos") return items;
-    if (selectedCanal === "publicaciones") return items.filter((i) => !isHistoria(i));
-    if (selectedCanal === "historias") return items.filter((i) => isHistoria(i));
+    if (selectedCanal === "instagram") return items.filter((i) => i.canal === "instagram");
+    if (selectedCanal === "ig_publicaciones") return items.filter((i) => i.canal === "instagram" && !isHistoria(i));
+    if (selectedCanal === "ig_historias") return items.filter((i) => i.canal === "instagram" && isHistoria(i));
+    if (selectedCanal === "mercadolibre") return items.filter((i) => i.canal === "mercadolibre");
+    if (selectedCanal === "facebook") return items.filter((i) => i.canal === "facebook");
     if (selectedCanal === "pendientes") return items.filter((i) => !i.completada);
-    return items.filter((i) => i.canal === selectedCanal);
+    return items;
   }, [items, selectedCanal]);
 
   const formattedDateTitle = useMemo(() => {
@@ -342,8 +355,11 @@ export default function AdminGrillaPage() {
 
     const days = [];
     let weekTotalDone = 0;
-    let weekTotalPubs = 0;
-    let weekTotalHists = 0;
+    let weekIgDone = 0;
+    let weekIgPubs = 0;
+    let weekIgHists = 0;
+    let weekMlDone = 0;
+    let weekFbDone = 0;
     let weekTotalTarget = 0;
     const productFrequency: Record<string, { count: number; name: string; img?: string }> = {};
 
@@ -354,9 +370,12 @@ export default function AdminGrillaPage() {
       const diaObj = historial[dateStr];
       const dayItems: GrillaItem[] = diaObj?.items || (dateStr === selectedDate ? items : []);
 
-      const dayPubs = dayItems.filter((it) => !isHistoria(it) && it.completada).length;
-      const dayHists = dayItems.filter((it) => isHistoria(it) && it.completada).length;
-      const doneTotal = dayPubs + dayHists;
+      const dayIgPubs = dayItems.filter((it) => it.canal === "instagram" && !isHistoria(it) && it.completada).length;
+      const dayIgHists = dayItems.filter((it) => it.canal === "instagram" && isHistoria(it) && it.completada).length;
+      const dayIgTotal = dayIgPubs + dayIgHists;
+      const dayMl = dayItems.filter((it) => it.canal === "mercadolibre" && it.completada).length;
+      const dayFb = dayItems.filter((it) => it.canal === "facebook" && it.completada).length;
+      const doneTotal = dayIgTotal + dayMl + dayFb;
 
       dayItems.forEach((it) => {
         if (it.completada && it.productoNombre) {
@@ -369,9 +388,12 @@ export default function AdminGrillaPage() {
       });
 
       weekTotalDone += doneTotal;
-      weekTotalPubs += dayPubs;
-      weekTotalHists += dayHists;
-      weekTotalTarget += 10;
+      weekIgDone += dayIgTotal;
+      weekIgPubs += dayIgPubs;
+      weekIgHists += dayIgHists;
+      weekMlDone += dayMl;
+      weekFbDone += dayFb;
+      weekTotalTarget += 14;
 
       days.push({
         dateStr,
@@ -380,9 +402,12 @@ export default function AdminGrillaPage() {
         isToday: dateStr === todayStr,
         isSelected: dateStr === selectedDate,
         doneTotal,
-        dayPubs,
-        dayHists,
-        percent: Math.min(100, Math.round((doneTotal / 10) * 100)),
+        dayIgTotal,
+        dayIgPubs,
+        dayIgHists,
+        dayMl,
+        dayFb,
+        percent: Math.min(100, Math.round((doneTotal / 14) * 100)),
       });
     }
 
@@ -393,9 +418,12 @@ export default function AdminGrillaPage() {
     return {
       days,
       weekTotalDone,
-      weekTotalPubs,
-      weekTotalHists,
       weekTotalTarget,
+      weekIgDone,
+      weekIgPubs,
+      weekIgHists,
+      weekMlDone,
+      weekFbDone,
       weekPercent: Math.round((weekTotalDone / weekTotalTarget) * 100),
       topProducts,
     };
@@ -409,9 +437,9 @@ export default function AdminGrillaPage() {
     const daysInMonth = new Date(year, month, 0).getDate();
 
     let monthTotalDone = 0;
-    let monthPubs = 0;
-    let monthHists = 0;
     let igTotal = 0;
+    let igPubs = 0;
+    let igHists = 0;
     let mlTotal = 0;
     let fbTotal = 0;
     let daysWithActivity = 0;
@@ -423,20 +451,19 @@ export default function AdminGrillaPage() {
       const diaObj = historial[dateStr];
       const dayItems: GrillaItem[] = diaObj?.items || (dateStr === selectedDate ? items : []);
 
-      const dayPubs = dayItems.filter((it) => !isHistoria(it) && it.completada).length;
-      const dayHists = dayItems.filter((it) => isHistoria(it) && it.completada).length;
-      const sumDay = dayPubs + dayHists;
-
-      const igDay = dayItems.filter((it) => it.canal === "instagram" && it.completada).length;
+      const dayIgPubs = dayItems.filter((it) => it.canal === "instagram" && !isHistoria(it) && it.completada).length;
+      const dayIgHists = dayItems.filter((it) => it.canal === "instagram" && isHistoria(it) && it.completada).length;
+      const dayIgSum = dayIgPubs + dayIgHists;
       const mlDay = dayItems.filter((it) => it.canal === "mercadolibre" && it.completada).length;
       const fbDay = dayItems.filter((it) => it.canal === "facebook" && it.completada).length;
+      const sumDay = dayIgSum + mlDay + fbDay;
 
       if (sumDay > 0) {
         daysWithActivity += 1;
         monthTotalDone += sumDay;
-        monthPubs += dayPubs;
-        monthHists += dayHists;
-        igTotal += igDay;
+        igTotal += dayIgSum;
+        igPubs += dayIgPubs;
+        igHists += dayIgHists;
         mlTotal += mlDay;
         fbTotal += fbDay;
       }
@@ -452,7 +479,7 @@ export default function AdminGrillaPage() {
       });
     }
 
-    const monthlyTarget = daysInMonth * 10;
+    const monthlyTarget = daysInMonth * 14;
     const topMonthProducts = Object.values(monthProducts)
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
@@ -463,13 +490,13 @@ export default function AdminGrillaPage() {
         year: "numeric",
       }),
       monthTotalDone,
-      monthPubs,
-      monthHists,
-      monthlyTarget,
-      monthPercent: Math.round((monthTotalDone / monthlyTarget) * 100),
       igTotal,
+      igPubs,
+      igHists,
       mlTotal,
       fbTotal,
+      monthlyTarget,
+      monthPercent: Math.round((monthTotalDone / monthlyTarget) * 100),
       daysWithActivity,
       daysInMonth,
       averageDaily: daysWithActivity > 0 ? (monthTotalDone / daysWithActivity).toFixed(1) : "0",
@@ -477,14 +504,15 @@ export default function AdminGrillaPage() {
     };
   }, [selectedDate, historial, items]);
 
-  // 11. Meta Professional Analysis Engine (Fórmula 6 Publicaciones + 4 Historias)
+  // 11. Meta Professional Analysis Engine (Instagram: 6 Publicaciones + 4 Historias)
   const metaAudit = useMemo(() => {
     const weeklyRate = weeklyData.weekPercent;
-    const { weekTotalDone, weekTotalPubs, weekTotalHists } = weeklyData;
+    const { weekIgDone, weekIgPubs, weekIgHists, weekMlDone, weekFbDone } = weeklyData;
 
-    let score = Math.round(weeklyRate * 0.8);
-    if (weekTotalPubs >= 25) score += 10;
-    if (weekTotalHists >= 18) score += 10;
+    let score = Math.round(weeklyRate * 0.75);
+    if (weekIgPubs >= 25) score += 10;
+    if (weekIgHists >= 18) score += 10;
+    if (weekMlDone >= 8 && weekFbDone >= 8) score += 5;
     score = Math.min(100, Math.max(10, score));
 
     let nivel = "En Inicio";
@@ -504,11 +532,12 @@ export default function AdminGrillaPage() {
       score,
       nivel,
       badgeColor,
-      weekTotalDone,
-      weekTotalPubs,
-      weekTotalHists,
-      isPubsStrong: weekTotalPubs >= 25,
-      isHistsStrong: weekTotalHists >= 16,
+      weekIgDone,
+      weekIgPubs,
+      weekIgHists,
+      weekMlDone,
+      weekFbDone,
+      isIgStrong: weekIgDone >= 40,
     };
   }, [weeklyData]);
 
@@ -537,7 +566,7 @@ export default function AdminGrillaPage() {
             Grilla de Publicaciones
           </h1>
           <p className="text-slate-500 text-xs text-center mt-1 mb-6">
-            Meta diaria: 6 Publicaciones fijas + 4 Historias
+            Meta: Instagram (10: 6 publicaciones + 4 historias), ML (2), Marketplace (2)
           </p>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -625,7 +654,7 @@ export default function AdminGrillaPage() {
               <Calendar className="w-4 h-4" />
               <span>Grilla Diaria</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-700 text-white font-mono">
-                {completadas}/10
+                {completadas}/{totalItems}
               </span>
             </button>
 
@@ -695,7 +724,8 @@ export default function AdminGrillaPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════
-            PESTAÑA 1: GRILLA DIARIA ÁGIL (6 PUBLICACIONES + 4 HISTORIAS)
+            PESTAÑA 1: GRILLA DIARIA ÁGIL
+            (INSTAGRAM: 6 PUBLICACIONES + 4 HISTORIAS | ML: 2 | FB: 2)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === "diaria" && (
           <div>
@@ -714,7 +744,7 @@ export default function AdminGrillaPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Meta diaria: <strong>6 Publicaciones</strong> (Reel, Feed, ML, Marketplace) + <strong>4 Historias</strong>
+                    Meta diaria: <strong>Instagram (10: 6 publicaciones + 4 historias)</strong> · <strong>MercadoLibre (2)</strong> · <strong>FB Marketplace (2)</strong> = 14 totales
                   </p>
                 </div>
 
@@ -744,7 +774,7 @@ export default function AdminGrillaPage() {
                   <button
                     onClick={handleResetToDefaults}
                     className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-medium"
-                    title="Restablecer plantilla horaria (6 publicaciones y 4 historias)"
+                    title="Restablecer plantilla horaria (14 contenidos)"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </button>
@@ -758,68 +788,64 @@ export default function AdminGrillaPage() {
                 </div>
               )}
 
-              {/* Tarjetas de Cuotas: 6 Publicaciones + 4 Historias + Progreso */}
+              {/* Tarjetas de Cuotas por Canal y Formato */}
               <div className="mt-4 pt-4 border-t border-slate-100">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                  {/* Publicaciones */}
-                  <div className="bg-emerald-50/60 rounded-xl p-3 border border-emerald-200/80">
-                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block flex items-center gap-1">
-                      📌 Publicaciones (Meta: 6)
+                  {/* Instagram (Meta: 10: 6 publicaciones + 4 historias) */}
+                  <div className="bg-gradient-to-br from-pink-50/70 to-purple-50/50 rounded-xl p-3 border border-pink-200/80">
+                    <span className="text-[10px] font-bold text-pink-800 uppercase tracking-wider block flex items-center gap-1">
+                      📸 Instagram (Meta: 10)
                     </span>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-xl font-black text-emerald-950">{pubDone}</span>
-                      <span className="text-xs font-semibold text-emerald-700">/ 6 completadas</span>
+                      <span className="text-xl font-black text-pink-950">{igDone}</span>
+                      <span className="text-xs font-semibold text-pink-700">/ 10 completados</span>
                     </div>
-                    <span className="text-[10px] text-emerald-600 block mt-0.5">
-                      Feed, Reels, ML, Marketplace
+                    <div className="flex items-center gap-2 mt-1 text-[10px] font-bold">
+                      <span className="text-emerald-700">📌 Pub: {igPubDone}/6</span>
+                      <span className="text-purple-700">⏱️ Hist: {igHistDone}/4</span>
+                    </div>
+                  </div>
+
+                  {/* MercadoLibre */}
+                  <div className="bg-amber-50/60 rounded-xl p-3 border border-amber-200/80">
+                    <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block flex items-center gap-1">
+                      💛 MercadoLibre (Meta: 2)
+                    </span>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="text-xl font-black text-amber-950">{mlDone}</span>
+                      <span className="text-xs font-semibold text-amber-700">/ 2 completadas</span>
+                    </div>
+                    <span className="text-[10px] text-amber-700 block mt-1 font-medium">
+                      Producto estrella y combos
                     </span>
                   </div>
 
-                  {/* Historias */}
-                  <div className="bg-purple-50/60 rounded-xl p-3 border border-purple-200/80">
-                    <span className="text-[10px] font-bold text-purple-800 uppercase tracking-wider block flex items-center gap-1">
-                      ⏱️ Historias (Meta: 4)
+                  {/* Facebook Marketplace */}
+                  <div className="bg-blue-50/60 rounded-xl p-3 border border-blue-200/80">
+                    <span className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block flex items-center gap-1">
+                      💙 Marketplace (Meta: 2)
                     </span>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-xl font-black text-purple-950">{histDone}</span>
-                      <span className="text-xs font-semibold text-purple-700">/ 4 completadas</span>
+                      <span className="text-xl font-black text-blue-950">{fbDone}</span>
+                      <span className="text-xs font-semibold text-blue-700">/ 2 completadas</span>
                     </div>
-                    <span className="text-[10px] text-purple-600 block mt-0.5">
-                      Stories Instagram espaciadas
+                    <span className="text-[10px] text-blue-700 block mt-1 font-medium">
+                      Caracas y Guarenas-Guatire
                     </span>
                   </div>
 
-                  {/* Total Diario */}
+                  {/* Total Diario General (14) */}
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                      Total Cumplido
+                      Total Diario (Meta: 14)
                     </span>
                     <div className="flex items-baseline gap-1 mt-1">
                       <span className="text-xl font-black text-slate-900">{completadas}</span>
                       <span className="text-xs font-semibold text-slate-400">/ {totalItems}</span>
                     </div>
-                    <span className="text-[10px] text-slate-500 block mt-0.5 font-bold">
-                      {percent}% de la meta del día
+                    <span className="text-[10px] text-slate-600 block mt-1 font-bold">
+                      {percent}% cumplido · {10 - allPubDone} pubs y {4 - allHistDone} hist pend.
                     </span>
-                  </div>
-
-                  {/* Por Canal */}
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-xs">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                      Desglose por Canal
-                    </span>
-                    <div className="flex justify-between text-[11px] font-semibold text-slate-700 py-0.5">
-                      <span>📸 Instagram:</span>
-                      <span className="font-bold text-pink-700">{igDone} / 6</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] font-semibold text-slate-700 py-0.5">
-                      <span>💛 MercadoLibre:</span>
-                      <span className="font-bold text-amber-800">{mlDone} / 2</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] font-semibold text-slate-700 py-0.5">
-                      <span>💙 Marketplace:</span>
-                      <span className="font-bold text-blue-700">{fbDone} / 2</span>
-                    </div>
                   </div>
                 </div>
 
@@ -855,26 +881,6 @@ export default function AdminGrillaPage() {
                 Todos ({totalItems})
               </button>
               <button
-                onClick={() => setSelectedCanal("publicaciones")}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors shrink-0 ${
-                  selectedCanal === "publicaciones"
-                    ? "bg-emerald-700 text-white"
-                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                📌 Publicaciones ({pubDone}/6)
-              </button>
-              <button
-                onClick={() => setSelectedCanal("historias")}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors shrink-0 ${
-                  selectedCanal === "historias"
-                    ? "bg-purple-700 text-white"
-                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                ⏱️ Historias ({histDone}/4)
-              </button>
-              <button
                 onClick={() => setSelectedCanal("instagram")}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors shrink-0 ${
                   selectedCanal === "instagram"
@@ -882,13 +888,33 @@ export default function AdminGrillaPage() {
                     : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                Instagram ({igDone}/6)
+                📸 Instagram ({igDone}/10)
+              </button>
+              <button
+                onClick={() => setSelectedCanal("ig_publicaciones")}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors shrink-0 ${
+                  selectedCanal === "ig_publicaciones"
+                    ? "bg-emerald-700 text-white"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                📌 IG Publicaciones ({igPubDone}/6)
+              </button>
+              <button
+                onClick={() => setSelectedCanal("ig_historias")}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors shrink-0 ${
+                  selectedCanal === "ig_historias"
+                    ? "bg-purple-700 text-white"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                ⏱️ IG Historias ({igHistDone}/4)
               </button>
               <button
                 onClick={() => setSelectedCanal("mercadolibre")}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors shrink-0 ${
                   selectedCanal === "mercadolibre"
-                    ? "bg-amber-500 text-slate-950"
+                    ? "bg-amber-500 text-slate-950 font-black"
                     : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                 }`}
               >
@@ -916,7 +942,7 @@ export default function AdminGrillaPage() {
               </button>
             </div>
 
-            {/* Lista Cronológica: DOBLE LÍNEA para leer el mensaje completo sin truncar */}
+            {/* Lista Cronológica de 14 Slots: DOBLE LÍNEA para leer el mensaje completo sin truncar */}
             <div className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden divide-y divide-slate-100">
               {filteredItems.map((item) => {
                 const isIg = item.canal === "instagram";
@@ -989,7 +1015,7 @@ export default function AdminGrillaPage() {
 
                       {/* Mensaje / Tipo en DOBLE LÍNEA (Sin truncar, lectura completa) */}
                       <div
-                        className="text-xs font-bold text-slate-800 leading-snug line-clamp-2 max-w-[260px] sm:max-w-md break-words"
+                        className="text-xs font-bold text-slate-800 leading-snug line-clamp-2 max-w-[280px] sm:max-w-md break-words"
                         title={item.tipo}
                       >
                         {item.tipo}
@@ -1093,7 +1119,7 @@ export default function AdminGrillaPage() {
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            PESTAÑA 2: RESUMEN SEMANAL
+            PESTAÑA 2: RESUMEN SEMANAL (MATRIZ LUNES A DOMINGO)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === "semanal" && (
           <div className="space-y-6">
@@ -1105,21 +1131,27 @@ export default function AdminGrillaPage() {
                     Resumen Semanal de Publicaciones e Historias
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Semana del {weeklyData.days[0]?.dateStr} al {weeklyData.days[6]?.dateStr}
+                    Semana del {weeklyData.days[0]?.dateStr} al {weeklyData.days[6]?.dateStr} · Meta semanal: 98 contenidos
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs">
-                  <div className="bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-                    <span className="text-[10px] font-bold text-emerald-800 uppercase block">Publicaciones</span>
-                    <span className="text-base font-black text-emerald-950">
-                      {weeklyData.weekTotalPubs} <span className="text-xs font-normal">/ 42 semanal</span>
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <div className="bg-pink-50 px-3 py-1.5 rounded-xl border border-pink-200">
+                    <span className="text-[10px] font-bold text-pink-800 uppercase block">📸 Instagram</span>
+                    <span className="text-base font-black text-pink-950">
+                      {weeklyData.weekIgDone} <span className="text-xs font-normal">/ 70 (Pub: {weeklyData.weekIgPubs}/42 · Hist: {weeklyData.weekIgHists}/28)</span>
                     </span>
                   </div>
-                  <div className="bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200">
-                    <span className="text-[10px] font-bold text-purple-800 uppercase block">Historias</span>
-                    <span className="text-base font-black text-purple-950">
-                      {weeklyData.weekTotalHists} <span className="text-xs font-normal">/ 28 semanal</span>
+                  <div className="bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+                    <span className="text-[10px] font-bold text-amber-900 uppercase block">💛 MercadoLibre</span>
+                    <span className="text-base font-black text-amber-950">
+                      {weeklyData.weekMlDone} <span className="text-xs font-normal">/ 14</span>
+                    </span>
+                  </div>
+                  <div className="bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200">
+                    <span className="text-[10px] font-bold text-blue-900 uppercase block">💙 Marketplace</span>
+                    <span className="text-base font-black text-blue-950">
+                      {weeklyData.weekFbDone} <span className="text-xs font-normal">/ 14</span>
                     </span>
                   </div>
                 </div>
@@ -1153,7 +1185,7 @@ export default function AdminGrillaPage() {
 
                     <div className="text-center my-2">
                       <span className="text-2xl font-black text-slate-900">{day.doneTotal}</span>
-                      <span className="text-xs text-slate-400 font-semibold block">/ 10 meta</span>
+                      <span className="text-xs text-slate-400 font-semibold block">/ 14 meta</span>
                     </div>
 
                     <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mb-2">
@@ -1165,12 +1197,20 @@ export default function AdminGrillaPage() {
 
                     <div className="space-y-1 text-[10px] text-slate-600 font-medium pt-2 border-t border-slate-200/60">
                       <div className="flex justify-between">
-                        <span>📌 Publicaciones:</span>
-                        <span className="font-bold text-emerald-800">{day.dayPubs}/6</span>
+                        <span>📸 IG:</span>
+                        <span className="font-bold text-pink-700">{day.dayIgTotal}/10</span>
+                      </div>
+                      <div className="flex justify-between pl-1 text-[9px] text-slate-500">
+                        <span>• Pubs / Hist:</span>
+                        <span>{day.dayIgPubs}p / {day.dayIgHists}h</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>⏱️ Historias:</span>
-                        <span className="font-bold text-purple-800">{day.dayHists}/4</span>
+                        <span>💛 ML:</span>
+                        <span className="font-bold text-amber-800">{day.dayMl}/2</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>💙 FB:</span>
+                        <span className="font-bold text-blue-700">{day.dayFb}/2</span>
                       </div>
                     </div>
                   </div>
@@ -1235,7 +1275,7 @@ export default function AdminGrillaPage() {
                     Estadísticas del Mes ({monthlyData.monthName})
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Seguimiento de volumen: Publicaciones permanentes vs Historias de 24h
+                    Seguimiento mensual: Instagram (10 diarios: 6 publicaciones + 4 historias), ML (2) y Marketplace (2)
                   </p>
                 </div>
               </div>
@@ -1252,30 +1292,30 @@ export default function AdminGrillaPage() {
                   </span>
                 </div>
 
-                <div className="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-200">
-                  <span className="text-xs font-bold text-emerald-800 block uppercase">📌 Publicaciones</span>
-                  <span className="text-2xl sm:text-3xl font-black text-emerald-900 mt-1 block">
-                    {monthlyData.monthPubs}
+                <div className="bg-pink-50/60 rounded-2xl p-4 border border-pink-200">
+                  <span className="text-xs font-bold text-pink-800 block uppercase">📸 Instagram</span>
+                  <span className="text-2xl sm:text-3xl font-black text-pink-900 mt-1 block">
+                    {monthlyData.igTotal}
                   </span>
-                  <span className="text-[11px] text-emerald-700 font-medium">Feed, Reels, ML, Marketplace</span>
-                </div>
-
-                <div className="bg-purple-50/60 rounded-2xl p-4 border border-purple-200">
-                  <span className="text-xs font-bold text-purple-800 block uppercase">⏱️ Historias</span>
-                  <span className="text-2xl sm:text-3xl font-black text-purple-900 mt-1 block">
-                    {monthlyData.monthHists}
+                  <span className="text-[11px] text-pink-700 font-medium">
+                    {monthlyData.igPubs} publicaciones · {monthlyData.igHists} historias
                   </span>
-                  <span className="text-[11px] text-purple-700 font-medium">Stories Instagram 24h</span>
                 </div>
 
                 <div className="bg-amber-50/60 rounded-2xl p-4 border border-amber-200">
-                  <span className="text-xs font-bold text-amber-900 block uppercase">Días Activos</span>
+                  <span className="text-xs font-bold text-amber-900 block uppercase">💛 MercadoLibre</span>
                   <span className="text-2xl sm:text-3xl font-black text-amber-950 mt-1 block">
-                    {monthlyData.daysWithActivity}
+                    {monthlyData.mlTotal}
                   </span>
-                  <span className="text-[11px] text-amber-800 font-medium">
-                    Promedio: {monthlyData.averageDaily} al día
+                  <span className="text-[11px] text-amber-800 font-medium">Publicaciones mayoristas</span>
+                </div>
+
+                <div className="bg-blue-50/60 rounded-2xl p-4 border border-blue-200">
+                  <span className="text-xs font-bold text-blue-900 block uppercase">💙 FB Marketplace</span>
+                  <span className="text-2xl sm:text-3xl font-black text-blue-950 mt-1 block">
+                    {monthlyData.fbTotal}
                   </span>
+                  <span className="text-[11px] text-blue-800 font-medium">Caracas y Guarenas-Guatire</span>
                 </div>
               </div>
 
@@ -1385,10 +1425,10 @@ export default function AdminGrillaPage() {
                     <span>Especialista Meta Ads & Crecimiento B2B</span>
                   </div>
                   <h2 className="text-2xl font-black tracking-tight">
-                    Fórmula Estratégica: 6 Publicaciones + 4 Historias
+                    Fórmula Estratégica: Instagram (6 Publicaciones + 4 Historias)
                   </h2>
                   <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
-                    La combinación exacta entre <strong>adquisición de nuevos clientes</strong> (Feed, Reels y Marketplaces) y <strong>frecuencia de recordación</strong> (Historias).
+                    10 contenidos en Instagram diarios + 2 en MercadoLibre + 2 en Facebook Marketplace. La máquina de alcance y conversión mayorista para Venezuela.
                   </p>
                 </div>
 
@@ -1410,37 +1450,35 @@ export default function AdminGrillaPage() {
 
             {/* Diagnóstico según tu frecuencia actual */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Publicaciones (Meta: 6/día) */}
+              {/* Instagram: 6 Publicaciones */}
               <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                    📌
+                  <div className="w-8 h-8 rounded-lg bg-pink-100 text-pink-700 flex items-center justify-center font-bold">
+                    📸
                   </div>
                   <div>
                     <h3 className="text-xs font-black text-slate-900 uppercase">
-                      6 Publicaciones Fijas Diarias (Tracción Permanente)
+                      6 Publicaciones en Instagram al Día (Feed y Reels)
                     </h3>
                     <span className="text-[11px] text-slate-500">
-                      Esta semana: <strong>{metaAudit.weekTotalPubs}</strong> de 42 recomendadas
+                      Esta semana: <strong>{metaAudit.weekIgPubs}</strong> de 42 recomendadas
                     </span>
                   </div>
                 </div>
 
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Las publicaciones (Reels en Instagram, posts en Feed, listings en MercadoLibre y Facebook Marketplace) tienen <strong>vida útil prolongada e indexación en motores de búsqueda</strong>.
+                  Publicar 6 veces en el muro de Instagram (Feed, Reels y Carruseles) es el motor de <strong>descubrimiento orgánico</strong>:
                   <br />
                   <br />
-                  • <strong>1 Reel Diario:</strong> Llega a usuarios que aún no te siguen en Caracas y Miranda.
+                  • <strong>Reels de demostración:</strong> El algoritmo de Meta los distribuye a usuarios que no te siguen en Caracas, Miranda y Aragua.
                   <br />
-                  • <strong>1 Post Feed / Carrusel:</strong> Ficha técnica guardable con medidas y precios oficiales.
+                  • <strong>Carruseles de variantes:</strong> Muestran medidas, tablas de precios por bulto y fomentan que los comerciantes guarden el post para cotizar.
                   <br />
-                  • <strong>2 Marketplace:</strong> Capturan compras inmediatas de personas buscando cajas, vasos y bolsas hoy.
-                  <br />
-                  • <strong>2 MercadoLibre:</strong> Indexan en Google y MercadoLibre para ventas por bulto cerrado.
+                  • <strong>Posts de Combos:</strong> Atraen emprendimientos nuevos que necesitan paquetes mixtos de bolsas, cajas y vasos.
                 </p>
               </div>
 
-              {/* Historias (Meta: 4/día) */}
+              {/* Instagram: 4 Historias */}
               <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center font-bold">
@@ -1448,73 +1486,71 @@ export default function AdminGrillaPage() {
                   </div>
                   <div>
                     <h3 className="text-xs font-black text-slate-900 uppercase">
-                      4 Historias Diarias (Frecuencia & Cierres WhatsApp)
+                      4 Historias de Instagram al Día (Retención y WhatsApp)
                     </h3>
                     <span className="text-[11px] text-slate-500">
-                      Esta semana: <strong>{metaAudit.weekTotalHists}</strong> de 28 recomendadas
+                      Esta semana: <strong>{metaAudit.weekIgHists}</strong> de 28 recomendadas
                     </span>
                   </div>
                 </div>
 
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Las historias duran 24 horas y tienen como objetivo el algoritmo de <strong>Tray Bubble Priority</strong>:
+                  Las 4 historias activan el algoritmo de <strong>Tray Bubble Freshness</strong> cada 3 a 4 horas:
                   <br />
                   <br />
-                  • <strong>Espaciadas cada 3 a 4 horas:</strong> Cada vez que subes una historia, el círculo de Sumilisto salta al primer lugar de la bandeja de historias de tus seguidores.
+                  • <strong>08:00 AM:</strong> Apertura de tienda, stock del día y bienvenida.
                   <br />
-                  • <strong>Estructura recomendada:</strong>
+                  • <strong>11:45 AM:</strong> Escala de descuento al Gran Mayor por bulto.
                   <br />
-                  - <em>08:00 AM:</em> Apertura y stock disponible.
+                  • <strong>07:00 PM:</strong> Rutas de despacho del día siguiente (Caracas, Guarenas, Guatire).
                   <br />
-                  - <em>11:30 AM:</em> Escala de descuento por bulto al Gran Mayor.
-                  <br />
-                  - <em>07:00 PM:</em> Recordatorio de rutas de despacho del día siguiente.
-                  <br />
-                  - <em>08:30 PM:</em> Cierre, métodos de pago (Pago Móvil, Zelle, efectivo) y WhatsApp directo.
+                  • <strong>08:30 PM:</strong> Cierre de pedidos, métodos de pago (Pago Móvil, Zelle, efectivo) y sticker de WhatsApp.
                 </p>
               </div>
             </div>
 
-            {/* 5 Recomendaciones Tácticas */}
+            {/* 4 Canales Sincronizados */}
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
               <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-amber-500" />
-                Reglas de Oro de un Media Buyer para Escalar Sumilisto
+                Matriz de los 14 Contenidos Diarios de Sumilisto
               </h3>
 
               <div className="space-y-3 text-xs text-slate-700">
                 <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="w-5 h-5 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                    1
+                  <div className="w-5 h-5 rounded-full bg-pink-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                    IG
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">Stickers de Enlace en las 4 Historias</h4>
+                    <h4 className="font-bold text-slate-900">Instagram: 10 Contenidos al Día</h4>
                     <p className="text-slate-500 mt-0.5">
-                      Nunca publiques una historia sin un sticker con enlace directo a WhatsApp (<code>wa.me/584227864547</code>) o al catálogo web. El 60% de los comerciantes prefiere tocar un botón directo antes que escribir un DM.
+                      <strong>6 Publicaciones:</strong> Ficha de producto (08:30 AM), Carrusel de catálogo (11:00 AM), Reel demostrativo (01:30 PM), Combo negocio (04:30 PM), Reel de almacén (06:00 PM) y Testimonio/Catálogo (07:45 PM).  
+                      <br />
+                      <strong>4 Historias:</strong> Apertura (08:00 AM), Precios al Mayor (11:45 AM), Despachos (07:00 PM) y Cierre/Pagos (08:30 PM).
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="w-5 h-5 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                    2
+                  <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                    FB
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">Marketplace: Ubicaciones Rotativas</h4>
+                    <h4 className="font-bold text-slate-900">Facebook Marketplace: 2 Publicaciones al Día</h4>
                     <p className="text-slate-500 mt-0.5">
-                      Publicación 1 en Caracas (Chacao/Sucre) a las 09:00 AM y Publicación 2 en Guarenas/Guatire a las 03:00 PM. Esto amplía tu radio geográfico sin que el algoritmo marque tu anuncio como listing duplicado.
+                      09:15 AM (Caracas) y 02:30 PM (Guarenas - Guatire). Con fotos reales tomadas en el depósito y precio unitario al Gran Mayor.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="w-5 h-5 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                    3
+                  <div className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-[10px] shrink-0 mt-0.5">
+                    ML
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">Títulos con Intención de Compra en MercadoLibre</h4>
+                    <h4 className="font-bold text-slate-900">MercadoLibre: 2 Publicaciones al Día</h4>
                     <p className="text-slate-500 mt-0.5">
-                      Incluye siempre: <em>[Producto] + [Medida] + [Al Mayor / Por Bulto] + [Sumilisto Caracas]</em>. Los compradores que buscan comprar volumen filtran con la palabra "bulto".
+                      10:00 AM (Producto Estrella) y 03:30 PM (Combo Mayorista). Palabras clave: <em>"al mayor"</em>, <em>"por bulto"</em> y <em>"delivery"</em>.
                     </p>
                   </div>
                 </div>
