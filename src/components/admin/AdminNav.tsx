@@ -10,6 +10,7 @@ import {
   Settings,
   ShoppingCart,
   Activity,
+  Calendar,
   ExternalLink,
   LogOut,
   ShieldCheck,
@@ -53,6 +54,13 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
       href: "/admin/carritos",
       icon: ShoppingCart,
       active: pathname === "/admin/carritos",
+    },
+    {
+      label: "Grilla de Contenido",
+      shortLabel: "Grilla",
+      href: "/admin/grilla",
+      icon: Calendar,
+      active: pathname === "/admin/grilla",
     },
     {
       label: "Estadísticas en Vivo",

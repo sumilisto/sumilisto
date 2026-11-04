@@ -1,0 +1,111 @@
+import { GrillaItem, GrillaCanal } from "@/types/grilla";
+
+export function getDefaultGrillaItems(fecha: string): GrillaItem[] {
+  return [
+    // 📸 INSTAGRAM (6 publicaciones)
+    {
+      id: `${fecha}-ig-1`,
+      canal: "instagram",
+      slotNumber: 1,
+      tipo: "Historia: Buenos Días & Producto Estrella",
+      horarioSugerido: "08:30 AM",
+      titulo: "Producto del Día con Descuento al Gran Mayor",
+      copia: `☀️ ¡Buenos días comerciantes y emprendedores! Arrancamos la jornada con el empaque más pedido para tu negocio.\n\n📦 Precios especiales por bulto cerrado al Mayor y Gran Mayor.\n📍 Entregas hoy en Caracas, Guarenas y Guatire.\n📲 Escríbenos al DM o al link de la bio para apartar tu pedido.`,
+      completada: false,
+    },
+    {
+      id: `${fecha}-ig-2`,
+      canal: "instagram",
+      slotNumber: 2,
+      tipo: "Historia: Escala de Precios Mayor / Gran Mayor",
+      horarioSugerido: "11:00 AM",
+      titulo: "Ahorra Comprando al Gran Mayor",
+      copia: `💡 ¿Sabías cuánto ahorras comprando al Gran Mayor en Sumilisto?\n\n💰 Mayor (desde 50 unds): Precio accesible para no descapitalizarte.\n🔥 Gran Mayor (desde bulto/volumen): Máxima rentabilidad para tu local o producción.\n\n🚚 Despachos rápidos y seguros directos a tu puerta.`,
+      completada: false,
+    },
+    {
+      id: `${fecha}-ig-3`,
+      canal: "instagram",
+      slotNumber: 3,
+      tipo: "Reel / Video: Demostración o Resistencia",
+      horarioSugerido: "01:30 PM",
+      titulo: "Demostración de Calidad y Capacidad",
+      copia: `Calidad que habla bien de tu negocio ✨ Nada de empaques que se rompen ni tapas que no ajustan. Mira la resistencia y el acabado de nuestros productos.\n\n¿Quieres el catálogo completo con precios al mayor? Comenta "CATALOGO" o haz clic en el enlace de nuestro perfil 👆\n\n#empaquesvenezuela #descartables #sumilisto #caracas #negocioscaracas`,
+      completada: false,
+    },
+    {
+      id: `${fecha}-ig-4`,
+      canal: "instagram",
+      slotNumber: 4,
+      tipo: "Post Feed / Carrusel: Ficha de Producto y Variantes",
+      horarioSugerido: "04:00 PM",
+      titulo: "Ficha Técnica, Medidas y Usos Recomendados",
+      copia: `Todo lo que necesitas saber antes de comprar tus empaques 📋\n\n✔️ Medidas exactas\n✔️ Material apto para alimentos y alta resistencia\n✔️ Precios en $ y Bs a tasa oficial BCV\n✔️ Disponibilidad inmediata\n\nDesliza para ver los detalles y pide directamente por WhatsApp o en nuestra tienda online 📲 sumilisto.shop`,
+      completada: false,
+    },
+    {
+      id: `${fecha}-ig-5`,
+      canal: "instagram",
+      slotNumber: 5,
+      tipo: "Historia: Zonas de Despacho y Logística",
+      horarioSugerido: "06:30 PM",
+      titulo: "Rutas de Entrega: Caracas, Guarenas y Guatire",
+      copia: `🛵 ¿Dónde recibes tu pedido?\n\n📍 Caracas (Chacao, Baruta, El Hatillo, Sucre, Libertador)\n📍 Guarenas y Guatire (Entrega directa)\n📦 Envíos a toda Venezuela por MRW, Zoom y Tealca.\n\nRecuerda que puedes agendar tu entrega para mañana temprano 🚀`,
+      completada: false,
+    },
+    {
+      id: `${fecha}-ig-6`,
+      canal: "instagram",
+      slotNumber: 6,
+      tipo: "Historia: Reseñas / Pedidos Listos / Métodos de Pago",
+      horarioSugerido: "08:30 PM",
+      titulo: "Prueba Social y Métodos de Pago Disponibles",
+      copia: `📦 Más pedidos listos para salir a primera hora. Gracias por confiar en Sumilisto como tu proveedor de empaques y descartables.\n\n💳 Métodos de pago cómodos:\n• Pago Móvil y Transferencia Bancaria (Tasa BCV oficial)\n• Zelle\n• Efectivo en divisas al entregar\n\n¡Déjanos tu mensaje y te atendemos de inmediato!`,
+      completada: false,
+    },
+
+    // 💛 MERCADOLIBRE (2 publicaciones)
+    {
+      id: `${fecha}-ml-1`,
+      canal: "mercadolibre",
+      slotNumber: 1,
+      tipo: "Publicación Nueva o Reactivación: Producto Estrella",
+      horarioSugerido: "10:00 AM",
+      titulo: "Publicación ML: Empaques / Bolsas / Cajas al Mayor",
+      copia: `Título sugerido ML: [Nombre del Producto] Al Mayor Y Gran Mayor Por Bulto Sumilisto\n\nDescripción:\nSomos Sumilisto, distribuidores de empaques, descartables y suministros comerciales en Venezuela.\n\n• Presentación: Bulto / Paquete\n• Facturación y despacho inmediato\n• Entregas personales en Caracas, Guarenas y Guatire\n• Envíos gratis por Mercado Envíos a nivel nacional.\n\n¡Haga todas sus preguntas antes de ofertar!`,
+      completada: false,
+    },
+    {
+      id: `${fecha}-ml-2`,
+      canal: "mercadolibre",
+      slotNumber: 2,
+      tipo: "Publicación Combo / Gran Mayor",
+      horarioSugerido: "03:00 PM",
+      titulo: "Publicación ML: Combo Descartables / Tinas / Vasos",
+      copia: `Título sugerido ML: Combo [Producto] [Medida] Para Negocios Y Eventos Mayor\n\nDescripción:\nOptimiza los costos de tu negocio o restaurante con empaques de primera calidad.\n\n• Medidas y especificaciones exactas\n• Precios transparentes ajustados a tasa oficial\n• Atención inmediata de Lunes a Sábado.\n\nConsulte disponibilidad y variedades en la sección de preguntas.`,
+      completada: false,
+    },
+
+    // 💙 FACEBOOK MARKETPLACE (2 publicaciones)
+    {
+      id: `${fecha}-fb-1`,
+      canal: "facebook",
+      slotNumber: 1,
+      tipo: "Marketplace: Zona Caracas",
+      horarioSugerido: "09:30 AM",
+      titulo: "Publicación Marketplace: Caracas (Chacao / Sucre / Libertador)",
+      copia: `Título FB: [Producto] al Mayor para Negocios y Repostería - Caracas\n\nPrecio: Colocar precio unitario al Gran Mayor\nCategoría: Artículos comerciales / Hogar\nUbicación: Caracas, Distrito Capital\n\nDescripción:\nDisponibles para entrega inmediata en Caracas. Empaques resistentes, ideales para delivery, cafeterías, comida rápida y repostería.\n\n💰 Precio al Mayor y descuento por bulto al Gran Mayor.\n🛵 Entregas personales y delivery en Caracas.\n📲 Escríbeme por WhatsApp al 0422-786-4547 para catálogo con fotos y medidas.`,
+      completada: false,
+    },
+    {
+      id: `${fecha}-fb-2`,
+      canal: "facebook",
+      slotNumber: 2,
+      tipo: "Marketplace: Zona Guarenas - Guatire",
+      horarioSugerido: "02:30 PM",
+      titulo: "Publicación Marketplace: Guarenas / Guatire / Miranda",
+      copia: `Título FB: [Producto] al Mayor - Despacho Inmediato Guarenas y Guatire\n\nPrecio: Colocar precio unitario al Gran Mayor\nCategoría: Suministros comerciales\nUbicación: Guatire / Guarenas, Miranda\n\nDescripción:\n¿Tienes negocio o emprendimiento en Guarenas o Guatire? Te llevamos tus empaques y descartables sin complicaciones.\n\n📦 Stock disponible hoy mismo.\n💵 Pagos en Bs (Tasa BCV), Zelle o efectivo.\n📲 Contáctanos al 0422-786-4547 o visita sumilisto.shop`,
+      completada: false,
+    },
+  ];
+}
