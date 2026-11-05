@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { formatVes } from "@/lib/currency/format";
-import { Search, ShoppingBag, MapPin, Sparkles, Instagram } from "lucide-react";
+import { Search, ShoppingBag, MapPin, Sparkles, Instagram, Truck } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import { InstantSearchModal } from "@/components/search/InstantSearchModal";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
 
   return (
     <>
-      {/* Barra superior de tasa oficial BCV y cobertura */}
+      {/* Barra superior de tasa oficial BCV y cobertura con Delivery Gratis */}
       <div className="bg-brand-active text-xs py-1.5 px-4 sm:px-6" style={{ color: theme.topBarTextColor || "#f0fdf4" }}>
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
           <div className="flex items-center gap-1.5 justify-center">
@@ -33,9 +33,13 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
             <span className="font-bold text-white">{formatVes(bcvRate)}</span>
             <span className="opacity-80 hidden md:inline">· Precios en Bs. calculados al cambio oficial</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] justify-center opacity-90">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>Despachos en Caracas, Guarenas y Guatire</span>
+          <div className="flex items-center gap-1.5 text-[11px] justify-center opacity-95">
+            <span className="font-extrabold text-amber-300 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+              🛵 DELIVERY GRATIS en compras &gt; $50
+            </span>
+            <span className="hidden sm:inline text-white/70">·</span>
+            <span className="hidden sm:inline text-white/90">Caracas, Guarenas y Guatire</span>
           </div>
         </div>
       </div>

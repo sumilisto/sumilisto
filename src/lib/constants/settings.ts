@@ -82,14 +82,14 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   instagramHandle: "sumilisto_",
   instagramUrl: "https://www.instagram.com/sumilisto_/",
   heroTitle: "Suministros, Empaques y Descartables al Mayor y Gran Mayor para tu Negocio",
-  heroSubtitle: "Empaques comerciales, bolsas kraft, vasos, cajas, descartables y artículos para eventos con escala de descuento al Gran Mayor. Despachos rápidos en Caracas, Guarenas, Guatire y envíos nacionales.",
+  heroSubtitle: "Empaques comerciales, bolsas kraft, vasos, cajas, descartables y artículos para eventos con escala de descuento al Gran Mayor. ¡Delivery GRATIS en Caracas, Guarenas y Guatire para compras mayores a $50!",
   heroHeight: "md",
   heroSlides: [],
-  despachoText: "Despachos en Caracas, Guarenas y Guatire",
+  despachoText: "🛵 Delivery GRATIS en compras mayores a $50 · Caracas, Guarenas y Guatire",
   // Footer
   footerDescription: "Tu aliado confiable en suministros, empaques y descartables al Mayor y Gran Mayor para negocios, comercios, emprendimientos y eventos en Venezuela.",
   footerSchedule: "Lunes a Viernes: 8:00 AM - 5:00 PM\nSábados: 8:00 AM - 1:00 PM",
-  footerDeliveryText: "Despachos en Caracas, Guarenas y Guatire. Envíos nacionales por encomienda.",
+  footerDeliveryText: "Delivery GRATIS en compras mayores a $50 en Caracas, Guarenas y Guatire. Envíos nacionales por encomienda.",
   footerBgColor: "#0f172a",
   footerTextColor: "#94a3b8",
   // Barra Inferior Móvil

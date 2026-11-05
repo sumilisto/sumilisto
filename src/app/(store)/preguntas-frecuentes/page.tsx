@@ -17,7 +17,7 @@ export default function FAQPage() {
     },
     {
       q: "¿Cuáles son las zonas de despacho y tiempos de entrega?",
-      a: "Realizamos despachos directos en la Gran Caracas, Guarenas y Guatire, habitualmente en un lapso de 24 a 48 horas tras la confirmación del pago. Para el interior del país, enviamos por las principales empresas de encomienda (Tealca, MRW, Zoom) con cobro en destino.",
+      a: "¡Disfruta de Delivery GRATIS en Caracas, Guarenas y Guatire en compras mayores a $50! Para compras menores a $50, la entrega tiene un costo muy accesible coordinado con tu asesor. Entregamos habitualmente en 24 a 48 horas. Para el resto del país, enviamos por las principales empresas de encomienda (Tealca, MRW, Zoom) con cobro en destino.",
       icon: Truck,
     },
     {

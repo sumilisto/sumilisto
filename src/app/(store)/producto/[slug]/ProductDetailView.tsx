@@ -534,6 +534,16 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             </div>
           )}
 
+          {/* Beneficio Delivery Gratis */}
+          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-emerald-50/90 border border-emerald-200/90 text-emerald-950 text-xs font-semibold shadow-xs">
+            <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+              <Truck className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-extrabold text-emerald-900">Delivery GRATIS</span> en Caracas, Guarenas y Guatire en pedidos mayores a $50.
+            </div>
+          </div>
+
           {/* Selector de Modalidad */}
           <div className="border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-200">
             {/* Opción MAYOR */}

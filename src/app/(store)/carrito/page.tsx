@@ -119,6 +119,11 @@ export default function CartPage() {
   const totalUsd = Math.round(lines.reduce((acc, l) => acc + l.subtotal, 0) * 100) / 100;
   const totalVes = calculateVesTotal(totalUsd, bcvRate || 0);
 
+  const FREE_DELIVERY_THRESHOLD = 50;
+  const qualifiesForFreeDelivery = totalUsd >= FREE_DELIVERY_THRESHOLD;
+  const amountNeededForFreeDelivery = Math.max(0, Math.round((FREE_DELIVERY_THRESHOLD - totalUsd) * 100) / 100);
+  const freeDeliveryProgress = Math.min(100, Math.round((totalUsd / FREE_DELIVERY_THRESHOLD) * 100));
+
   // Auto-guardado en segundo plano de carrito para recuperación de abandonados
   useEffect(() => {
     if (!sessionId || lines.length === 0) return;
@@ -285,6 +290,11 @@ export default function CartPage() {
       )}\n`;
     });
 
+    if (qualifiesForFreeDelivery) {
+      message += `\n🛵 *DESPACHO:* ¡DELIVERY GRATIS APLICADO! (Compra mayor a $50 en Caracas, Guarenas o Guatire)\n`;
+    } else {
+      message += `\n🛵 *DESPACHO:* Por coordinar con asesor (Delivery GRATIS a partir de $50)\n`;
+    }
     message += `\n💰 *TOTAL USD:* ${formatUsd(totalUsd)}`;
     if (bcvRate) {
       message += `\n💵 *TOTAL VES (BCV):* ${formatVes(totalVes)}`;
@@ -333,6 +343,52 @@ export default function CartPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-extrabold text-slate-900 mb-6">Resumen de tu Pedido Mayorista</h1>
+
+      {/* Banner de Delivery Gratis */}
+      <div className={`mb-6 p-4 rounded-2xl border transition-all ${
+        qualifiesForFreeDelivery
+          ? "bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-emerald-300 shadow-xs"
+          : "bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-amber-200 shadow-xs"
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${
+              qualifiesForFreeDelivery ? "bg-emerald-600 text-white shadow-xs" : "bg-amber-500 text-white shadow-xs"
+            }`}>
+              {qualifiesForFreeDelivery ? "🎉" : "🛵"}
+            </div>
+            <div>
+              <h2 className={`text-sm sm:text-base font-black ${
+                qualifiesForFreeDelivery ? "text-emerald-950" : "text-amber-950"
+              }`}>
+                {qualifiesForFreeDelivery
+                  ? "¡Felicidades! Calificas para DELIVERY GRATIS"
+                  : `¡Te faltan ${formatUsd(amountNeededForFreeDelivery)} para DELIVERY GRATIS!`}
+              </h2>
+              <p className="text-xs text-slate-600">
+                {qualifiesForFreeDelivery
+                  ? "Tu pedido supera los $50. Entrega gratuita en Caracas, Guarenas y Guatire."
+                  : "Agrega más productos y ahórrate el costo de envío (compras mayores a $50 en Caracas, Guarenas y Guatire)."}
+              </p>
+            </div>
+          </div>
+
+          <span className={`self-start sm:self-auto text-xs font-black px-2.5 py-1 rounded-full shrink-0 ${
+            qualifiesForFreeDelivery ? "bg-emerald-200 text-emerald-900" : "bg-amber-200 text-amber-900"
+          }`}>
+            {freeDeliveryProgress}%
+          </span>
+        </div>
+
+        <div className="w-full h-2.5 bg-white/80 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              qualifiesForFreeDelivery ? "bg-emerald-500" : "bg-amber-500"
+            }`}
+            style={{ width: `${freeDeliveryProgress}%` }}
+          />
+        </div>
+      </div>
 
       {errorValidacion && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-medium animate-pulse">
@@ -685,8 +741,26 @@ export default function CartPage() {
 
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between items-center text-slate-600 text-sm">
+              <span>Subtotal Productos:</span>
+              <span className="font-bold text-slate-900 text-sm">{formatUsd(totalUsd)}</span>
+            </div>
+
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-600">Costo de Despacho:</span>
+              {qualifiesForFreeDelivery ? (
+                <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs uppercase">
+                  ¡GRATIS! (&gt; $50)
+                </span>
+              ) : (
+                <span className="font-medium text-slate-500 text-xs">
+                  Tarifa reducida a coordinar
+                </span>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center text-slate-900 text-base pt-2 border-t border-slate-100 font-black">
               <span>Total en Dólares:</span>
-              <span className="font-extrabold text-slate-900 text-lg">{formatUsd(totalUsd)}</span>
+              <span className="font-extrabold text-emerald-700 text-lg">{formatUsd(totalUsd)}</span>
             </div>
             {bcvRate > 0 && (
               <div className="flex justify-between items-center text-slate-600 text-sm">
