@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
           <div className="flex items-center gap-1.5 text-[11px] justify-center opacity-95">
             <span className="font-extrabold text-amber-300 flex items-center gap-1">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-              🛵 DELIVERY GRATIS en compras &gt; $50
+              🛵 DELIVERY GRATIS en compras +$50
             </span>
             <span className="hidden sm:inline text-white/70">·</span>
             <span className="hidden sm:inline text-white/90">Caracas, Guarenas y Guatire</span>

@@ -749,7 +749,7 @@ export default function CartPage() {
               <span className="text-slate-600">Costo de Despacho:</span>
               {qualifiesForFreeDelivery ? (
                 <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs uppercase">
-                  ¡GRATIS! (&gt; $50)
+                  ¡GRATIS! (+$50)
                 </span>
               ) : (
                 <span className="font-medium text-slate-500 text-xs">
