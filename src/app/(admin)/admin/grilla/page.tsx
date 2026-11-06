@@ -205,9 +205,7 @@ export default function AdminGrillaPage() {
         return {
           ...item,
           completada: next,
-          completadaAt: next
-            ? new Date().toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit" })
-            : undefined,
+          completadaAt: next ? item.hora : undefined,
         };
       }
       return item;
@@ -219,7 +217,16 @@ export default function AdminGrillaPage() {
 
   const updateItemField = (id: string, field: keyof GrillaItem, value: any) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextItem = { ...item, [field]: value };
+          if (field === "hora" && item.completada) {
+            nextItem.completadaAt = value;
+          }
+          return nextItem;
+        }
+        return item;
+      })
     );
     setHasUnsavedChanges(true);
   };
@@ -980,7 +987,7 @@ export default function AdminGrillaPage() {
                             ? "bg-emerald-600 text-white shadow-xs"
                             : "bg-white border-2 border-slate-300 hover:border-emerald-500 text-transparent"
                         }`}
-                        title={item.completada ? "Marcar como pendiente" : "Marcar como publicado"}
+                        title={item.completada ? "Marcar como pendiente" : `Marcar como programado (${item.hora})`}
                       >
                         <Check className="w-4 h-4 stroke-[3]" />
                       </button>
@@ -1057,7 +1064,7 @@ export default function AdminGrillaPage() {
                       {item.completada ? (
                         <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          Publicado {item.completadaAt && `(${item.completadaAt})`}
+                          Programado ({item.hora})
                         </span>
                       ) : (
                         <span className="text-[11px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
