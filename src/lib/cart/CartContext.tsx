@@ -14,8 +14,8 @@ interface CartContextType {
   whatsappSentAt?: number;
   isExpired: boolean;
   getItemQuantity: (sku: string) => number;
-  addItem: (sku: string, quantity?: number, tier?: "mayor" | "gran_mayor", comentarios?: string) => void;
-  updateQuantity: (sku: string, quantity: number, tier?: "mayor" | "gran_mayor", comentarios?: string) => void;
+  addItem: (sku: string, quantity?: number, tier?: "mayor" | "gran_mayor", comentarios?: string, subtotalUsd?: number) => void;
+  updateQuantity: (sku: string, quantity: number, tier?: "mayor" | "gran_mayor", comentarios?: string, subtotalUsd?: number) => void;
   removeItem: (sku: string) => void;
   clearCart: () => void;
   markAsSentWhatsApp: () => void;
@@ -90,7 +90,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const addItem = useCallback(
-    (sku: string, quantity = 1, tier?: "mayor" | "gran_mayor", comentarios?: string) => {
+    (sku: string, quantity = 1, tier?: "mayor" | "gran_mayor", comentarios?: string, subtotalUsd?: number) => {
       setCartData((prev) => {
         const existingIndex = prev.items.findIndex((item) => item.sku === sku);
         let newItems: CartStorageItem[];
@@ -102,9 +102,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             cantidad: newItems[existingIndex].cantidad + quantity,
             tier: tier || newItems[existingIndex].tier,
             comentarios: comentarios !== undefined ? comentarios : newItems[existingIndex].comentarios,
+            subtotalUsd: subtotalUsd !== undefined ? subtotalUsd : newItems[existingIndex].subtotalUsd,
           };
         } else {
-          newItems = [...prev.items, { sku, cantidad: quantity, tier, comentarios }];
+          newItems = [...prev.items, { sku, cantidad: quantity, tier, comentarios, subtotalUsd }];
         }
 
         const updated: CartStorageData = {
@@ -125,7 +126,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const updateQuantity = useCallback(
-    (sku: string, quantity: number, tier?: "mayor" | "gran_mayor", comentarios?: string) => {
+    (sku: string, quantity: number, tier?: "mayor" | "gran_mayor", comentarios?: string, subtotalUsd?: number) => {
       setCartData((prev) => {
         let newItems: CartStorageItem[];
         if (quantity <= 0) {
@@ -140,11 +141,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     cantidad: quantity,
                     tier: tier || item.tier,
                     comentarios: comentarios !== undefined ? comentarios : item.comentarios,
+                    subtotalUsd: subtotalUsd !== undefined ? subtotalUsd : item.subtotalUsd,
                   }
                 : item
             );
           } else {
-            newItems = [...prev.items, { sku, cantidad: quantity, tier, comentarios }];
+            newItems = [...prev.items, { sku, cantidad: quantity, tier, comentarios, subtotalUsd }];
           }
         }
 

@@ -375,7 +375,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     }
 
     // Guarda en el carrito con su SKU único de variante (así ROJA y DORADA se guardan como productos separados)
-    updateQuantity(activeVariant.sku, totalUnits, selectedTier, comentarios);
+    updateQuantity(activeVariant.sku, totalUnits, selectedTier, comentarios, totalUsd);
     setAddedFeedback(true);
     setStockAlertMessage(null);
     setTimeout(() => setAddedFeedback(false), 2500);

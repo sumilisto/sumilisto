@@ -5,22 +5,51 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart/CartContext";
 import { useProducts } from "@/lib/products/ProductsContext";
-import { calculateProductPrice } from "@/lib/pricing/pricing";
 import { formatUsd } from "@/lib/currency/format";
-import { ShoppingBag, ArrowRight, Truck } from "lucide-react";
+import { ShoppingBag, ArrowRight } from "lucide-react";
 
 export const FloatingCartBar: React.FC = () => {
   const pathname = usePathname();
   const { items, itemCount } = useCart();
   const { products } = useProducts();
 
-  // Calcular subtotal aproximado en el cliente para el floating bar
+  // Calcular subtotal exacto en el cliente para el floating bar resolviendo variantes y productos
   const totalUsd = useMemo(() => {
     return items.reduce((acc, cartItem) => {
-      const product = products.find((p) => p.sku === cartItem.sku);
-      if (!product || !product.isAvailable) return acc;
-      const pricing = calculateProductPrice(product, cartItem.cantidad);
-      return acc + pricing.subtotalUsd;
+      if (!cartItem.cantidad || cartItem.cantidad <= 0) return acc;
+
+      // 1. Buscar producto por SKU directo o por SKU de sus variantes
+      let product = products.find((p) => p.sku === cartItem.sku);
+      let variant = product?.variantes?.find((v) => v.sku === cartItem.sku);
+
+      if (!product) {
+        product = products.find((p) => p.variantes?.some((v) => v.sku === cartItem.sku));
+        variant = product?.variantes?.find((v) => v.sku === cartItem.sku);
+      }
+
+      if (product) {
+        const precioMayor = variant?.precioMayorUsd ?? product.precioMayorUsd ?? 0;
+        const precioGranMayor = variant?.precioGranMayorUsd ?? product.precioGranMayorUsd ?? 0;
+        const minMayor = variant?.minMayor || product.minMayor || 50;
+        const minGranMayor = variant?.minGranMayor || product.minGranMayor || 100;
+
+        const aplicaGranMayor =
+          precioGranMayor > 0 && minGranMayor > 0 && cartItem.cantidad >= minGranMayor;
+
+        const unidadesPorPaquete = aplicaGranMayor ? minGranMayor : minMayor;
+        const precioPaquete = aplicaGranMayor ? precioGranMayor : precioMayor;
+        const subtotal =
+          Math.round(precioPaquete * (cartItem.cantidad / unidadesPorPaquete) * 100) / 100;
+
+        return acc + subtotal;
+      }
+
+      // 2. Fallback resiliente si el item almacenó su subtotal en el carrito
+      if (typeof cartItem.subtotalUsd === "number" && cartItem.subtotalUsd > 0) {
+        return acc + cartItem.subtotalUsd;
+      }
+
+      return acc;
     }, 0);
   }, [items, products]);
 
@@ -35,7 +64,7 @@ export const FloatingCartBar: React.FC = () => {
 
   const productLabel = itemCount === 1 ? "1 producto" : `${itemCount} productos`;
   const qualifiesForFreeDelivery = totalUsd >= 50;
-  const amountToFreeDelivery = Math.max(0, 50 - totalUsd);
+  const amountToFreeDelivery = Math.max(0, Math.round((50 - totalUsd) * 100) / 100);
 
   return (
     <aside aria-label="Resumen rápido del pedido" className="sm:hidden fixed bottom-14 left-0 right-0 z-30 px-3 pb-2 pointer-events-none">
@@ -56,7 +85,7 @@ export const FloatingCartBar: React.FC = () => {
                 </span>
               ) : (
                 <span className="text-[10px] font-medium text-emerald-200">
-                  Faltan ${Math.ceil(amountToFreeDelivery)} p/ Delivery Gratis
+                  Faltan ${amountToFreeDelivery.toFixed(2).replace(".", ",")} p/ Delivery Gratis
                 </span>
               )}
             </div>

@@ -5,6 +5,7 @@ export interface CartStorageItem {
   cantidad: number;
   tier?: "mayor" | "gran_mayor";
   comentarios?: string;
+  subtotalUsd?: number;
 }
 
 export interface CartStorageData {
