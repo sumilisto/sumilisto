@@ -569,7 +569,40 @@ export async function getOrders(): Promise<Order[]> {
       .single();
 
     if (error || !data) return [];
-    return (data.data?.pedidos || []) as Order[];
+    const allPedidos = (data.data?.pedidos || []) as Order[];
+
+    // Auto-limpieza: pedidos cancelados que superaron los 2 minutos (120,000 ms) se purgan
+    // y su código queda libre automáticamente para próximos pedidos
+    const now = Date.now();
+    const TWO_MINUTES_MS = 2 * 60 * 1000;
+    let hadExpired = false;
+
+    const activePedidos = allPedidos.filter((p) => {
+      if (p.estado === "cancelado" && p.cancelledAt) {
+        const elapsed = now - new Date(p.cancelledAt).getTime();
+        if (elapsed >= TWO_MINUTES_MS) {
+          hadExpired = true;
+          return false; // Purgar pedido definitivamente
+        }
+      }
+      return true;
+    });
+
+    if (hadExpired) {
+      // Guardar en segundo plano la lista limpia sin los cancelados expirados
+      supabaseAdmin
+        .from("configuracion")
+        .update({
+          data: {
+            ...data.data,
+            pedidos: activePedidos,
+          },
+        })
+        .eq("id", 1)
+        .then(() => {});
+    }
+
+    return activePedidos;
   } catch (err) {
     console.error("Error obteniendo pedidos:", err);
     return [];
@@ -588,7 +621,7 @@ export async function saveOrder(order: Order): Promise<boolean> {
     const currentData = data?.data || {};
     const pedidos: Order[] = currentData.pedidos || [];
 
-    const existingIdx = pedidos.findIndex((p) => p.id === order.id || p.codigo === order.codigo);
+    const existingIdx = pedidos.findIndex((p) => p.id === order.id);
     let updatedPedidos: Order[];
     if (existingIdx >= 0) {
       updatedPedidos = [...pedidos];
@@ -631,9 +664,18 @@ export async function updateOrder(orderId: string, updates: Partial<Order>): Pro
     const currentData = data?.data || {};
     const pedidos: Order[] = currentData.pedidos || [];
 
-    const updatedPedidos = pedidos.map((p) =>
-      p.id === orderId || p.codigo === orderId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
-    );
+    const updatedPedidos = pedidos.map((p) => {
+      if (p.id === orderId || p.codigo === orderId) {
+        const merged: Order = { ...p, ...updates, updatedAt: new Date().toISOString() };
+        if (updates.estado === "cancelado") {
+          merged.cancelledAt = merged.cancelledAt || new Date().toISOString();
+        } else if (updates.estado) {
+          delete merged.cancelledAt;
+        }
+        return merged;
+      }
+      return p;
+    });
 
     const { error: updateError } = await supabaseAdmin
       .from("configuracion")
@@ -664,9 +706,18 @@ export async function updateOrderStatus(orderId: string, estado: OrderStatus): P
     const currentData = data?.data || {};
     const pedidos: Order[] = currentData.pedidos || [];
 
-    const updatedPedidos = pedidos.map((p) =>
-      p.id === orderId ? { ...p, estado, updatedAt: new Date().toISOString() } : p
-    );
+    const updatedPedidos = pedidos.map((p) => {
+      if (p.id === orderId || p.codigo === orderId) {
+        const updated: Order = { ...p, estado, updatedAt: new Date().toISOString() };
+        if (estado === "cancelado") {
+          updated.cancelledAt = updated.cancelledAt || new Date().toISOString();
+        } else {
+          delete updated.cancelledAt;
+        }
+        return updated;
+      }
+      return p;
+    });
 
     const { error: updateError } = await supabaseAdmin
       .from("configuracion")
@@ -695,7 +746,7 @@ export async function deleteOrder(orderId: string): Promise<boolean> {
 
     if (error) return false;
     const currentData = data?.data || {};
-    const pedidos: Order[] = (currentData.pedidos || []).filter((p: Order) => p.id !== orderId);
+    const pedidos: Order[] = (currentData.pedidos || []).filter((p: Order) => p.id !== orderId && p.codigo !== orderId);
 
     const { error: updateError } = await supabaseAdmin
       .from("configuracion")

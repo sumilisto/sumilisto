@@ -59,6 +59,19 @@ export default function CartPage() {
   const [showManualMapsInput, setShowManualMapsInput] = useState(false);
   const [errorValidacion, setErrorValidacion] = useState('');
   const [sessionId, setSessionId] = useState<string>('');
+  const [assignedOrderCode, setAssignedOrderCode] = useState<string>('');
+
+  useEffect(() => {
+    // Pre-cargar un código de pedido garantizado único desde el servidor
+    fetch('/api/orders/code')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.ok && data.code) {
+          setAssignedOrderCode(data.code);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -136,7 +149,7 @@ export default function CartPage() {
           });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const totalUsd = Math.round(lines.reduce((acc, l) => acc + l.subtotal, 0) * 100) / 100;
@@ -227,7 +240,7 @@ export default function CartPage() {
         // Intentar afinar con alta precisión satelital si el dispositivo lo soporta
         navigator.geolocation.getCurrentPosition(
           (precisePos) => onSuccess(precisePos),
-          () => {},
+          () => { },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       },
@@ -288,7 +301,7 @@ export default function CartPage() {
 
     setErrorValidacion('');
 
-    const orderCode = generateOrderCode();
+    const orderCode = assignedOrderCode || generateOrderCode();
     let message = `_*SUMILISTO*_\n`;
     message += `🛒 Resumen de su pedido *${orderCode}*\n\n`;
     message += `Cliente: _*${cleanNombre}*_\n`;
@@ -366,7 +379,7 @@ export default function CartPage() {
           totalVes,
           tasaBcv: currentBcvRate,
         }),
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     // En navegadores móviles y webviews (Instagram, Facebook), window.open es bloqueado frecuentemente.
@@ -403,22 +416,19 @@ export default function CartPage() {
       <h1 className="text-3xl font-extrabold text-slate-900 mb-6">Resumen de tu Pedido Mayorista</h1>
 
       {/* Banner de Delivery Gratis */}
-      <div className={`mb-6 p-4 rounded-2xl border transition-all ${
-        qualifiesForFreeDelivery
+      <div className={`mb-6 p-4 rounded-2xl border transition-all ${qualifiesForFreeDelivery
           ? "bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-emerald-300 shadow-xs"
           : "bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-amber-200 shadow-xs"
-      }`}>
+        }`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${
-              qualifiesForFreeDelivery ? "bg-emerald-600 text-white shadow-xs" : "bg-amber-500 text-white shadow-xs"
-            }`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${qualifiesForFreeDelivery ? "bg-emerald-600 text-white shadow-xs" : "bg-amber-500 text-white shadow-xs"
+              }`}>
               {qualifiesForFreeDelivery ? "🎉" : "🛵"}
             </div>
             <div>
-              <h2 className={`text-sm sm:text-base font-black ${
-                qualifiesForFreeDelivery ? "text-emerald-950" : "text-amber-950"
-              }`}>
+              <h2 className={`text-sm sm:text-base font-black ${qualifiesForFreeDelivery ? "text-emerald-950" : "text-amber-950"
+                }`}>
                 {qualifiesForFreeDelivery
                   ? "¡Felicidades! Calificas para DELIVERY GRATIS"
                   : `¡Te faltan ${formatUsd(amountNeededForFreeDelivery)} para DELIVERY GRATIS!`}
@@ -431,18 +441,16 @@ export default function CartPage() {
             </div>
           </div>
 
-          <span className={`self-start sm:self-auto text-xs font-black px-2.5 py-1 rounded-full shrink-0 ${
-            qualifiesForFreeDelivery ? "bg-emerald-200 text-emerald-900" : "bg-amber-200 text-amber-900"
-          }`}>
+          <span className={`self-start sm:self-auto text-xs font-black px-2.5 py-1 rounded-full shrink-0 ${qualifiesForFreeDelivery ? "bg-emerald-200 text-emerald-900" : "bg-amber-200 text-amber-900"
+            }`}>
             {freeDeliveryProgress}%
           </span>
         </div>
 
         <div className="w-full h-2.5 bg-white/80 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              qualifiesForFreeDelivery ? "bg-emerald-500" : "bg-amber-500"
-            }`}
+            className={`h-full rounded-full transition-all duration-500 ${qualifiesForFreeDelivery ? "bg-emerald-500" : "bg-amber-500"
+              }`}
             style={{ width: `${freeDeliveryProgress}%` }}
           />
         </div>

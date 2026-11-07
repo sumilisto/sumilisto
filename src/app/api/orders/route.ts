@@ -106,7 +106,10 @@ export async function POST(req: NextRequest) {
     const gananciaNeta = Math.max(0, Math.round((gananciaBruta - fleteRetiro - embalaje) * 100) / 100);
 
     const totalVes = calculateVesTotal(totalUsd, parsedTasa);
-    const orderCode = generateOrderCode(); // #SUMI-XXXX de 4 dígitos no correlativos
+    // Obtener pedidos existentes para garantizar que el código de 4 dígitos no se repita
+    const existingOrders = await getOrders();
+    const existingCodes = existingOrders.map((o) => o.codigo);
+    const orderCode = generateOrderCode(existingCodes); // #SUMI-XXXX de 4 dígitos no correlativos garantizado único
     const now = new Date().toISOString();
 
     const newOrder: Order = {
@@ -214,6 +217,11 @@ export async function PATCH(req: NextRequest) {
 
     if (estado !== undefined) {
       updates.estado = estado as OrderStatus;
+      if (estado === "cancelado") {
+        updates.cancelledAt = new Date().toISOString();
+      } else {
+        updates.cancelledAt = undefined;
+      }
     }
 
     if (conIva !== undefined) {

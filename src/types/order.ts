@@ -44,6 +44,7 @@ export interface Order {
     ahorro: number; // 10%
   };
   estado: OrderStatus;
+  cancelledAt?: string; // Timestamp ISO cuando se marcó como cancelado (temporizador de 2 min)
   createdAt: string;
   updatedAt: string;
 }

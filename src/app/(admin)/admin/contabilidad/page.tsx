@@ -32,6 +32,7 @@ import {
   AlertCircle,
   FileText,
   Percent,
+  ClipboardList,
 } from "lucide-react";
 
 export default function AdminContabilidadPage() {
@@ -51,6 +52,7 @@ export default function AdminContabilidadPage() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRange, setSelectedRange] = useState<"mes" | "todo">("mes");
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
 
   // Modal de pedido manual
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -127,6 +129,33 @@ export default function AdminContabilidadPage() {
       setLoading(false);
     }
   };
+
+  // Temporizador de 1 segundo para la cuenta regresiva de 2 minutos en pedidos cancelados
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setCurrentTime(now);
+
+      // Limpieza automática si transcurrieron los 2 minutos (120,000 ms) para pedidos cancelados
+      setOrders((prev) => {
+        let changed = false;
+        const next = prev.filter((ord) => {
+          if (ord.estado === "cancelado" && ord.cancelledAt) {
+            const elapsed = now - new Date(ord.cancelledAt).getTime();
+            if (elapsed >= 120000) {
+              changed = true;
+              fetch(`/api/orders?id=${ord.id}`, { method: "DELETE" }).catch(() => {});
+              return false;
+            }
+          }
+          return true;
+        });
+        return changed ? next : prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -499,17 +528,29 @@ export default function AdminContabilidadPage() {
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
+    const nowIso = new Date().toISOString();
+    // Actualización reactiva instantánea
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id === orderId) {
+          const updated: Order = { ...o, estado: newStatus, updatedAt: nowIso };
+          if (newStatus === "cancelado") {
+            updated.cancelledAt = nowIso;
+          } else {
+            delete updated.cancelledAt;
+          }
+          return updated;
+        }
+        return o;
+      })
+    );
+
     try {
-      const res = await fetch("/api/orders", {
+      await fetch("/api/orders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, estado: newStatus }),
       });
-      if (res.ok) {
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, estado: newStatus } : o))
-        );
-      }
     } catch (err) {
       console.error("Error actualizando estado:", err);
     }
@@ -902,6 +943,14 @@ export default function AdminContabilidadPage() {
                 <option value="entregado">Entregados</option>
                 <option value="cancelado">Cancelados</option>
               </select>
+
+              <Link
+                href="/admin/pedidos"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs"
+              >
+                <ClipboardList className="w-3.5 h-3.5" />
+                <span>Ir a Gestión y Despacho -&gt;</span>
+              </Link>
             </div>
           </div>
 
@@ -1042,27 +1091,51 @@ export default function AdminContabilidadPage() {
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <select
-                            value={ord.estado}
-                            onChange={(e) => handleUpdateStatus(ord.id, e.target.value as OrderStatus)}
-                            className={`text-xs font-bold px-2 py-1 rounded-lg border outline-none cursor-pointer ${
-                              ord.estado === "entregado"
-                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                : ord.estado === "pagado"
-                                ? "bg-blue-50 text-blue-800 border-blue-200"
-                                : ord.estado === "despachado"
-                                ? "bg-purple-50 text-purple-800 border-purple-200"
-                                : ord.estado === "cancelado"
-                                ? "bg-rose-50 text-rose-800 border-rose-200"
-                                : "bg-amber-50 text-amber-800 border-amber-200"
-                            }`}
-                          >
-                            <option value="pendiente">Pendiente</option>
-                            <option value="pagado">Pagado</option>
-                            <option value="despachado">Despachado</option>
-                            <option value="entregado">Entregado</option>
-                            <option value="cancelado">Cancelado</option>
-                          </select>
+                          <div className="space-y-1">
+                            <select
+                              value={ord.estado}
+                              onChange={(e) => handleUpdateStatus(ord.id, e.target.value as OrderStatus)}
+                              className={`text-xs font-bold px-2 py-1 rounded-lg border outline-none cursor-pointer ${
+                                ord.estado === "entregado"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  : ord.estado === "pagado"
+                                  ? "bg-blue-50 text-blue-800 border-blue-200"
+                                  : ord.estado === "despachado"
+                                  ? "bg-purple-50 text-purple-800 border-purple-200"
+                                  : ord.estado === "cancelado"
+                                  ? "bg-rose-50 text-rose-800 border-rose-200"
+                                  : "bg-amber-50 text-amber-800 border-amber-200"
+                              }`}
+                            >
+                              <option value="pendiente">Pendiente</option>
+                              <option value="pagado">Pagado</option>
+                              <option value="despachado">Despachado</option>
+                              <option value="entregado">Entregado</option>
+                              <option value="cancelado">Cancelado</option>
+                            </select>
+
+                            {ord.estado === "cancelado" && ord.cancelledAt && (() => {
+                              const elapsed = currentTime - new Date(ord.cancelledAt).getTime();
+                              const remSec = Math.max(0, Math.ceil((120000 - elapsed) / 1000));
+                              return (
+                                <div className="flex items-center gap-1.5 pt-0.5">
+                                  <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                                    <span>⏳</span>
+                                    <span>
+                                      {Math.floor(remSec / 60)}:{(remSec % 60).toString().padStart(2, "0")}
+                                    </span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateStatus(ord.id, "pendiente")}
+                                    className="text-[10px] font-bold text-blue-700 hover:underline cursor-pointer"
+                                  >
+                                    Deshacer
+                                  </button>
+                                </div>
+                              );
+                            })()}
+                          </div>
                         </td>
 
                         <td className="py-3.5 px-4 text-right">

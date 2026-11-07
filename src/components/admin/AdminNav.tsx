@@ -15,6 +15,7 @@ import {
   LogOut,
   ShieldCheck,
   Calculator,
+  ClipboardList,
 } from "lucide-react";
 
 interface AdminNavProps {
@@ -36,18 +37,25 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
 
   const navItems = [
     {
+      label: "Pedidos y Despacho",
+      shortLabel: "Pedidos",
+      href: "/admin/pedidos",
+      icon: ClipboardList,
+      active: pathname === "/admin/pedidos",
+    },
+    {
+      label: "Contabilidad y Finanzas",
+      shortLabel: "Contabilidad",
+      href: "/admin/contabilidad",
+      icon: Calculator,
+      active: pathname === "/admin/contabilidad",
+    },
+    {
       label: "Productos y Variantes",
       shortLabel: "Productos",
       href: "/admin/productos",
       icon: Package,
       active: pathname === "/admin/productos" || pathname === "/admin",
-    },
-    {
-      label: "Contabilidad y Pedidos",
-      shortLabel: "Contabilidad",
-      href: "/admin/contabilidad",
-      icon: Calculator,
-      active: pathname === "/admin/contabilidad",
     },
     {
       label: "Carritos Abandonados",

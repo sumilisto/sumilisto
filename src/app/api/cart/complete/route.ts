@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { saveOrder } from "@/lib/supabase/queries";
+import { saveOrder, getOrders } from "@/lib/supabase/queries";
+import { generateUniqueOrderCode } from "@/lib/orders/orderCode";
 import { Order, OrderItem } from "@/types/order";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimit";
 
@@ -63,9 +64,17 @@ export async function POST(req: Request) {
         tarifa: i.tarifa === "gran_mayor" ? "gran_mayor" : "mayor",
       }));
 
+      // Garantizar que el código del pedido no colisione con ninguno existente
+      const existingOrders = await getOrders();
+      const existingCodes = existingOrders.map((o) => o.codigo);
+      let finalCode = String(orderCode).trim().slice(0, 20);
+      if (existingCodes.includes(finalCode)) {
+        finalCode = generateUniqueOrderCode(existingCodes);
+      }
+
       const orderData: Order = {
         id: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        codigo: String(orderCode).slice(0, 20),
+        codigo: finalCode,
         origen: "web",
         clienteNombre: String(nombre || "Cliente Web").slice(0, 100),
         clienteTelefono: String(telefono || "").slice(0, 50),
