@@ -1,0 +1,1102 @@
+"use client";
+
+import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { isAdminAuthenticated, loginAdmin, logoutAdmin } from "@/lib/actions/auth";
+import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
+import { Order, OrderItem, OrderStatus, DEFAULT_ACCOUNTING_SETTINGS } from "@/types/order";
+import { Product } from "@/types/product";
+import { AdminNav } from "@/components/admin/AdminNav";
+import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
+import {
+  Calculator,
+  Plus,
+  Search,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  ShieldAlert,
+  Wallet,
+  PiggyBank,
+  CheckCircle2,
+  Clock,
+  Truck,
+  Package,
+  ExternalLink,
+  ChevronRight,
+  Filter,
+  RefreshCw,
+  X,
+  Lock,
+  User,
+  AlertCircle,
+  FileText,
+  Percent,
+} from "lucide-react";
+
+export default function AdminContabilidadPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [authError, setAuthError] = useState("");
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [bcvRate, setBcvRate] = useState<number>(880.12);
+
+  // Filtros
+  const [filterEstado, setFilterEstado] = useState<string>("todos");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedRange, setSelectedRange] = useState<"mes" | "todo">("mes");
+
+  // Modal de pedido manual
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submittingManual, setSubmittingManual] = useState(false);
+
+  // Formulario de pedido manual
+  const [manualNombre, setManualNombre] = useState("");
+  const [manualTelefono, setManualTelefono] = useState("");
+  const [manualZona, setManualZona] = useState("Caracas");
+  const [manualDireccion, setManualDireccion] = useState("");
+  const [manualMetodo, setManualMetodo] = useState("Pago Móvil / Transferencia Bs (Tasa BCV)");
+  const [manualNotas, setManualNotas] = useState("");
+  const [manualItems, setManualItems] = useState<
+    Array<{
+      productoId: string;
+      sku: string;
+      nombre: string;
+      color?: string;
+      presentacion?: string;
+      cantidad: number;
+      tarifa: "mayor" | "gran_mayor";
+      precioUnitario: number;
+      costoUnitario: number;
+    }>
+  >([]);
+
+  // Item temporal para agregar
+  const [selectedProdId, setSelectedProdId] = useState("");
+  const [selectedVariantSku, setSelectedVariantSku] = useState("");
+  const [selectedTarifa, setSelectedTarifa] = useState<"mayor" | "gran_mayor">("mayor");
+  const [selectedCantidad, setSelectedCantidad] = useState("1");
+
+  // Flete y embalaje del pedido manual
+  const [manualFleteOpcion, setManualFleteOpcion] = useState<string>("5.00");
+  const [manualEmbalaje, setManualEmbalaje] = useState<string>("0.50");
+
+  useEffect(() => {
+    isAdminAuthenticated().then((auth) => {
+      setIsAuthenticated(auth);
+      setAuthChecked(true);
+      if (auth) {
+        loadData();
+      }
+    });
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [ordersRes, prodsRes, bcvRes] = await Promise.all([
+        fetch("/api/orders").then((r) => r.json()),
+        fetch("/api/products").then((r) => r.json()),
+        fetch("/api/bcv").then((r) => r.json()),
+      ]);
+
+      if (ordersRes?.ok && Array.isArray(ordersRes.orders)) {
+        setOrders(ordersRes.orders);
+      }
+      if (Array.isArray(prodsRes)) {
+        setProducts(prodsRes);
+      }
+      if (bcvRes?.rate) {
+        setBcvRate(Number(bcvRes.rate));
+      }
+    } catch (err) {
+      console.error("Error cargando datos contables:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoggingIn(true);
+    setAuthError("");
+    try {
+      const res = await loginAdmin(usernameInput, passwordInput);
+      if (res.ok) {
+        setIsAuthenticated(true);
+        loadData();
+      } else {
+        setAuthError(res.error || "Credenciales incorrectas.");
+      }
+    } finally {
+      setLoggingIn(false);
+    }
+  };
+
+  // Filtrado de pedidos
+  const filteredOrders = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return orders.filter((ord) => {
+      if (filterEstado !== "todos" && ord.estado !== filterEstado) {
+        return false;
+      }
+      if (selectedRange === "mes") {
+        const ordDate = new Date(ord.createdAt);
+        if (ordDate.getMonth() !== currentMonth || ordDate.getFullYear() !== currentYear) {
+          return false;
+        }
+      }
+      if (searchTerm.trim() !== "") {
+        const q = searchTerm.toLowerCase();
+        const matchesCode = ord.codigo?.toLowerCase().includes(q);
+        const matchesName = ord.clienteNombre?.toLowerCase().includes(q);
+        const matchesPhone = ord.clienteTelefono?.toLowerCase().includes(q);
+        return matchesCode || matchesName || matchesPhone;
+      }
+      return true;
+    });
+  }, [orders, filterEstado, selectedRange, searchTerm]);
+
+  // Cálculos Contables y P&L
+  const metrics = useMemo(() => {
+    let facturacionTotal = 0;
+    let costoMercanciaTotal = 0;
+    let fletesRetiroTotal = 0;
+    let embalajeTotal = 0;
+
+    filteredOrders.forEach((o) => {
+      if (o.estado !== "cancelado") {
+        facturacionTotal += o.totalUsd || 0;
+        costoMercanciaTotal += o.costoMercanciaUsd || 0;
+        fletesRetiroTotal += o.gastoFleteRetiroUsd || 0;
+        embalajeTotal += o.gastoEmbalajeUsd || 0;
+      }
+    });
+
+    const gananciaBruta = Math.max(0, facturacionTotal - costoMercanciaTotal);
+    const margenBrutoPorc = facturacionTotal > 0 ? (gananciaBruta / facturacionTotal) * 100 : 0;
+
+    // Gastos Fijos Mensuales del Negocio
+    const sueldoFijo = DEFAULT_ACCOUNTING_SETTINGS.sueldoFijoMensual; // $800
+    const internet = DEFAULT_ACCOUNTING_SETTINGS.internetMensual; // $25
+    const luz = DEFAULT_ACCOUNTING_SETTINGS.luzMensual; // $10
+    const dominio = DEFAULT_ACCOUNTING_SETTINGS.dominioMensual; // $1
+    const totalGastosFijos = sueldoFijo + internet + luz + dominio; // $836
+
+    // Punto de Equilibrio: Con un 20% de ganancia neta meta, se requiere facturar:
+    // Ventas de Equilibrio = $836 / 0.20 = $4,180.00
+    const ventasEquilibrioMeta = totalGastosFijos / (DEFAULT_ACCOUNTING_SETTINGS.margenMetaPorcentaje / 100);
+    const progresoEquilibrio = Math.min(100, Math.round((facturacionTotal / ventasEquilibrioMeta) * 100));
+    const faltaParaEquilibrio = Math.max(0, ventasEquilibrioMeta - facturacionTotal);
+
+    // Ganancia Neta Real (Utilidad Distribuible después de fletes, embalajes y cuota de fijos)
+    const gananciaNetaOperativa = Math.max(0, gananciaBruta - fletesRetiroTotal - embalajeTotal);
+
+    // Reparto de la ganancia con tu regla:
+    const reparto = {
+      reinversion: Math.round(gananciaNetaOperativa * 0.5 * 100) / 100, // 50%
+      reserva: Math.round(gananciaNetaOperativa * 0.2 * 100) / 100, // 20%
+      sueldo: Math.round(gananciaNetaOperativa * 0.2 * 100) / 100, // 20%
+      ahorro: Math.round(gananciaNetaOperativa * 0.1 * 100) / 100, // 10%
+    };
+
+    return {
+      facturacionTotal: Math.round(facturacionTotal * 100) / 100,
+      costoMercanciaTotal: Math.round(costoMercanciaTotal * 100) / 100,
+      fletesRetiroTotal: Math.round(fletesRetiroTotal * 100) / 100,
+      embalajeTotal: Math.round(embalajeTotal * 100) / 100,
+      gananciaBruta: Math.round(gananciaBruta * 100) / 100,
+      margenBrutoPorc: Math.round(margenBrutoPorc * 10) / 10,
+      totalGastosFijos,
+      ventasEquilibrioMeta,
+      progresoEquilibrio,
+      faltaParaEquilibrio: Math.round(faltaParaEquilibrio * 100) / 100,
+      gananciaNetaOperativa: Math.round(gananciaNetaOperativa * 100) / 100,
+      reparto,
+    };
+  }, [filteredOrders]);
+
+  // Manejo de productos en formulario manual
+  const selectedProduct = useMemo(() => {
+    return products.find((p) => p.id === selectedProdId);
+  }, [products, selectedProdId]);
+
+  const handleAddProductToManual = () => {
+    if (!selectedProduct) return;
+    const variants = selectedProduct.variantes || [];
+    const variant = variants.find((v) => v.sku === selectedVariantSku) || variants[0];
+    const qty = parseInt(selectedCantidad, 10);
+    if (isNaN(qty) || qty <= 0) return;
+
+    const precioUnitario =
+      selectedTarifa === "gran_mayor"
+        ? variant?.precioGranMayorUsd || selectedProduct.precioGranMayorUsd || 0
+        : variant?.precioMayorUsd || selectedProduct.precioMayorUsd || 0;
+
+    const costoUnitario =
+      selectedTarifa === "gran_mayor"
+        ? variant?.costoGranMayorUsd || selectedProduct.costoGranMayorUsd || precioUnitario * 0.75
+        : variant?.costoMayorUsd || selectedProduct.costoMayorUsd || precioUnitario * 0.75;
+
+    setManualItems((prev) => [
+      ...prev,
+      {
+        productoId: selectedProduct.id || selectedProduct.sku || "",
+        sku: variant?.sku || selectedProduct.sku,
+        nombre: selectedProduct.nombre,
+        color: variant?.color,
+        presentacion: variant?.presentacion || selectedProduct.presentacion,
+        cantidad: qty,
+        tarifa: selectedTarifa,
+        precioUnitario,
+        costoUnitario,
+      },
+    ]);
+
+    setSelectedCantidad("1");
+  };
+
+  const handleRemoveManualItem = (index: number) => {
+    setManualItems((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const manualTotalUsd = useMemo(() => {
+    return manualItems.reduce((acc, it) => acc + it.precioUnitario * it.cantidad, 0);
+  }, [manualItems]);
+
+  const handleCreateManualOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualNombre.trim() || !manualTelefono.trim()) {
+      alert("Por favor ingresa nombre y teléfono del cliente.");
+      return;
+    }
+    if (manualItems.length === 0) {
+      alert("Por favor agrega al menos un producto al pedido.");
+      return;
+    }
+
+    setSubmittingManual(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clienteNombre: manualNombre,
+          clienteTelefono: manualTelefono,
+          zonaEntrega: manualZona,
+          direccion: manualDireccion,
+          metodoPago: manualMetodo,
+          notas: manualNotas,
+          items: manualItems,
+          gastoFleteRetiroUsd: parseFloat(manualFleteOpcion),
+          gastoEmbalajeUsd: parseFloat(manualEmbalaje),
+          tasaBcv: bcvRate,
+        }),
+      });
+
+      const data = await res.json();
+      if (data?.ok && data.whatsappUrl) {
+        // Abrir inmediatamente la ventana de chat con el cliente
+        window.open(data.whatsappUrl, "_blank");
+
+        // Limpiar formulario y cerrar modal
+        setManualNombre("");
+        setManualTelefono("");
+        setManualDireccion("");
+        setManualNotas("");
+        setManualItems([]);
+        setIsModalOpen(false);
+
+        // Recargar pedidos
+        await loadData();
+      } else {
+        alert(data.error || "No se pudo crear el pedido.");
+      }
+    } catch (err: any) {
+      alert("Error creando pedido: " + err.message);
+    } finally {
+      setSubmittingManual(false);
+    }
+  };
+
+  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, estado: newStatus }),
+      });
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, estado: newStatus } : o))
+        );
+      }
+    } catch (err) {
+      console.error("Error actualizando estado:", err);
+    }
+  };
+
+  // Pantalla de login
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <RefreshCw className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/80 p-8">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-800 mb-3 shadow-xs">
+              <Calculator className="w-6 h-6" />
+            </div>
+            <h1 className="text-xl font-black text-slate-900">Contabilidad y Pedidos</h1>
+            <p className="text-xs text-slate-500 mt-1">Sumilisto · Acceso Privado de Administración</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Usuario</label>
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  placeholder="admin"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-emerald-600"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Contraseña</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-emerald-600"
+                  required
+                />
+              </div>
+            </div>
+
+            {authError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loggingIn}
+              className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              {loggingIn ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Iniciar Sesión"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50/60 pb-20">
+      <AdminNav onLogout={() => setIsAuthenticated(false)} />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
+        {/* ENCABEZADO Y ACCIONES PRINCIPALES */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Contabilidad y Pedidos</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                P&L en Vivo
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Control de ingresos, costos de mercancía, retiros, embalaje y reparto automático de utilidades.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Selector de Rango */}
+            <div className="bg-white border border-slate-200 rounded-xl p-1 flex items-center text-xs font-bold shadow-2xs">
+              <button
+                onClick={() => setSelectedRange("mes")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  selectedRange === "mes" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Este Mes
+              </button>
+              <button
+                onClick={() => setSelectedRange("todo")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  selectedRange === "todo" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Histórico
+              </button>
+            </div>
+
+            {/* Botón de Montar Pedido Manual */}
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Montar Pedido Manual</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 1. SECCIÓN DE PUNTO DE EQUILIBRIO CON SUELDO FIJO DE $800 */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-700/50">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
+            <div>
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
+                <TargetIcon className="w-4 h-4" />
+                <span>Punto de Equilibrio Mensual (Break-Even)</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+                Meta de Facturación: {formatUsd(metrics.ventasEquilibrioMeta)} / mes
+              </h2>
+              <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                Calculado para cubrir al 100% tu <strong>sueldo fijo de $800.00</strong> + Internet ($25) + Luz ($10) + Dominio ($1) = <strong>$836.00 de gastos fijos</strong>, con tu margen neto objetivo del 20%.
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-center gap-4 shrink-0">
+              <div>
+                <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Gastos Fijos Asignados</p>
+                <p className="text-xl font-black text-emerald-300">{formatUsd(metrics.totalGastosFijos)}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">$800 sueldo + $36 servicios</p>
+              </div>
+              <div className="h-10 w-px bg-white/20" />
+              <div>
+                <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Tasa BCV del Día</p>
+                <p className="text-xl font-black text-white">{bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2 })}</p>
+                <p className="text-[10px] text-emerald-400 mt-0.5">Bs./USD Oficial</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Barra de Progreso */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span>Progreso hacia la meta: {formatUsd(metrics.facturacionTotal)} ({metrics.progresoEquilibrio}%)</span>
+              <span className={metrics.faltaParaEquilibrio === 0 ? "text-emerald-400 font-extrabold" : "text-amber-300 font-semibold"}>
+                {metrics.faltaParaEquilibrio === 0
+                  ? "🎉 ¡Punto de equilibrio superado! A partir de aquí todo es utilidad extra"
+                  : `Faltan ${formatUsd(metrics.faltaParaEquilibrio)} para cubrir sueldo y gastos fijos`}
+              </span>
+            </div>
+            <div className="w-full h-3.5 bg-slate-700/80 rounded-full overflow-hidden p-0.5">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 rounded-full transition-all duration-500 shadow-sm"
+                style={{ width: `${metrics.progresoEquilibrio}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 2. TARJETAS FINANCIERAS RESUMEN (P&L) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">Ventas Totales</span>
+              <DollarSign className="w-4 h-4 text-emerald-600" />
+            </div>
+            <p className="text-2xl font-black text-slate-900">{formatUsd(metrics.facturacionTotal)}</p>
+            <p className="text-xs text-slate-500 mt-1">
+              ≈ {formatVes(calculateVesTotal(metrics.facturacionTotal, bcvRate))}
+            </p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">Costo Mercancía (CMV)</span>
+              <Package className="w-4 h-4 text-slate-600" />
+            </div>
+            <p className="text-2xl font-black text-slate-800">{formatUsd(metrics.costoMercanciaTotal)}</p>
+            <p className="text-xs text-slate-500 mt-1">Lo que pagaste a proveedores</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">Flete y Embalaje</span>
+              <Truck className="w-4 h-4 text-amber-600" />
+            </div>
+            <p className="text-2xl font-black text-amber-900">
+              {formatUsd(metrics.fletesRetiroTotal + metrics.embalajeTotal)}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Fletes: {formatUsd(metrics.fletesRetiroTotal)} · Embalaje: {formatUsd(metrics.embalajeTotal)}
+            </p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-2xs">
+            <div className="flex items-center justify-between text-emerald-800 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider">Ganancia Neta</span>
+              <TrendingUp className="w-4 h-4 text-emerald-700" />
+            </div>
+            <p className="text-2xl font-black text-emerald-800">{formatUsd(metrics.gananciaNetaOperativa)}</p>
+            <p className="text-xs text-emerald-700 mt-1">Margen Bruto: {metrics.margenBrutoPorc}%</p>
+          </div>
+        </div>
+
+        {/* 3. REPARTO DE LA GANANCIA NETA (LAS 4 CUENTAS / BALDES) */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+          <div className="mb-6">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-emerald-700" />
+              <span>Distribución Automática de Ganancia (Las 4 Cuentas)</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Así se dividen tus {formatUsd(metrics.gananciaNetaOperativa)} de ganancia neta acumulada en este período:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 50% Reinversión */}
+            <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-800 text-white font-black text-[10px]">
+                  50%
+                </span>
+                <TrendingUp className="w-4 h-4 text-emerald-800" />
+              </div>
+              <h4 className="text-xs font-bold uppercase text-emerald-950">Reinversión</h4>
+              <p className="text-2xl font-black text-emerald-900 mt-1">{formatUsd(metrics.reparto.reinversion)}</p>
+              <p className="text-[11px] text-emerald-800/80 mt-2 leading-relaxed">
+                Para Meta Ads ($1 a $3 diarios) y compra de más inventario a Gran Mayor.
+              </p>
+            </div>
+
+            {/* 20% Reserva */}
+            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="px-2 py-0.5 rounded-full bg-amber-800 text-white font-black text-[10px]">
+                  20%
+                </span>
+                <ShieldAlert className="w-4 h-4 text-amber-800" />
+              </div>
+              <h4 className="text-xs font-bold uppercase text-amber-950">Fondo de Emergencia</h4>
+              <p className="text-2xl font-black text-amber-900 mt-1">{formatUsd(metrics.reparto.reserva)}</p>
+              <p className="text-[11px] text-amber-800/80 mt-2 leading-relaxed">
+                Colchón en efectivo/USDT para imprevistos operativos o fluctuaciones.
+              </p>
+            </div>
+
+            {/* 20% Sueldo */}
+            <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="px-2 py-0.5 rounded-full bg-blue-800 text-white font-black text-[10px]">
+                  20%
+                </span>
+                <User className="w-4 h-4 text-blue-800" />
+              </div>
+              <h4 className="text-xs font-bold uppercase text-blue-950">Tu Sueldo (Abono)</h4>
+              <p className="text-2xl font-black text-blue-900 mt-1">{formatUsd(metrics.reparto.sueldo)}</p>
+              <p className="text-[11px] text-blue-800/80 mt-2 leading-relaxed">
+                Compensación del dueño (hacia la meta fija de $800 mensual).
+              </p>
+            </div>
+
+            {/* 10% Ahorro */}
+            <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="px-2 py-0.5 rounded-full bg-purple-800 text-white font-black text-[10px]">
+                  10%
+                </span>
+                <PiggyBank className="w-4 h-4 text-purple-800" />
+              </div>
+              <h4 className="text-xs font-bold uppercase text-purple-950">Ahorro e Inversión</h4>
+              <p className="text-2xl font-black text-purple-900 mt-1">{formatUsd(metrics.reparto.ahorro)}</p>
+              <p className="text-[11px] text-purple-800/80 mt-2 leading-relaxed">
+                Para maquinaria de empaque, depósito propio y proyectos futuros.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. LIBRO DE PEDIDOS (WEB Y MANUALES) */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-800" />
+                <span>Libro de Pedidos ({filteredOrders.length})</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Pedidos recibidos por la web y cargados manualmente. Códigos no correlativos (#SUMI-XXXX).
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Buscador */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar #SUMI o cliente..."
+                  className="pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 w-48 sm:w-60"
+                />
+              </div>
+
+              {/* Filtro Estado */}
+              <select
+                value={filterEstado}
+                onChange={(e) => setFilterEstado(e.target.value)}
+                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-bold text-slate-700"
+              >
+                <option value="todos">Todos los Estados</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="pagado">Pagados</option>
+                <option value="despachado">Despachados</option>
+                <option value="entregado">Entregados</option>
+                <option value="cancelado">Cancelados</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tabla de Pedidos */}
+          <div className="overflow-x-auto">
+            {filteredOrders.length === 0 ? (
+              <div className="py-16 text-center text-slate-400">
+                <Package className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                <p className="text-sm font-bold text-slate-600">No hay pedidos registrados con estos filtros</p>
+                <p className="text-xs text-slate-400 mt-1">Presiona &quot;+ Montar Pedido Manual&quot; para registrar tu primera venta.</p>
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/80 text-slate-600 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th className="py-3 px-4">Código</th>
+                    <th className="py-3 px-4">Cliente / Contacto</th>
+                    <th className="py-3 px-4">Fecha</th>
+                    <th className="py-3 px-4">Total USD / Bs</th>
+                    <th className="py-3 px-4">Costo Mercancía</th>
+                    <th className="py-3 px-4">Ganancia Neta</th>
+                    <th className="py-3 px-4">Estado</th>
+                    <th className="py-3 px-4 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {filteredOrders.map((ord) => {
+                    // Normalizar número telefónico para WhatsApp
+                    let rawPhone = ord.clienteTelefono?.replace(/[^0-9]/g, "") || "";
+                    if (rawPhone.startsWith("0")) rawPhone = "58" + rawPhone.slice(1);
+                    else if (!rawPhone.startsWith("58") && rawPhone.length === 10) rawPhone = "58" + rawPhone;
+
+                    const whatsappChatUrl = `https://wa.me/${rawPhone}`;
+
+                    return (
+                      <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-mono">
+                              {ord.codigo}
+                            </span>
+                            <span
+                              className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                                ord.origen === "web"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {ord.origen === "web" ? "Web" : "Manual"}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <p className="font-bold text-slate-900">{ord.clienteNombre}</p>
+                          <a
+                            href={whatsappChatUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-slate-500 hover:text-emerald-700 flex items-center gap-1 mt-0.5"
+                          >
+                            <WhatsAppIcon className="w-3 h-3 text-emerald-600" />
+                            <span>{ord.clienteTelefono}</span>
+                          </a>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
+                          {new Date(ord.createdAt).toLocaleDateString("es-VE", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <p className="font-extrabold text-slate-900">{formatUsd(ord.totalUsd)}</p>
+                          <p className="text-[10px] text-slate-400">
+                            {formatVes(ord.totalVes || calculateVesTotal(ord.totalUsd, ord.tasaBcv || bcvRate))}
+                          </p>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-slate-600">
+                          {formatUsd(ord.costoMercanciaUsd || 0)}
+                        </td>
+
+                        <td className="py-3.5 px-4 font-black text-emerald-700">
+                          +{formatUsd(ord.gananciaNetaUsd || 0)}
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <select
+                            value={ord.estado}
+                            onChange={(e) => handleUpdateStatus(ord.id, e.target.value as OrderStatus)}
+                            className={`text-xs font-bold px-2 py-1 rounded-lg border outline-none cursor-pointer ${
+                              ord.estado === "entregado"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : ord.estado === "pagado"
+                                ? "bg-blue-50 text-blue-800 border-blue-200"
+                                : ord.estado === "despachado"
+                                ? "bg-purple-50 text-purple-800 border-purple-200"
+                                : ord.estado === "cancelado"
+                                ? "bg-rose-50 text-rose-800 border-rose-200"
+                                : "bg-amber-50 text-amber-800 border-amber-200"
+                            }`}
+                          >
+                            <option value="pendiente">Pendiente</option>
+                            <option value="pagado">Pagado</option>
+                            <option value="despachado">Despachado</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                          </select>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-right">
+                          <a
+                            href={whatsappChatUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold transition-all"
+                            title="Abrir chat de WhatsApp con el cliente"
+                          >
+                            <WhatsAppIcon className="w-3.5 h-3.5" />
+                            <span>WhatsApp</span>
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* 5. MODAL DE CREACIÓN MANUAL DE PEDIDO */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 sm:p-8">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-emerald-700" />
+                  <span>Montar Pedido Manual</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Registra un pedido cerrado por WhatsApp o llamada. Se asignará un código <strong>#SUMI-XXXX</strong> y se abrirá el chat con el cliente.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateManualOrder} className="space-y-6">
+              {/* DATOS DEL CLIENTE */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Nombre del Cliente <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={manualNombre}
+                    onChange={(e) => setManualNombre(e.target.value)}
+                    placeholder="Ej. Distribuidora Santa María / Carlos"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-emerald-600"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Teléfono WhatsApp <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={manualTelefono}
+                    onChange={(e) => setManualTelefono(e.target.value)}
+                    placeholder="Ej. 04121234567 o 584121234567"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-emerald-600"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Zona de Entrega</label>
+                  <select
+                    value={manualZona}
+                    onChange={(e) => setManualZona(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-emerald-600"
+                  >
+                    <option value="Caracas">Caracas</option>
+                    <option value="Guarenas">Guarenas</option>
+                    <option value="Guatire">Guatire</option>
+                    <option value="Envíos Nacionales">Envíos Nacionales (Tealca / Zoom)</option>
+                    <option value="Retiro en Almacén">Retiro en Almacén</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Método de Pago</label>
+                  <select
+                    value={manualMetodo}
+                    onChange={(e) => setManualMetodo(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-emerald-600"
+                  >
+                    <option value="Pago Móvil / Transferencia Bs (Tasa BCV)">
+                      Pago Móvil / Transferencia Bs (Tasa BCV)
+                    </option>
+                    <option value="Dólares en Efectivo">Dólares en Efectivo</option>
+                    <option value="Binance USDT">Binance USDT</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Dirección de Despacho</label>
+                  <input
+                    type="text"
+                    value={manualDireccion}
+                    onChange={(e) => setManualDireccion(e.target.value)}
+                    placeholder="Calle, local, punto de referencia"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-emerald-600"
+                  />
+                </div>
+              </div>
+
+              {/* SELECTOR DE PRODUCTOS DEL CATÁLOGO */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <h4 className="text-xs font-bold uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                  <Package className="w-4 h-4 text-emerald-800" />
+                  <span>Agregar Productos al Pedido</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Producto</label>
+                    <select
+                      value={selectedProdId}
+                      onChange={(e) => {
+                        setSelectedProdId(e.target.value);
+                        const prod = products.find((p) => p.id === e.target.value);
+                        if (prod?.variantes?.[0]) {
+                          setSelectedVariantSku(prod.variantes[0].sku);
+                        }
+                      }}
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium"
+                    >
+                      <option value="">Selecciona un producto...</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre} (SKU: {p.sku})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Variante / Color</label>
+                    <select
+                      value={selectedVariantSku}
+                      onChange={(e) => setSelectedVariantSku(e.target.value)}
+                      disabled={!selectedProduct || (selectedProduct.variantes || []).length <= 1}
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium disabled:opacity-50"
+                    >
+                      {(selectedProduct?.variantes || []).map((v) => (
+                        <option key={v.sku} value={v.sku}>
+                          {v.color || v.presentacion || v.sku}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tarifa</label>
+                    <select
+                      value={selectedTarifa}
+                      onChange={(e) => setSelectedTarifa(e.target.value as "mayor" | "gran_mayor")}
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
+                    >
+                      <option value="mayor">Mayor</option>
+                      <option value="gran_mayor">Gran Mayor</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-28">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cantidad</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={selectedCantidad}
+                      onChange={(e) => setSelectedCantidad(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddProductToManual}
+                    disabled={!selectedProduct}
+                    className="mt-5 px-4 py-1.5 rounded-xl bg-emerald-800 text-white font-bold text-xs hover:bg-emerald-900 disabled:opacity-50 transition-all cursor-pointer"
+                  >
+                    + Agregar Producto
+                  </button>
+                </div>
+
+                {/* Lista de productos agregados */}
+                {manualItems.length > 0 && (
+                  <div className="mt-3 divide-y divide-slate-200 border-t border-slate-200 pt-2 space-y-2">
+                    {manualItems.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between pt-1.5 text-xs">
+                        <div>
+                          <p className="font-bold text-slate-900">
+                            {item.nombre} {item.color ? `(${item.color})` : ""}
+                          </p>
+                          <p className="text-[10px] text-slate-500">
+                            {item.cantidad} unds × {formatUsd(item.precioUnitario)} ({item.tarifa === "gran_mayor" ? "Gran Mayor" : "Mayor"}) · Costo: {formatUsd(item.costoUnitario)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-black text-slate-900">{formatUsd(item.precioUnitario * item.cantidad)}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveManualItem(idx)}
+                            className="text-rose-500 hover:text-rose-700 p-1"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ASIGNACIÓN DE GASTOS LOGÍSTICOS DEL VIAJE */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/80">
+                <div>
+                  <label className="block text-xs font-bold text-amber-950 mb-1">
+                    Flete de Retiro al Proveedor (Asignado a este Pedido)
+                  </label>
+                  <select
+                    value={manualFleteOpcion}
+                    onChange={(e) => setManualFleteOpcion(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-white border border-amber-200 rounded-xl text-xs font-bold text-amber-900"
+                  >
+                    <option value="5.00">Viaje individual exclusivo: $5.00</option>
+                    <option value="2.50">Agrupado con 2 pedidos: $2.50</option>
+                    <option value="1.67">Agrupado con 3 pedidos: $1.67</option>
+                    <option value="1.25">Agrupado con 4 pedidos: $1.25</option>
+                    <option value="1.00">Agrupado con 5 pedidos (Meta): $1.00</option>
+                    <option value="0.00">Sin gasto de flete (Stock ya en almacén): $0.00</option>
+                  </select>
+                  <p className="text-[10px] text-amber-800 mt-1">
+                    El costo del viaje al proveedor son $5. Si agrupas pedidos, se divide entre ellos.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-amber-950 mb-1">Gasto de Embalaje</label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    value={manualEmbalaje}
+                    onChange={(e) => setManualEmbalaje(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-white border border-amber-200 rounded-xl text-xs font-bold text-amber-900"
+                  />
+                  <p className="text-[10px] text-amber-800 mt-1">Caja, cinta, etiquetas y bolsa ($0.50 por pedido).</p>
+                </div>
+              </div>
+
+              {/* RESUMEN TOTAL Y BOTÓN DE ACCIÓN */}
+              <div className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Total a Cobrar al Cliente</p>
+                  <p className="text-2xl font-black text-emerald-400">{formatUsd(manualTotalUsd)}</p>
+                  <p className="text-xs text-slate-300">
+                    ≈ {formatVes(calculateVesTotal(manualTotalUsd, bcvRate))} (Tasa BCV {bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2 })})
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingManual}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm shadow-md transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <WhatsAppIcon className="w-5 h-5" />
+                  <span>{submittingManual ? "Registrando..." : "Guardar y Abrir WhatsApp"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Icono auxiliar de Target / Objetivo
+function TargetIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  );
+}

@@ -1511,7 +1511,7 @@ export default function AdminGrillaPage() {
                   <br />
                   • <strong>07:00 PM:</strong> Rutas de despacho del día siguiente (Caracas, Guarenas, Guatire).
                   <br />
-                  • <strong>08:30 PM:</strong> Cierre de pedidos, métodos de pago (Pago Móvil, Zelle, efectivo) y sticker de WhatsApp.
+                  • <strong>08:30 PM:</strong> Cierre de pedidos, métodos de pago (Pago Móvil, Binance USDT, efectivo) y sticker de WhatsApp.
                 </p>
               </div>
             </div>

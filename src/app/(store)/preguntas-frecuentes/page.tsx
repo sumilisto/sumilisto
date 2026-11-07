@@ -27,7 +27,7 @@ export default function FAQPage() {
     },
     {
       q: "¿Qué métodos de pago aceptan?",
-      a: "Aceptamos Pago Móvil y transferencias bancarias en bolívares a tasa oficial BCV, dólares en efectivo (contra entrega o retiro en almacén), Binance Pay (USDT) y Zelle. 💥 ¡BENEFICIO ESPECIAL! Todos los pagos realizados en divisas (efectivo, Binance Pay o Zelle) cuentan con un 15% de descuento (15% OFF) directo sobre el total de tu pedido.",
+      a: "Aceptamos Pago Móvil y transferencias bancarias en bolívares a tasa oficial BCV, dólares en efectivo (contra entrega o retiro en almacén) y Binance Pay (USDT). 💥 ¡BENEFICIO ESPECIAL! Todos los pagos realizados en divisas (efectivo o Binance Pay) cuentan con un 15% de descuento (15% OFF) directo sobre el total de tu pedido.",
       icon: Package,
     },
   ];

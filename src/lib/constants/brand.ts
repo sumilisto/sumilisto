@@ -25,7 +25,6 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
     "Pago Móvil / Transferencia Bancaria (Banesco / Mercantil)",
     "Dólares en Efectivo (Contra entrega o retiro)",
     "Binance Pay (USDT)",
-    "Zelle (Previa confirmación)",
   ],
 };
 

@@ -14,6 +14,7 @@ import {
   ExternalLink,
   LogOut,
   ShieldCheck,
+  Calculator,
 } from "lucide-react";
 
 interface AdminNavProps {
@@ -42,14 +43,14 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
       active: pathname === "/admin/productos" || pathname === "/admin",
     },
     {
-      label: "Ajustes de Tienda",
-      shortLabel: "Ajustes",
-      href: "/admin/settings",
-      icon: Settings,
-      active: pathname === "/admin/settings" || pathname === "/settings",
+      label: "Contabilidad y Pedidos",
+      shortLabel: "Contabilidad",
+      href: "/admin/contabilidad",
+      icon: Calculator,
+      active: pathname === "/admin/contabilidad",
     },
     {
-      label: "Carritos y Pedidos",
+      label: "Carritos Abandonados",
       shortLabel: "Carritos",
       href: "/admin/carritos",
       icon: ShoppingCart,
@@ -68,6 +69,13 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
       href: "/admin/estadisticas",
       icon: Activity,
       active: pathname === "/admin/estadisticas",
+    },
+    {
+      label: "Ajustes de Tienda",
+      shortLabel: "Ajustes",
+      href: "/admin/settings",
+      icon: Settings,
+      active: pathname === "/admin/settings" || pathname === "/settings",
     },
   ];
 

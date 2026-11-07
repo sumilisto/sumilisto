@@ -13,6 +13,7 @@ import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { formatUsd, formatVes, calculateVesTotal } from '@/lib/currency/format';
 import { LocationPickerModal } from '@/components/cart/LocationPickerModal';
+import { generateOrderCode } from '@/lib/orders/orderCode';
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1584278860047-22db9ff82bed?auto=format&fit=crop&w=600&q=80';
@@ -33,8 +34,12 @@ interface Line {
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, markAsSentWhatsApp } = useCart();
-  const { products, bcvRate } = useProducts();
+  const { products, bcvRate: initialBcvRate } = useProducts();
   const { theme } = useTheme();
+
+  // Tasa BCV en vivo (se refresca automáticamente al abrir el carrito)
+  const [liveBcvRate, setLiveBcvRate] = useState<number>(initialBcvRate || 0);
+  const [bcvNotice, setBcvNotice] = useState<string | null>(null);
 
   // Formulario
   const [nombre, setNombre] = useState('');
@@ -116,8 +121,26 @@ export default function CartPage() {
     return result;
   }, [items, products]);
 
+  useEffect(() => {
+    // Consulta la tasa oficial más reciente al entrar al carrito
+    fetch('/api/bcv')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.ok && data.rate && data.rate > 0) {
+          setLiveBcvRate((prev) => {
+            if (prev > 0 && Math.abs(prev - data.rate) > 0.01) {
+              setBcvNotice(`Tasa BCV actualizada a Bs. ${data.rate.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+            }
+            return data.rate;
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const totalUsd = Math.round(lines.reduce((acc, l) => acc + l.subtotal, 0) * 100) / 100;
-  const totalVes = calculateVesTotal(totalUsd, bcvRate || 0);
+  const currentBcvRate = liveBcvRate || initialBcvRate || 0;
+  const totalVes = calculateVesTotal(totalUsd, currentBcvRate);
 
   const FREE_DELIVERY_THRESHOLD = 50;
   const qualifiesForFreeDelivery = totalUsd >= FREE_DELIVERY_THRESHOLD;
@@ -264,7 +287,8 @@ export default function CartPage() {
 
     setErrorValidacion('');
 
-    let message = `🛒 *NUEVO PEDIDO MAYORISTA - SUMILISTO*\n\n`;
+    const orderCode = generateOrderCode();
+    let message = `🛒 *PEDIDO ${orderCode} - SUMILISTO*\n\n`;
     message += `👤 *Cliente:* ${cleanNombre}\n`;
     message += `📞 *Teléfono:* ${cleanTelefono}\n`;
     message += `📍 *Zona de Entrega:* ${cleanZona}\n`;
@@ -296,7 +320,7 @@ export default function CartPage() {
       message += `\n🛵 *DESPACHO:* Por coordinar con asesor (Delivery GRATIS a partir de $50)\n`;
     }
     message += `\n💰 *TOTAL USD:* ${formatUsd(totalUsd)}`;
-    if (bcvRate) {
+    if (currentBcvRate > 0) {
       message += `\n💵 *TOTAL VES (BCV):* ${formatVes(totalVes)}`;
     }
 
@@ -309,12 +333,32 @@ export default function CartPage() {
     }
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-    // Marcar como completado en segundo plano
+    // Marcar como completado y registrar pedido con su código no correlativo en segundo plano
     if (sessionId) {
       fetch('/api/cart/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({
+          sessionId,
+          orderCode,
+          nombre: cleanNombre,
+          telefono: cleanTelefono,
+          zonaEntrega: cleanZona,
+          direccion: cleanDireccion,
+          metodoPago: cleanMetodo,
+          items: lines.map((l) => ({
+            sku: l.sku,
+            nombre: l.nombre,
+            presentacion: l.presentacion,
+            cantidad: l.cantidad,
+            precioUnitarioUsd: l.precioPaquete,
+            subtotalUsd: l.subtotal,
+            tarifa: l.nivel,
+          })),
+          totalUsd,
+          totalVes,
+          tasaBcv: currentBcvRate,
+        }),
       }).catch(() => {});
     }
 
@@ -769,13 +813,18 @@ export default function CartPage() {
               <span>Total en Dólares:</span>
               <span className="font-extrabold text-emerald-700 text-lg">{formatUsd(totalUsd)}</span>
             </div>
-            {bcvRate > 0 && (
+            {currentBcvRate > 0 && (
               <div className="flex justify-between items-center text-slate-600 text-sm">
                 <span>Bolívares (BCV):</span>
                 <span className="font-bold text-slate-700">
                   {formatVes(totalVes)}
                 </span>
               </div>
+            )}
+            {bcvNotice && (
+              <p className="text-[11px] text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 text-center animate-in fade-in">
+                🟢 {bcvNotice}
+              </p>
             )}
           </div>
 

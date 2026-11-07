@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Product, ProductVariant, ProductPhoto } from "@/types/product";
+import { Order, OrderStatus } from "@/types/order";
 
 // ─────────────────────────────────────────────────────────
 // OBTENER TODOS LOS PRODUCTOS (con variantes y fotos)
@@ -69,8 +70,10 @@ export async function getSettings(): Promise<Record<string, any>> {
 
   if (error || !data) return {};
   const settingsData = { ...(data.data || {}) };
-  // SEGURIDAD: Nunca exponer carritos abandonados ni datos personales de clientes en configuraciones públicas
+  // SEGURIDAD: Nunca exponer carritos abandonados ni pedidos ni datos personales de clientes en configuraciones públicas
   delete settingsData.carritos_abandonados;
+  delete settingsData.pedidos;
+  delete settingsData.accounting_settings;
   return { ...settingsData, tasaBcv: Number(data.tasa_bcv) || 880.12 };
 }
 
@@ -78,9 +81,9 @@ export async function getSettings(): Promise<Record<string, any>> {
 // GUARDAR CONFIGURACIÓN / TEMA
 // ─────────────────────────────────────────────────────────
 export async function updateSettings(settings: Record<string, any>): Promise<boolean> {
-  const { tasaBcv, carritos_abandonados, ...themeData } = settings;
+  const { tasaBcv, carritos_abandonados, pedidos, ...themeData } = settings;
 
-  // Preservar carritos_abandonados existentes en la base de datos para no sobreescribirlos
+  // Preservar carritos y pedidos existentes en la base de datos para no sobreescribirlos
   const { data: currentConfig } = await supabaseAdmin
     .from("configuracion")
     .select("data")
@@ -91,6 +94,12 @@ export async function updateSettings(settings: Record<string, any>): Promise<boo
   const mergedData = { ...existingData, ...themeData };
   if (existingData.carritos_abandonados) {
     mergedData.carritos_abandonados = existingData.carritos_abandonados;
+  }
+  if (existingData.pedidos) {
+    mergedData.pedidos = existingData.pedidos;
+  }
+  if (existingData.accounting_settings) {
+    mergedData.accounting_settings = existingData.accounting_settings;
   }
 
   const updatePayload: Record<string, any> = { data: mergedData };
@@ -546,4 +555,123 @@ function mapDbToProduct(row: any, includeCosts: boolean = false): Product {
     descripcionLarga: row.descripcion,
     variantes,
   };
+}
+
+// ─────────────────────────────────────────────────────────
+// GESTIÓN DE PEDIDOS Y CONTABILIDAD
+// ─────────────────────────────────────────────────────────
+export async function getOrders(): Promise<Order[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error || !data) return [];
+    return (data.data?.pedidos || []) as Order[];
+  } catch (err) {
+    console.error("Error obteniendo pedidos:", err);
+    return [];
+  }
+}
+
+export async function saveOrder(order: Order): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const pedidos: Order[] = currentData.pedidos || [];
+
+    const existingIdx = pedidos.findIndex((p) => p.id === order.id || p.codigo === order.codigo);
+    let updatedPedidos: Order[];
+    if (existingIdx >= 0) {
+      updatedPedidos = [...pedidos];
+      updatedPedidos[existingIdx] = { ...pedidos[existingIdx], ...order, updatedAt: new Date().toISOString() };
+    } else {
+      updatedPedidos = [order, ...pedidos];
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          pedidos: updatedPedidos,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error guardando pedido:", err);
+    return false;
+  }
+}
+
+export async function updateOrderStatus(orderId: string, estado: OrderStatus): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const pedidos: Order[] = currentData.pedidos || [];
+
+    const updatedPedidos = pedidos.map((p) =>
+      p.id === orderId ? { ...p, estado, updatedAt: new Date().toISOString() } : p
+    );
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          pedidos: updatedPedidos,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error actualizando estado de pedido:", err);
+    return false;
+  }
+}
+
+export async function deleteOrder(orderId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const pedidos: Order[] = (currentData.pedidos || []).filter((p: Order) => p.id !== orderId);
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          pedidos,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error eliminando pedido:", err);
+    return false;
+  }
 }
