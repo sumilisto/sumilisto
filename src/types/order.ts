@@ -76,3 +76,4 @@ export const DEFAULT_ACCOUNTING_SETTINGS: AccountingSettings = {
     ahorro: 10,
   },
 };
+

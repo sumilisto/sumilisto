@@ -597,6 +597,11 @@ export async function saveOrder(order: Order): Promise<boolean> {
       updatedPedidos = [order, ...pedidos];
     }
 
+    // Blindaje contra desbordamiento de base de datos: conservar los últimos 1,000 pedidos
+    if (updatedPedidos.length > 1000) {
+      updatedPedidos = updatedPedidos.slice(0, 1000);
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from("configuracion")
       .update({
