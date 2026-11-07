@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { resolveLocation } from "@/lib/analytics/geo";
 import { isBotUserAgent } from "@/lib/analytics/botDetection";
+import { checkRateLimit, getClientIp } from "@/lib/security/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
+    // Blindaje contra ataques de scraping / flooding de métricas: máx 60 eventos por minuto por IP
+    const clientIp = getClientIp(req);
+    const rateCheck = checkRateLimit(`analytics_track:${clientIp}`, 60, 60 * 1000);
+    if (!rateCheck.ok) {
+      return NextResponse.json({ skipped: true, reason: "rate_limited" }, { status: 429 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const {
       ruta,

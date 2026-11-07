@@ -20,7 +20,8 @@ export async function getProducts(): Promise<Product[]> {
     return [];
   }
 
-  return (productos || []).map(mapDbToProduct);
+  // Blindaje de seguridad: el catálogo público jamás incluye costos internos de proveedor
+  return (productos || []).map((p) => mapDbToProduct(p, false));
 }
 
 // ─────────────────────────────────────────────────────────
@@ -38,7 +39,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     .single();
 
   if (error || !data) return null;
-  return mapDbToProduct(data);
+  // Blindaje de seguridad: el detalle de producto público jamás incluye costos
+  return mapDbToProduct(data, false);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -457,20 +459,20 @@ export async function getAllProductsAdmin() {
     return [];
   }
 
-  return (data || []).map(mapDbToProduct);
+  return (data || []).map((p) => mapDbToProduct(p, true));
 }
 
 // ─────────────────────────────────────────────────────────
 // MAPPER: DB row → Product (tipo frontend)
 // ─────────────────────────────────────────────────────────
-function mapDbToProduct(row: any): Product {
+function mapDbToProduct(row: any, includeCosts: boolean = false): Product {
   const variantes: ProductVariant[] = (row.variantes || []).map((v: any) => ({
     id: v.id,
     sku: v.sku,
     color: v.color || "ESTÁNDAR",
     presentacion: v.presentacion || v.color || "Unidad",
-    costoMayorUsd: v.costo_mayor_usd ? Number(v.costo_mayor_usd) : undefined,
-    costoGranMayorUsd: v.costo_gran_mayor_usd ? Number(v.costo_gran_mayor_usd) : undefined,
+    costoMayorUsd: includeCosts && v.costo_mayor_usd ? Number(v.costo_mayor_usd) : undefined,
+    costoGranMayorUsd: includeCosts && v.costo_gran_mayor_usd ? Number(v.costo_gran_mayor_usd) : undefined,
     precioMayorUsd: v.precio_mayor_usd ? Number(v.precio_mayor_usd) : undefined,
     minMayor: v.min_mayor || 100,
     precioGranMayorUsd: v.precio_gran_mayor_usd ? Number(v.precio_gran_mayor_usd) : undefined,
@@ -528,8 +530,8 @@ function mapDbToProduct(row: any): Product {
     color: primaryVariant?.color,
     presentacion,
     unidadVenta: row.unidad_venta || "100 Unidades",
-    costoMayorUsd: row.costo_mayor_usd ? Number(row.costo_mayor_usd) : primaryVariant?.costoMayorUsd,
-    costoGranMayorUsd: row.costo_gran_mayor_usd ? Number(row.costo_gran_mayor_usd) : primaryVariant?.costoGranMayorUsd,
+    costoMayorUsd: includeCosts ? (row.costo_mayor_usd ? Number(row.costo_mayor_usd) : primaryVariant?.costoMayorUsd) : undefined,
+    costoGranMayorUsd: includeCosts ? (row.costo_gran_mayor_usd ? Number(row.costo_gran_mayor_usd) : primaryVariant?.costoGranMayorUsd) : undefined,
     precioMayorUsd: primaryVariant?.precioMayorUsd,
     minMayor: primaryVariant?.minMayor || 100,
     precioGranMayorUsd: primaryVariant?.precioGranMayorUsd,

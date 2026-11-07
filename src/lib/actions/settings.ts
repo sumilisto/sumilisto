@@ -8,7 +8,9 @@ export async function getStoreSettings(): Promise<StoreSettings> {
   try {
     const data = await getSettings();
     if (data && Object.keys(data).length > 0) {
-      return { ...DEFAULT_SETTINGS, ...data };
+      // Blindaje de seguridad: jamás serializar datos confidenciales (carritos, PII) al cliente en SSR
+      const { carritos_abandonados, ...cleanSettings } = data;
+      return { ...DEFAULT_SETTINGS, ...cleanSettings };
     }
   } catch (error) {
     console.error("Error reading settings from Supabase:", error);

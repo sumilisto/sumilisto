@@ -30,6 +30,16 @@ export async function GET(
       return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
     }
 
+    // Blindaje de seguridad: si no es admin autenticado, eliminar costos confidenciales
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      delete data.costo_mayor_usd;
+      delete data.costo_gran_mayor_usd;
+      if (Array.isArray(data.variantes)) {
+        data.variantes = data.variantes.map(({ costo_mayor_usd, costo_gran_mayor_usd, ...v }: any) => v);
+      }
+    }
+
     return NextResponse.json(data);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

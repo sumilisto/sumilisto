@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { checkRateLimit, getClientIp } from "@/lib/security/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    // Blindaje contra ataques de saturación / DoS: máximo 15 guardados de carrito por minuto por IP
+    const clientIp = getClientIp(req);
+    const rateCheck = checkRateLimit(`cart_save:${clientIp}`, 15, 60 * 1000);
+    if (!rateCheck.ok) {
+      return NextResponse.json(
+        { error: "Demasiadas peticiones. Intenta de nuevo en un minuto." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const {
       sessionId,
