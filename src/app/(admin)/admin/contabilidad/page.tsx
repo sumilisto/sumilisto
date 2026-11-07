@@ -85,6 +85,8 @@ export default function AdminContabilidadPage() {
   const [selectedVariantSku, setSelectedVariantSku] = useState("");
   const [selectedTarifa, setSelectedTarifa] = useState<"mayor" | "gran_mayor">("mayor");
   const [selectedCantidad, setSelectedCantidad] = useState("1");
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [isProductSearchOpen, setIsProductSearchOpen] = useState(false);
 
   // Flete, IVA y embalaje del pedido manual
   const [manualFleteOpcion, setManualFleteOpcion] = useState<string>("5.00");
@@ -319,9 +321,35 @@ export default function AdminContabilidadPage() {
     return selectedVariant?.minMayor || selectedProduct.minMayor || 50;
   }, [selectedProduct, selectedVariant, selectedTarifa]);
 
+  // Filtro de productos para la búsqueda inteligente
+  const searchFilteredProducts = useMemo(() => {
+    const q = productSearchQuery.trim().toLowerCase();
+    if (!q) return products.slice(0, 30);
+
+    return products
+      .filter((p) => {
+        const matchesName = p.nombre?.toLowerCase().includes(q);
+        const matchesSku = p.sku?.toLowerCase().includes(q);
+        const matchesCategory = p.categoria?.toLowerCase().includes(q);
+        const matchesVariant = (p.variantes || []).some(
+          (v) =>
+            v.color?.toLowerCase().includes(q) ||
+            v.sku?.toLowerCase().includes(q) ||
+            v.presentacion?.toLowerCase().includes(q)
+        );
+        return matchesName || matchesSku || matchesCategory || matchesVariant;
+      })
+      .slice(0, 30);
+  }, [products, productSearchQuery]);
+
   const handleSelectProduct = (prodId: string) => {
     setSelectedProdId(prodId);
     const prod = products.find((p) => p.id === prodId);
+    if (prod) {
+      setProductSearchQuery(prod.nombre);
+    }
+    setIsProductSearchOpen(false);
+
     const firstVariant = prod?.variantes?.[0];
     const firstSku = firstVariant?.sku || "";
     setSelectedVariantSku(firstSku);
@@ -332,6 +360,14 @@ export default function AdminContabilidadPage() {
         : firstVariant?.minMayor || prod?.minMayor || 50;
 
     setSelectedCantidad(String(minUnits));
+  };
+
+  const handleClearProductSelection = () => {
+    setSelectedProdId("");
+    setSelectedVariantSku("");
+    setProductSearchQuery("");
+    setSelectedCantidad("1");
+    setIsProductSearchOpen(false);
   };
 
   const handleChangeTarifa = (tarifa: "mayor" | "gran_mayor") => {
@@ -389,6 +425,9 @@ export default function AdminContabilidadPage() {
     ]);
 
     setSelectedCantidad(String(currentStep));
+    setSelectedProdId("");
+    setSelectedVariantSku("");
+    setProductSearchQuery("");
   };
 
   const handleRemoveManualItem = (index: number) => {
@@ -442,6 +481,9 @@ export default function AdminContabilidadPage() {
         setManualNotas("");
         setManualItems([]);
         setManualConIva(false);
+        setProductSearchQuery("");
+        setSelectedProdId("");
+        setSelectedVariantSku("");
         setIsModalOpen(false);
 
         // Recargar pedidos
@@ -1149,20 +1191,100 @@ export default function AdminContabilidadPage() {
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Producto</label>
-                    <select
-                      value={selectedProdId}
-                      onChange={(e) => handleSelectProduct(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium"
-                    >
-                      <option value="">Selecciona un producto...</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.nombre} (SKU: {p.sku})
-                        </option>
-                      ))}
-                    </select>
+                  <div className="sm:col-span-2 relative">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center justify-between">
+                      <span>Producto (Búsqueda inteligente)</span>
+                      {selectedProduct && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                          ✓ Seleccionado
+                        </span>
+                      )}
+                    </label>
+
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={productSearchQuery}
+                        onChange={(e) => {
+                          setProductSearchQuery(e.target.value);
+                          setIsProductSearchOpen(true);
+                          if (!e.target.value) {
+                            setSelectedProdId("");
+                            setSelectedVariantSku("");
+                          }
+                        }}
+                        onFocus={() => setIsProductSearchOpen(true)}
+                        placeholder="Escribe molde, vaso, caja, SKU o nombre..."
+                        className="w-full pl-8 pr-8 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-emerald-600 focus:ring-1 focus:ring-emerald-600/30"
+                      />
+                      {productSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={handleClearProductSelection}
+                          className="absolute right-2 top-2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 cursor-pointer"
+                          title="Limpiar búsqueda"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Menú flotante de resultados inteligentes */}
+                    {isProductSearchOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-20"
+                          onClick={() => setIsProductSearchOpen(false)}
+                        />
+                        <div className="absolute left-0 right-0 top-full mt-1.5 z-30 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-slate-200 divide-y divide-slate-100 animate-in fade-in">
+                          {searchFilteredProducts.length === 0 ? (
+                            <div className="p-4 text-center text-xs text-slate-500">
+                              <p className="font-bold">No se encontraron productos coincidentes</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">Intenta con otro término o código SKU</p>
+                            </div>
+                          ) : (
+                            searchFilteredProducts.map((p) => {
+                              const isSelected = p.id === selectedProdId;
+                              const minP = p.minMayor || 50;
+                              const priceP = p.precioMayorUsd || 0;
+                              return (
+                                <button
+                                  key={p.id || p.sku}
+                                  type="button"
+                                  onClick={() => handleSelectProduct(p.id || p.sku || "")}
+                                  className={`w-full text-left p-2.5 transition-colors flex items-center justify-between gap-2.5 cursor-pointer ${
+                                    isSelected
+                                      ? "bg-emerald-50 text-emerald-950 font-bold"
+                                      : "hover:bg-slate-50 text-slate-800"
+                                  }`}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-bold truncate">
+                                      {p.nombre}
+                                    </p>
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                      <span className="font-mono bg-slate-100 px-1.5 py-0.2 rounded font-semibold text-slate-700">
+                                        SKU: {p.sku}
+                                      </span>
+                                      {p.categoria && <span>· {p.categoria}</span>}
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="text-[11px] font-black text-emerald-800 block">
+                                      {formatUsd(priceP)}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400">
+                                      mín. {minP} unds
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div>
@@ -1261,7 +1383,7 @@ export default function AdminContabilidadPage() {
                     className="h-9 px-5 rounded-xl bg-emerald-800 text-white font-bold text-xs hover:bg-emerald-900 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>+ Agregar Producto</span>
+                    <span>Agregar Producto</span>
                   </button>
                 </div>
 
