@@ -162,12 +162,16 @@ export async function POST(req: NextRequest) {
     whatsappText += `\nDETALLES DE ARTÍCULOS:\n`;
     newOrder.items.forEach((it, idx) => {
       const tarifaDesc = it.tarifa === "gran_mayor" ? "Gran Mayor" : "Mayor";
-      const pres = it.presentacion ? ` (${it.presentacion})` : "";
+      const pres = it.presentacion
+        ? ` (${it.presentacion})`
+        : it.color
+        ? ` (${it.color})`
+        : "";
       whatsappText += `${idx + 1}. ${it.nombre}${pres} - _*${it.cantidad} unds (${tarifaDesc}) = ${formatUsd(it.subtotalUsd)}*_\n`;
     });
 
     whatsappText += `\nTotal a pagar (BCV ${tasaBcvStr}): _*${formatUsd(totalUsd)} = ${formatVes(totalVes)}*_\n\n`;
-    whatsappText += `_*Gracias por preferir a *Sumilisto* para tus suministros mayoristas.*_\n`;
+    whatsappText += `_Gracias por preferir a *Sumilisto* para tus suministros mayoristas._\n`;
     whatsappText += `_*¡Feliz día!*_`;
 
     // Normalizar número telefónico del cliente para abrir su chat de WhatsApp
