@@ -71,9 +71,12 @@ export default function AdminContabilidadPage() {
       color?: string;
       presentacion?: string;
       cantidad: number;
+      unidadesPorPaquete: number;
       tarifa: "mayor" | "gran_mayor";
-      precioUnitario: number;
-      costoUnitario: number;
+      precioPaquete: number;
+      costoPaquete: number;
+      subtotalUsd: number;
+      costoTotalUsd: number;
     }>
   >([]);
 
@@ -230,6 +233,46 @@ export default function AdminContabilidadPage() {
     return products.find((p) => p.id === selectedProdId);
   }, [products, selectedProdId]);
 
+  const selectedVariant = useMemo(() => {
+    if (!selectedProduct) return null;
+    const variants = selectedProduct.variantes || [];
+    return variants.find((v) => v.sku === selectedVariantSku) || variants[0];
+  }, [selectedProduct, selectedVariantSku]);
+
+  // Cantidad mínima y salto según producto y tarifa seleccionada (Mayor vs Gran Mayor)
+  const currentStep = useMemo(() => {
+    if (!selectedProduct) return 50;
+    if (selectedTarifa === "gran_mayor") {
+      return selectedVariant?.minGranMayor || selectedProduct.minGranMayor || 100;
+    }
+    return selectedVariant?.minMayor || selectedProduct.minMayor || 50;
+  }, [selectedProduct, selectedVariant, selectedTarifa]);
+
+  const handleSelectProduct = (prodId: string) => {
+    setSelectedProdId(prodId);
+    const prod = products.find((p) => p.id === prodId);
+    const firstVariant = prod?.variantes?.[0];
+    const firstSku = firstVariant?.sku || "";
+    setSelectedVariantSku(firstSku);
+
+    const minUnits =
+      selectedTarifa === "gran_mayor"
+        ? firstVariant?.minGranMayor || prod?.minGranMayor || 100
+        : firstVariant?.minMayor || prod?.minMayor || 50;
+
+    setSelectedCantidad(String(minUnits));
+  };
+
+  const handleChangeTarifa = (tarifa: "mayor" | "gran_mayor") => {
+    setSelectedTarifa(tarifa);
+    const minUnits =
+      tarifa === "gran_mayor"
+        ? selectedVariant?.minGranMayor || selectedProduct?.minGranMayor || 100
+        : selectedVariant?.minMayor || selectedProduct?.minMayor || 50;
+
+    setSelectedCantidad(String(minUnits));
+  };
+
   const handleAddProductToManual = () => {
     if (!selectedProduct) return;
     const variants = selectedProduct.variantes || [];
@@ -237,15 +280,24 @@ export default function AdminContabilidadPage() {
     const qty = parseInt(selectedCantidad, 10);
     if (isNaN(qty) || qty <= 0) return;
 
-    const precioUnitario =
+    const unidadesPorPaquete =
+      selectedTarifa === "gran_mayor"
+        ? variant?.minGranMayor || selectedProduct.minGranMayor || 100
+        : variant?.minMayor || selectedProduct.minMayor || 50;
+
+    const precioPaquete =
       selectedTarifa === "gran_mayor"
         ? variant?.precioGranMayorUsd || selectedProduct.precioGranMayorUsd || 0
         : variant?.precioMayorUsd || selectedProduct.precioMayorUsd || 0;
 
-    const costoUnitario =
+    const costoPaquete =
       selectedTarifa === "gran_mayor"
-        ? variant?.costoGranMayorUsd || selectedProduct.costoGranMayorUsd || precioUnitario * 0.75
-        : variant?.costoMayorUsd || selectedProduct.costoMayorUsd || precioUnitario * 0.75;
+        ? variant?.costoGranMayorUsd || selectedProduct.costoGranMayorUsd || precioPaquete * 0.75
+        : variant?.costoMayorUsd || selectedProduct.costoMayorUsd || precioPaquete * 0.75;
+
+    const paquetes = qty / unidadesPorPaquete;
+    const subtotalUsd = Math.round(precioPaquete * paquetes * 100) / 100;
+    const costoTotalUsd = Math.round(costoPaquete * paquetes * 100) / 100;
 
     setManualItems((prev) => [
       ...prev,
@@ -256,13 +308,16 @@ export default function AdminContabilidadPage() {
         color: variant?.color,
         presentacion: variant?.presentacion || selectedProduct.presentacion,
         cantidad: qty,
+        unidadesPorPaquete,
         tarifa: selectedTarifa,
-        precioUnitario,
-        costoUnitario,
+        precioPaquete,
+        costoPaquete,
+        subtotalUsd,
+        costoTotalUsd,
       },
     ]);
 
-    setSelectedCantidad("1");
+    setSelectedCantidad(String(currentStep));
   };
 
   const handleRemoveManualItem = (index: number) => {
@@ -270,7 +325,7 @@ export default function AdminContabilidadPage() {
   };
 
   const manualTotalUsd = useMemo(() => {
-    return manualItems.reduce((acc, it) => acc + it.precioUnitario * it.cantidad, 0);
+    return Math.round(manualItems.reduce((acc, it) => acc + (it.subtotalUsd || 0), 0) * 100) / 100;
   }, [manualItems]);
 
   const handleCreateManualOrder = async (e: React.FormEvent) => {
@@ -921,13 +976,7 @@ export default function AdminContabilidadPage() {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Producto</label>
                     <select
                       value={selectedProdId}
-                      onChange={(e) => {
-                        setSelectedProdId(e.target.value);
-                        const prod = products.find((p) => p.id === e.target.value);
-                        if (prod?.variantes?.[0]) {
-                          setSelectedVariantSku(prod.variantes[0].sku);
-                        }
-                      }}
+                      onChange={(e) => handleSelectProduct(e.target.value)}
                       className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium"
                     >
                       <option value="">Selecciona un producto...</option>
@@ -943,7 +992,14 @@ export default function AdminContabilidadPage() {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Variante / Color</label>
                     <select
                       value={selectedVariantSku}
-                      onChange={(e) => setSelectedVariantSku(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedVariantSku(e.target.value);
+                        const minUnits =
+                          selectedTarifa === "gran_mayor"
+                            ? selectedProduct?.variantes?.find((v) => v.sku === e.target.value)?.minGranMayor || selectedProduct?.minGranMayor || 100
+                            : selectedProduct?.variantes?.find((v) => v.sku === e.target.value)?.minMayor || selectedProduct?.minMayor || 50;
+                        setSelectedCantidad(String(minUnits));
+                      }}
                       disabled={!selectedProduct || (selectedProduct.variantes || []).length <= 1}
                       className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium disabled:opacity-50"
                     >
@@ -959,7 +1015,7 @@ export default function AdminContabilidadPage() {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tarifa</label>
                     <select
                       value={selectedTarifa}
-                      onChange={(e) => setSelectedTarifa(e.target.value as "mayor" | "gran_mayor")}
+                      onChange={(e) => handleChangeTarifa(e.target.value as "mayor" | "gran_mayor")}
                       className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
                     >
                       <option value="mayor">Mayor</option>
@@ -968,25 +1024,67 @@ export default function AdminContabilidadPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-28">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cantidad</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={selectedCantidad}
-                      onChange={(e) => setSelectedCantidad(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
-                    />
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-1">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Cantidad ({selectedProduct ? `Mínimo ${currentStep} unds · Suma de ${currentStep} en ${currentStep}` : "Unidades"})
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = parseInt(selectedCantidad, 10) || currentStep;
+                          const next = Math.max(currentStep, cur - currentStep);
+                          setSelectedCantidad(String(next));
+                        }}
+                        className="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold flex items-center justify-center text-base transition-colors"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min={currentStep}
+                        step={currentStep}
+                        value={selectedCantidad}
+                        onChange={(e) => setSelectedCantidad(e.target.value)}
+                        className="w-24 h-9 px-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-center focus:outline-emerald-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = parseInt(selectedCantidad, 10) || currentStep;
+                          setSelectedCantidad(String(cur + currentStep));
+                        }}
+                        className="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold flex items-center justify-center text-base transition-colors"
+                      >
+                        +
+                      </button>
+                      <span className="text-xs font-bold text-slate-600 ml-1">unds</span>
+
+                      {selectedProduct && (
+                        <span className="text-xs font-black text-emerald-800 bg-emerald-100/70 border border-emerald-300 rounded-xl px-2.5 py-1.5 ml-2 shadow-2xs">
+                          = {formatUsd(
+                            Math.round(
+                              ((selectedTarifa === "gran_mayor"
+                                ? selectedVariant?.precioGranMayorUsd || selectedProduct.precioGranMayorUsd || 0
+                                : selectedVariant?.precioMayorUsd || selectedProduct.precioMayorUsd || 0) *
+                                ((parseInt(selectedCantidad, 10) || currentStep) / currentStep)) *
+                                100
+                            ) / 100
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={handleAddProductToManual}
                     disabled={!selectedProduct}
-                    className="mt-5 px-4 py-1.5 rounded-xl bg-emerald-800 text-white font-bold text-xs hover:bg-emerald-900 disabled:opacity-50 transition-all cursor-pointer"
+                    className="h-9 px-5 rounded-xl bg-emerald-800 text-white font-bold text-xs hover:bg-emerald-900 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    + Agregar Producto
+                    <Plus className="w-4 h-4" />
+                    <span>+ Agregar Producto</span>
                   </button>
                 </div>
 
@@ -1000,11 +1098,11 @@ export default function AdminContabilidadPage() {
                             {item.nombre} {item.color ? `(${item.color})` : ""}
                           </p>
                           <p className="text-[10px] text-slate-500">
-                            {item.cantidad} unds × {formatUsd(item.precioUnitario)} ({item.tarifa === "gran_mayor" ? "Gran Mayor" : "Mayor"}) · Costo: {formatUsd(item.costoUnitario)}
+                            {item.cantidad} unds ({item.tarifa === "gran_mayor" ? "Gran Mayor" : "Mayor"}) · Costo total: {formatUsd(item.costoTotalUsd)}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-black text-slate-900">{formatUsd(item.precioUnitario * item.cantidad)}</span>
+                          <span className="font-black text-slate-900">{formatUsd(item.subtotalUsd)}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoveManualItem(idx)}

@@ -64,16 +64,21 @@ export async function POST(req: NextRequest) {
       const cantidad = Number(it.cantidad) || 1;
       const tarifa = it.tarifa === "gran_mayor" ? "gran_mayor" : "mayor";
       
-      const precioUnitario = tarifa === "gran_mayor"
-        ? (variant?.precioGranMayorUsd || prod?.precioGranMayorUsd || Number(it.precioUnitarioUsd) || 0)
-        : (variant?.precioMayorUsd || prod?.precioMayorUsd || Number(it.precioUnitarioUsd) || 0);
+      const unidadesPorPaquete = tarifa === "gran_mayor"
+        ? (variant?.minGranMayor || prod?.minGranMayor || 100)
+        : (variant?.minMayor || prod?.minMayor || 50);
 
-      const costoUnitario = tarifa === "gran_mayor"
-        ? (variant?.costoGranMayorUsd || prod?.costoGranMayorUsd || Number(it.costoUnitarioUsd) || precioUnitario * 0.75)
-        : (variant?.costoMayorUsd || prod?.costoMayorUsd || Number(it.costoUnitarioUsd) || precioUnitario * 0.75);
+      const precioPaquete = tarifa === "gran_mayor"
+        ? (variant?.precioGranMayorUsd || prod?.precioGranMayorUsd || Number(it.precioPaquete) || 0)
+        : (variant?.precioMayorUsd || prod?.precioMayorUsd || Number(it.precioPaquete) || 0);
 
-      const subtotal = Math.round(precioUnitario * cantidad * 100) / 100;
-      const costoTotalItem = Math.round(costoUnitario * cantidad * 100) / 100;
+      const costoPaquete = tarifa === "gran_mayor"
+        ? (variant?.costoGranMayorUsd || prod?.costoGranMayorUsd || Number(it.costoPaquete) || precioPaquete * 0.75)
+        : (variant?.costoMayorUsd || prod?.costoMayorUsd || Number(it.costoPaquete) || precioPaquete * 0.75);
+
+      const paquetes = cantidad / unidadesPorPaquete;
+      const subtotal = it.subtotalUsd !== undefined ? Number(it.subtotalUsd) : Math.round(precioPaquete * paquetes * 100) / 100;
+      const costoTotalItem = it.costoTotalUsd !== undefined ? Number(it.costoTotalUsd) : Math.round(costoPaquete * paquetes * 100) / 100;
 
       totalUsd += subtotal;
       costoMercanciaTotal += costoTotalItem;
@@ -84,8 +89,8 @@ export async function POST(req: NextRequest) {
         presentacion: it.presentacion ? String(it.presentacion) : undefined,
         color: it.color ? String(it.color) : undefined,
         cantidad,
-        precioUnitarioUsd: precioUnitario,
-        costoUnitarioUsd: costoUnitario,
+        precioUnitarioUsd: precioPaquete,
+        costoUnitarioUsd: costoPaquete,
         subtotalUsd: subtotal,
         tarifa,
       };
