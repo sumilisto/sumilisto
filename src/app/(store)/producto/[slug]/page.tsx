@@ -108,10 +108,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-8">
-      {/* Datos Estructurados JSON-LD para Google Rich Snippets */}
+      {/* Datos Estructurados JSON-LD para Google Rich Snippets (sanitizado contra XSS injection) */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, "\\u003c") }}
       />
 
       {/* Migas de pan (Breadcrumbs) */}
