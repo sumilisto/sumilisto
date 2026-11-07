@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { DEFAULT_SETTINGS } from "@/lib/constants/settings";
+import { DEFAULT_STORE_CONFIG } from "@/lib/constants/brand";
 import { Home, LayoutGrid, Truck } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
   const pathname = usePathname();
   const { theme } = useTheme();
+  const whatsappNum = (theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber || "584227894547").replace(/[^0-9]/g, "");
 
   const navItems = [
     {
@@ -38,7 +40,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
     },
     {
       label: "WhatsApp",
-      href: "https://wa.me/584227864547",
+      href: `https://wa.me/${whatsappNum}?text=Hola%20Sumilisto,%20deseo%20hacer%20una%20consulta`,
       icon: WhatsAppIcon,
       isExternal: true,
     },

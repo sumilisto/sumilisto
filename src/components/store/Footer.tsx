@@ -43,7 +43,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Columna 2: Cobertura y Horarios */}
-          <div>
+          <div id="despachos" className="scroll-mt-24">
             <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
               Zonas de Entrega y Horarios
             </h4>

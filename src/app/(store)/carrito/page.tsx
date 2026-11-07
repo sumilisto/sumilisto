@@ -318,7 +318,14 @@ export default function CartPage() {
       }).catch(() => {});
     }
 
-    window.open(whatsappUrl, '_blank');
+    // En navegadores móviles y webviews (Instagram, Facebook), window.open es bloqueado frecuentemente.
+    // window.location.href garantiza apertura de la app nativa de WhatsApp sin perder el pedido.
+    const isMobileOrInApp = typeof window !== 'undefined' && (/Android|iPhone|iPad|iPod|Instagram|FBAN|FBAV/i.test(navigator.userAgent));
+    if (isMobileOrInApp) {
+      window.location.href = whatsappUrl;
+    } else {
+      window.open(whatsappUrl, '_blank');
+    }
     markAsSentWhatsApp();
   };
 
