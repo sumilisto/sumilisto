@@ -632,7 +632,7 @@ export async function updateOrder(orderId: string, updates: Partial<Order>): Pro
     const pedidos: Order[] = currentData.pedidos || [];
 
     const updatedPedidos = pedidos.map((p) =>
-      p.id === orderId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+      p.id === orderId || p.codigo === orderId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
     );
 
     const { error: updateError } = await supabaseAdmin

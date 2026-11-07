@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
-import { getOrders, saveOrder, updateOrderStatus, deleteOrder, getAllProductsAdmin } from "@/lib/supabase/queries";
+import { getOrders, saveOrder, updateOrder, updateOrderStatus, deleteOrder, getAllProductsAdmin } from "@/lib/supabase/queries";
 import { generateOrderCode } from "@/lib/orders/orderCode";
 import { Order, OrderItem, OrderStatus } from "@/types/order";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH /api/orders — Actualizar estado del pedido
+// PATCH /api/orders — Actualizar estado o régimen fiscal (con/sin IVA) del pedido
 export async function PATCH(req: NextRequest) {
   try {
     const isAuth = await isAdminAuthenticated();
@@ -210,18 +210,28 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { orderId, estado } = body;
+    const { orderId, estado, conIva } = body;
 
-    if (!orderId || !estado) {
-      return NextResponse.json({ error: "orderId y estado son requeridos" }, { status: 400 });
+    if (!orderId) {
+      return NextResponse.json({ error: "orderId es requerido" }, { status: 400 });
     }
 
-    const ok = await updateOrderStatus(orderId, estado as OrderStatus);
+    const updates: Partial<Order> = {};
+
+    if (estado !== undefined) {
+      updates.estado = estado as OrderStatus;
+    }
+
+    if (conIva !== undefined) {
+      updates.conIva = Boolean(conIva);
+    }
+
+    const ok = await updateOrder(orderId, updates);
     if (!ok) {
-      return NextResponse.json({ error: "No se pudo actualizar el estado" }, { status: 500 });
+      return NextResponse.json({ error: "No se pudo actualizar el pedido" }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, updates });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }

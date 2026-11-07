@@ -194,22 +194,12 @@ export default function AdminContabilidadPage() {
     return orders.filter((o) => o.estado !== "cancelado" && getOrderDateKey(o.createdAt) === todayKey).length;
   }, [orders]);
 
-  // Flete efectivo de retiro asignado a cada pedido:
-  // Si hay más de un pedido en la misma fecha, el viaje de $5 se divide entre ellos ($2.50 si son 2, $1.67 si son 3, etc.)
-  // A menos que el usuario le haya asignado un flete personalizado explícito.
+  // Flete de retiro asignado a cada pedido según la cantidad de pedidos de ese día:
+  // Se divide el viaje de $5 entre los pedidos registrados en la misma fecha (1 pedido: $5, 2 pedidos: $2.50, etc.)
   const getEffectiveFlete = (ord: Order) => {
     const key = getOrderDateKey(ord.createdAt);
     const countToday = ordersCountByDate[key] || 1;
-
-    if (ord.gastoFleteRetiroUsd !== undefined && ord.gastoFleteRetiroUsd !== 5.0) {
-      return ord.gastoFleteRetiroUsd;
-    }
-
-    if (countToday > 1) {
-      return Math.round((5.0 / countToday) * 100) / 100;
-    }
-
-    return ord.gastoFleteRetiroUsd !== undefined ? ord.gastoFleteRetiroUsd : 5.0;
+    return Math.round((5.0 / countToday) * 100) / 100;
   };
 
   // Cálculo exacto de Ganancia Neta por pedido:
@@ -485,25 +475,29 @@ export default function AdminContabilidadPage() {
 
   // Actualizar régimen fiscal (Con IVA vs Sin IVA)
   const handleUpdateFiscal = async (orderId: string, newConIva: boolean) => {
+    // 1. Actualización inmediata y reactiva en UI
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id !== orderId && o.codigo !== orderId) return o;
+        const total = o.totalUsd || 0;
+        const iva = newConIva ? Math.round((total - total / 1.16) * 100) / 100 : 0;
+        return {
+          ...o,
+          conIva: newConIva,
+          ivaMontoUsd: iva,
+        };
+      })
+    );
+
+    // 2. Persistir en la base de datos
     try {
       const res = await fetch("/api/orders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, conIva: newConIva }),
       });
-      if (res.ok) {
-        setOrders((prev) =>
-          prev.map((o) => {
-            if (o.id !== orderId) return o;
-            const total = o.totalUsd || 0;
-            const iva = newConIva ? Math.round((total - total / 1.16) * 100) / 100 : 0;
-            return {
-              ...o,
-              conIva: newConIva,
-              ivaMontoUsd: iva,
-            };
-          })
-        );
+      if (!res.ok) {
+        console.error("Error guardando régimen fiscal en API:", await res.text());
       }
     } catch (err) {
       console.error("Error actualizando régimen fiscal:", err);
@@ -978,26 +972,18 @@ export default function AdminContabilidadPage() {
                           </select>
                         </td>
 
-                        {/* SELECTOR INTERACTIVO DE FLETE DE RETIRO (CON REGLA DEL MISMO DÍA) */}
-                        <td className="py-3.5 px-4">
-                          <div className="flex flex-col gap-0.5">
-                            <select
-                              value={String(ord.gastoFleteRetiroUsd !== undefined ? ord.gastoFleteRetiroUsd : effectiveFlete)}
-                              onChange={(e) => handleUpdateFlete(ord.id, parseFloat(e.target.value))}
-                              className="text-[11px] font-bold px-2 py-1 rounded-lg border bg-amber-50 text-amber-900 border-amber-200 cursor-pointer outline-none"
-                            >
-                              <option value="5">Solo 1: $5.00</option>
-                              <option value="2.5">2 pedidos hoy: $2.50</option>
-                              <option value="1.67">3 pedidos hoy: $1.67</option>
-                              <option value="1.25">4 pedidos hoy: $1.25</option>
-                              <option value="1">5 pedidos hoy: $1.00</option>
-                              <option value="0">Sin flete: $0.00</option>
-                            </select>
-                            {sameDayCount > 1 && (
-                              <span className="text-[9px] font-black text-amber-700 bg-amber-100/60 px-1.5 py-0.5 rounded">
-                                🚚 {sameDayCount} pedidos hoy
+                        {/* FLETE DE RETIRO AUTOMÁTICO SEGÚN PEDIDOS DEL DÍA */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="font-black text-amber-950 text-sm">
+                              {formatUsd(effectiveFlete)}
+                            </span>
+                            <span className="text-[10px] font-bold text-amber-800 flex items-center gap-1 mt-0.5">
+                              <span>🚚</span>
+                              <span>
+                                {sameDayCount} {sameDayCount === 1 ? "pedido hoy" : "pedidos hoy"}
                               </span>
-                            )}
+                            </span>
                           </div>
                         </td>
 
