@@ -48,13 +48,20 @@ export function checkRateLimit(
 }
 
 /**
- * Extrae la IP real del cliente detrás de proxies (Vercel, Cloudflare).
+ * Extrae la IP real del cliente detrás de proxies confiables (Cloudflare, Vercel).
+ * Prioriza cabeceras autenticadas por el proxy para evitar spoofing vía X-Forwarded-For.
  */
 export function getClientIp(req: Request): string {
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
     return forwarded.split(",")[0].trim();
   }
-  return req.headers.get("x-real-ip") || "127.0.0.1";
+  return "127.0.0.1";
 }
 
