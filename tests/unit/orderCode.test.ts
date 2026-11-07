@@ -22,3 +22,4 @@ describe("Order Code Generation (#SUMI-XXXX)", () => {
     expect(code).toMatch(/^#SUMI-\d{4}$/);
   });
 });
+

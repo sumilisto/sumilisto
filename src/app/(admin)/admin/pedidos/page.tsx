@@ -132,7 +132,7 @@ export default function AdminPedidosPage() {
       const [ordersRes, bcvRes, prodRes] = await Promise.all([
         fetch("/api/orders").then((r) => r.json()),
         fetch("/api/bcv").then((r) => r.json()).catch(() => ({ rate: 880.12 })),
-        fetch("/api/products").then((r) => r.json()).catch(() => ({ products: [] })),
+        fetch("/api/products").then((r) => r.json()).catch(() => []),
       ]);
 
       if (ordersRes.ok && Array.isArray(ordersRes.orders)) {
@@ -141,11 +141,18 @@ export default function AdminPedidosPage() {
       if (bcvRes?.rate) {
         setBcvRate(Number(bcvRes.rate) || 880.12);
       }
-      if (Array.isArray(prodRes?.products)) {
-        setProducts(prodRes.products);
-        if (prodRes.products.length > 0 && !selectedProdId) {
-          const firstP = prodRes.products[0];
+      const productList: Product[] = Array.isArray(prodRes)
+        ? prodRes
+        : Array.isArray(prodRes?.products)
+        ? prodRes.products
+        : [];
+
+      if (productList.length > 0) {
+        setProducts(productList);
+        if (!selectedProdId) {
+          const firstP = productList[0];
           setSelectedProdId(firstP.id || firstP.sku);
+          setProductSearchQuery(firstP.nombre || "");
           setSelectedVariantSku(firstP.variantes?.[0]?.sku || firstP.sku || "");
           setSelectedCantidad(String(firstP.minMayor || 50));
         }
@@ -313,7 +320,10 @@ export default function AdminPedidosPage() {
 
   const searchFilteredProducts = useMemo(() => {
     if (!productSearchQuery.trim()) return products;
-    const q = productSearchQuery.toLowerCase();
+    const q = productSearchQuery.toLowerCase().trim();
+    if (selectedProduct && selectedProduct.nombre.toLowerCase().trim() === q) {
+      return products;
+    }
     return products.filter((p) => {
       return (
         p.nombre?.toLowerCase().includes(q) ||
@@ -321,7 +331,7 @@ export default function AdminPedidosPage() {
         p.categoria?.toLowerCase().includes(q)
       );
     });
-  }, [products, productSearchQuery]);
+  }, [products, productSearchQuery, selectedProduct]);
 
   const handleSelectProduct = (productIdOrSku: string) => {
     const prod = products.find((p) => p.id === productIdOrSku || p.sku === productIdOrSku);
@@ -341,8 +351,33 @@ export default function AdminPedidosPage() {
   };
 
   const handleClearProductSelection = () => {
+    setSelectedProdId("");
+    setSelectedVariantSku("");
     setProductSearchQuery("");
     setIsProductSearchOpen(true);
+  };
+
+  const handleOpenManualModal = async () => {
+    setIsModalOpen(true);
+    let list = products;
+    if (list.length === 0) {
+      try {
+        const prodRes = await fetch("/api/products").then((r) => r.json());
+        list = Array.isArray(prodRes) ? prodRes : prodRes?.products || [];
+        if (list.length > 0) {
+          setProducts(list);
+        }
+      } catch (err) {
+        console.error("Error cargando productos al abrir modal:", err);
+      }
+    }
+    if (list.length > 0 && !selectedProdId) {
+      const firstP = list[0];
+      setSelectedProdId(firstP.id || firstP.sku);
+      setProductSearchQuery(firstP.nombre || "");
+      setSelectedVariantSku(firstP.variantes?.[0]?.sku || firstP.sku || "");
+      setSelectedCantidad(String(firstP.minMayor || 50));
+    }
   };
 
   const handleChangeTarifa = (tarifa: "mayor" | "gran_mayor") => {
@@ -418,6 +453,10 @@ export default function AdminPedidosPage() {
         costoTotalUsd,
       },
     ]);
+
+    setProductSearchQuery("");
+    setSelectedProdId("");
+    setSelectedVariantSku("");
   };
 
   const handleRemoveManualItem = (index: number) => {
@@ -584,7 +623,7 @@ export default function AdminPedidosPage() {
             </Link>
 
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleOpenManualModal}
               className="px-4 py-2 text-xs font-black bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
@@ -1291,8 +1330,9 @@ export default function AdminPedidosPage() {
                             setIsProductSearchOpen(true);
                           }}
                           onFocus={() => setIsProductSearchOpen(true)}
-                          placeholder="Escribe nombre o SKU..."
-                          className="w-full px-3 py-1.5 pr-8 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-emerald-600"
+                          onClick={() => setIsProductSearchOpen(true)}
+                          placeholder="Buscar producto o SKU (haz clic para desplegar)..."
+                          className="w-full px-3 py-1.5 pr-8 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-emerald-600 cursor-pointer"
                         />
                         {productSearchQuery && (
                           <button
@@ -1310,9 +1350,14 @@ export default function AdminPedidosPage() {
                         <>
                           <div className="fixed inset-0 z-20" onClick={() => setIsProductSearchOpen(false)} />
                           <div className="absolute left-0 right-0 top-full mt-1.5 z-30 max-h-60 overflow-y-auto bg-white rounded-2xl shadow-xl border border-slate-200 divide-y divide-slate-100">
-                            {searchFilteredProducts.length === 0 ? (
-                              <div className="p-3 text-center text-xs text-slate-500">
-                                No se encontraron productos
+                            {products.length === 0 ? (
+                              <div className="p-4 text-center text-xs text-slate-500">
+                                Cargando catálogo de productos...
+                              </div>
+                            ) : searchFilteredProducts.length === 0 ? (
+                              <div className="p-4 text-center text-xs text-slate-500">
+                                <p className="font-bold">No se encontraron productos coincidentes</p>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Intenta con otro término o código SKU</p>
                               </div>
                             ) : (
                               searchFilteredProducts.map((p) => {
