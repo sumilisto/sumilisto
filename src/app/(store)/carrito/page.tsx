@@ -289,44 +289,47 @@ export default function CartPage() {
     setErrorValidacion('');
 
     const orderCode = generateOrderCode();
-    let message = `🛒 *PEDIDO ${orderCode} - SUMILISTO*\n\n`;
-    message += `👤 *Cliente:* ${cleanNombre}\n`;
-    message += `📞 *Teléfono:* ${cleanTelefono}\n`;
-    message += `📍 *Zona de Entrega:* ${cleanZona}\n`;
-    message += `🏠 *Dirección:* ${cleanDireccion}\n`;
+    let message = `_*SUMILISTO*_\n`;
+    message += `🛒 Resumen de su pedido *${orderCode}*\n\n`;
+    message += `Cliente: _*${cleanNombre}*_\n`;
+    message += `Teléfono: ${cleanTelefono}\n`;
+    message += `Zona de Entrega: ${cleanZona}\n`;
+    message += `Dirección: ${cleanDireccion}\n`;
 
     const mapsLink = gpsLocation
       ? `https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}`
       : cleanStr(customMapsUrl) || null;
 
     if (mapsLink) {
-      message += `🗺️ *Ubicación GPS:* ${mapsLink}\n`;
+      message += `Ubicación GPS: ${mapsLink}\n`;
     }
-    message += `💳 *Método de Pago:* ${cleanMetodo}\n`;
-    if (cleanNotas) message += `📝 *Notas:* ${cleanNotas}\n`;
+    message += `Método de Pago: ${cleanMetodo}\n`;
+    if (cleanNotas) message += `Notas: ${cleanNotas}\n`;
 
-    message += `\n📦 *DETALLE DEL PEDIDO:*\n`;
+    message += `\nDETALLES DEL PEDIDO:\n`;
     lines.forEach((l, index) => {
       const cleanProdNombre = cleanStr(l.nombre);
       const detalle = l.presentacion ? ` (${cleanStr(l.presentacion)})` : '';
       const tarifa = l.nivel === 'gran_mayor' ? 'Gran Mayor' : 'Mayor';
-      message += `${index + 1}. ${cleanProdNombre}${detalle} - ${l.cantidad} unds (${tarifa}) = ${formatUsd(
+      message += `${index + 1}. ${cleanProdNombre}${detalle} - _*${l.cantidad} unds (${tarifa}) = ${formatUsd(
         l.subtotal
-      )}\n`;
+      )}*_\n`;
     });
 
     const isEnvioNacional = cleanZona.toLowerCase().includes('nacional');
     if (isEnvioNacional) {
-      message += `\n📦 *DESPACHO:* Cobro en destino (Envío Nacional por Tealca / Zoom / MRW)\n`;
+      message += `\nDESPACHO: Cobro en destino (Envío Nacional por Tealca / Zoom / MRW)\n`;
     } else if (qualifiesForFreeDelivery) {
-      message += `\n🛵 *DESPACHO:* ¡DELIVERY GRATIS APLICADO! (Compra mayor a $50 en Caracas, Guarenas o Guatire)\n`;
+      message += `\nDESPACHO: ¡DELIVERY GRATIS APLICADO! (Compra mayor a $50 en Caracas, Guarenas o Guatire)\n`;
     } else {
-      message += `\n🛵 *DESPACHO:* Tarifa acordada con el asesor (Delivery GRATIS a partir de $50)\n`;
+      message += `\nDESPACHO: Tarifa acordada con el asesor (Delivery GRATIS a partir de $50)\n`;
     }
-    message += `\n💰 *TOTAL USD:* ${formatUsd(totalUsd)}`;
-    if (currentBcvRate > 0) {
-      message += `\n💵 *TOTAL VES (BCV):* ${formatVes(totalVes)}`;
-    }
+
+    const bcvFormatted = currentBcvRate.toLocaleString('es-VE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    message += `\nTotal a pagar (BCV ${bcvFormatted}): _*${formatUsd(totalUsd)} = ${formatVes(totalVes)}*_`;
 
     const rawWhatsappNumber = theme.whatsappNumber || '';
     const whatsappNumber = rawWhatsappNumber.replace(/[^0-9]/g, '');
