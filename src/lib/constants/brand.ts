@@ -16,7 +16,7 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   storeName: "Sumilisto",
   whatsappNumber: "584227894547",
   whatsappLastModifiedAt: new Date().toISOString(),
-  deliveryZones: ["Caracas", "Guarenas", "Guatire", "Envíos Nacionales (a convenir)"],
+  deliveryZones: ["Caracas", "Guarenas", "Guatire", "Envíos Nacionales (Cobro en destino)"],
   schedule: "Lunes a Viernes de 8:00 AM a 5:00 PM · Sábados de 8:00 AM a 1:00 PM",
   minOrderUsd: 10.00,
   lowStockThreshold: 10,

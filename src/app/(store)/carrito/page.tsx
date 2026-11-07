@@ -6,6 +6,7 @@ import Image from 'next/image';
 import {
   Trash2, Plus, Minus, MapPin, ArrowLeft,
   Navigation, ExternalLink, AlertCircle, Check, X,
+  Package, Truck,
 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/common/WhatsAppIcon';
 import { useCart } from '@/lib/cart/CartContext';
@@ -314,10 +315,13 @@ export default function CartPage() {
       )}\n`;
     });
 
-    if (qualifiesForFreeDelivery) {
+    const isEnvioNacional = cleanZona.toLowerCase().includes('nacional');
+    if (isEnvioNacional) {
+      message += `\n📦 *DESPACHO:* Cobro en destino (Envío Nacional por Tealca / Zoom / MRW)\n`;
+    } else if (qualifiesForFreeDelivery) {
       message += `\n🛵 *DESPACHO:* ¡DELIVERY GRATIS APLICADO! (Compra mayor a $50 en Caracas, Guarenas o Guatire)\n`;
     } else {
-      message += `\n🛵 *DESPACHO:* Por coordinar con asesor (Delivery GRATIS a partir de $50)\n`;
+      message += `\n🛵 *DESPACHO:* Tarifa acordada con el asesor (Delivery GRATIS a partir de $50)\n`;
     }
     message += `\n💰 *TOTAL USD:* ${formatUsd(totalUsd)}`;
     if (currentBcvRate > 0) {
@@ -595,25 +599,44 @@ export default function CartPage() {
               <option value="Caracas">Caracas</option>
               <option value="Guarenas">Guarenas</option>
               <option value="Guatire">Guatire</option>
-              <option value="Envío Nacional">Envío Nacional</option>
+              <option value="Envío Nacional (Cobro en Destino)">Envío Nacional (Cobro en Destino)</option>
             </select>
           </div>
 
+          {zonaEntrega && zonaEntrega.toLowerCase().includes('nacional') && (
+            <div className="p-3.5 bg-blue-50/90 border border-blue-200 rounded-2xl flex items-start gap-2.5 text-xs text-blue-900 animate-in fade-in">
+              <Package className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Envíos Nacionales: Cobro en Destino</p>
+                <p className="text-[11px] text-blue-800/80 mt-0.5 leading-relaxed">
+                  Despachamos por Tealca, Zoom o MRW a cualquier estado del país. Cancelas el costo de encomienda directamente al retirar en tu agencia receptora.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Dirección Escrita / Referencia <span className="text-red-600 font-bold">*</span>
+              {zonaEntrega && zonaEntrega.toLowerCase().includes('nacional')
+                ? "Ciudad, Estado y Agencia Receptora (Tealca / Zoom / MRW)"
+                : "Dirección Escrita / Referencia"}{" "}
+              <span className="text-red-600 font-bold">*</span>
             </label>
             <textarea
               value={direccion}
               onChange={(e) => setDireccion(e.target.value)}
               rows={2}
-              placeholder="Calle, edificio, local o punto de referencia exacto"
+              placeholder={
+                zonaEntrega && zonaEntrega.toLowerCase().includes('nacional')
+                  ? "Ej: Maracay, Edo. Aragua. Agencia Tealca Calle Mariño..."
+                  : "Calle, edificio, local o punto de referencia exacto"
+              }
               className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               required
             />
           </div>
 
-          {zonaEntrega && zonaEntrega !== 'Envío Nacional' && (
+          {zonaEntrega && !zonaEntrega.toLowerCase().includes('nacional') && (
             <div className="p-4 bg-emerald-50/60 border border-emerald-200/90 rounded-2xl space-y-3.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">

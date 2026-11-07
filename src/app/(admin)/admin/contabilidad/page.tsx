@@ -1123,7 +1123,7 @@ export default function AdminContabilidadPage() {
                     <option value="Caracas">Caracas</option>
                     <option value="Guarenas">Guarenas</option>
                     <option value="Guatire">Guatire</option>
-                    <option value="Envíos Nacionales">Envíos Nacionales (Tealca / Zoom)</option>
+                    <option value="Envíos Nacionales (Cobro en Destino)">Envíos Nacionales (Cobro en Destino Tealca / Zoom)</option>
                     <option value="Retiro en Almacén">Retiro en Almacén</option>
                   </select>
                 </div>

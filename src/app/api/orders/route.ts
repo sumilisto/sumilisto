@@ -164,8 +164,11 @@ export async function POST(req: NextRequest) {
       whatsappText += `${idx + 1}. ${it.nombre}${pres} - ${it.cantidad} unds (${tarifaDesc}) = ${formatUsd(it.subtotalUsd)}\n`;
     });
 
-    if (totalUsd >= 50) {
-      whatsappText += `\n🛵 *DESPACHO:* ¡DELIVERY GRATIS INCLUIDO!\n`;
+    const isEnvioNacional = newOrder.zonaEntrega?.toLowerCase().includes("nacional");
+    if (isEnvioNacional) {
+      whatsappText += `\n📦 *DESPACHO:* Cobro en destino (Envío Nacional por Tealca / Zoom / MRW)\n`;
+    } else if (totalUsd >= 50) {
+      whatsappText += `\n🛵 *DESPACHO:* ¡DELIVERY GRATIS INCLUIDO! (Caracas / Guarenas / Guatire)\n`;
     } else {
       whatsappText += `\n🛵 *DESPACHO:* Tarifa acordada con asesor\n`;
     }
