@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
-import { formatUsd } from "@/lib/currency/format";
+import { formatUsd, normalizeWhatsAppPhone } from "@/lib/currency/format";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { Plus, Minus, AlertCircle } from "lucide-react";
@@ -68,7 +68,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const whatsappNum = theme.whatsappNumber || "";
+  const whatsappNum = normalizeWhatsAppPhone(theme.whatsappNumber);
   const whatsappInquiryUrl = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(
     `Hola Sumilisto, quisiera consultar disponibilidad y precio del producto: ${product.nombre} (SKU: ${currentSku})`
   )}`;

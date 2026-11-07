@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
-import { formatVes } from "@/lib/currency/format";
+import { formatVes, normalizeWhatsAppPhone } from "@/lib/currency/format";
 import { Search, ShoppingBag, MapPin, Sparkles, Instagram, Truck } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import { InstantSearchModal } from "@/components/search/InstantSearchModal";
@@ -99,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
 
             {/* Enlace de WhatsApp directo */}
             <a
-              href={`https://wa.me/${theme.whatsappNumber}?text=Hola%20Sumilisto,%20quisiera%20hacer%20una%20consulta%20de%20suministros`}
+              href={`https://wa.me/${normalizeWhatsAppPhone(theme.whatsappNumber)}?text=Hola%20Sumilisto,%20quisiera%20hacer%20una%20consulta%20de%20suministros`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Contactar por WhatsApp"

@@ -72,3 +72,19 @@ export function calculateVesTotal(totalUsd: number, bcvRate: number): number {
 
   return totalVesCents / 100;
 }
+
+/**
+ * Normaliza cualquier número telefónico al formato internacional limpio de WhatsApp
+ * Ejemplo: "0422 786-4547" -> "584227864547", "+58 412 1234567" -> "584121234567"
+ */
+export function normalizeWhatsAppPhone(phone?: string | null): string {
+  if (!phone) return "584227894547";
+  let cleaned = String(phone).replace(/[^0-9]/g, "");
+  if (cleaned.startsWith("0")) {
+    cleaned = "58" + cleaned.slice(1);
+  } else if (!cleaned.startsWith("58") && cleaned.length === 10) {
+    cleaned = "58" + cleaned;
+  }
+  return cleaned || "584227894547";
+}
+

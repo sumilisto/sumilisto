@@ -7,10 +7,11 @@ import { DEFAULT_STORE_CONFIG, STORE_CATEGORIES } from "@/lib/constants/brand";
 import { DEFAULT_SETTINGS } from "@/lib/constants/settings";
 import { MapPin, Clock, ShieldCheck, Truck, Phone, Instagram } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
+import { normalizeWhatsAppPhone } from "@/lib/currency/format";
 
 export const Footer: React.FC = () => {
   const { theme } = useTheme();
-  const whatsappNum = theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber;
+  const whatsappNum = normalizeWhatsAppPhone(theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber);
   const instagramUrl = theme.instagramUrl || "https://www.instagram.com/sumilisto_/";
   const rawHandle = (theme.instagramHandle || DEFAULT_SETTINGS.instagramHandle || "Sumilisto_").replace(/^@/, "");
   const instagramHandle = rawHandle.toLowerCase() === "sumilisto_" ? "Sumilisto_" : rawHandle;

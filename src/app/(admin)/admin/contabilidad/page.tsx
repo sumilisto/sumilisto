@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isAdminAuthenticated, loginAdmin, logoutAdmin } from "@/lib/actions/auth";
-import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
+import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from "@/lib/currency/format";
 import { Order, OrderItem, OrderStatus, DEFAULT_ACCOUNTING_SETTINGS } from "@/types/order";
 import { Product } from "@/types/product";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -980,12 +980,7 @@ export default function AdminContabilidadPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                   {filteredOrders.map((ord) => {
-                    // Normalizar número telefónico para WhatsApp
-                    let rawPhone = ord.clienteTelefono?.replace(/[^0-9]/g, "") || "";
-                    if (rawPhone.startsWith("0")) rawPhone = "58" + rawPhone.slice(1);
-                    else if (!rawPhone.startsWith("58") && rawPhone.length === 10) rawPhone = "58" + rawPhone;
-
-                    const whatsappChatUrl = `https://wa.me/${rawPhone}`;
+                    const whatsappChatUrl = `https://wa.me/${normalizeWhatsAppPhone(ord.clienteTelefono)}`;
                     const effectiveFlete = getEffectiveFlete(ord);
                     const sameDayCount = ordersCountByDate[getOrderDateKey(ord.createdAt)] || 1;
                     const orderNetProfit = getOrderGananciaNeta(ord);

@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "@/lib/constants/settings";
 import { DEFAULT_STORE_CONFIG } from "@/lib/constants/brand";
 import { Home, LayoutGrid, Truck } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
+import { normalizeWhatsAppPhone } from "@/lib/currency/format";
 import { cn } from "@/lib/utils";
 
 interface MobileBottomNavProps {
@@ -17,7 +18,7 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
   const pathname = usePathname();
   const { theme } = useTheme();
-  const whatsappNum = (theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber || "584227894547").replace(/[^0-9]/g, "");
+  const whatsappNum = normalizeWhatsAppPhone(theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber);
 
   const navItems = [
     {

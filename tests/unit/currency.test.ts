@@ -4,6 +4,7 @@ import {
   formatVes,
   parseVenezuelanNumber,
   calculateVesTotal,
+  normalizeWhatsAppPhone,
 } from "@/lib/currency/format";
 
 describe("Formateo de Moneda y Conversión es-VE (Currency Module)", () => {
@@ -46,5 +47,14 @@ describe("Formateo de Moneda y Conversión es-VE (Currency Module)", () => {
 
     // Formateo visual en Bs. coincide exactamente
     expect(formatVes(calculateVesTotal(15.35, 881.0743))).toBe("Bs. 13.524,42");
+  });
+
+  it("normaliza números de teléfono para enlaces internacionales de WhatsApp", () => {
+    expect(normalizeWhatsAppPhone("0422 786-4547")).toBe("584227864547");
+    expect(normalizeWhatsAppPhone("+58 412 1234567")).toBe("584121234567");
+    expect(normalizeWhatsAppPhone("584227894547")).toBe("584227894547");
+    expect(normalizeWhatsAppPhone("04141234567")).toBe("584141234567");
+    expect(normalizeWhatsAppPhone("")).toBe("584227894547");
+    expect(normalizeWhatsAppPhone(null)).toBe("584227894547");
   });
 });

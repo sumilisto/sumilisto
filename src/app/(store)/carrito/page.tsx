@@ -12,7 +12,7 @@ import { WhatsAppIcon } from '@/components/common/WhatsAppIcon';
 import { useCart } from '@/lib/cart/CartContext';
 import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
-import { formatUsd, formatVes, calculateVesTotal } from '@/lib/currency/format';
+import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from '@/lib/currency/format';
 import { LocationPickerModal } from '@/components/cart/LocationPickerModal';
 import { generateOrderCode } from '@/lib/orders/orderCode';
 
@@ -344,13 +344,7 @@ export default function CartPage() {
     });
     message += `\nTotal a pagar (BCV ${bcvFormatted}): _*${formatUsd(totalUsd)} = ${formatVes(totalVes)}*_`;
 
-    const rawWhatsappNumber = theme.whatsappNumber || '';
-    const whatsappNumber = rawWhatsappNumber.replace(/[^0-9]/g, '');
-    if (!whatsappNumber) {
-      setErrorValidacion('El número de WhatsApp de la tienda no está configurado. Intenta más tarde.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
+    const whatsappNumber = normalizeWhatsAppPhone(theme.whatsappNumber);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
     // Marcar como completado y registrar pedido con su código no correlativo en segundo plano

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
+import { normalizeWhatsAppPhone } from "@/lib/currency/format";
 
 export function HeroSection() {
   const { theme } = useTheme();
@@ -96,7 +97,7 @@ export function HeroSection() {
           )}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <a
-              href={`https://wa.me/${theme.whatsappNumber}?text=Hola%20Sumilisto,%20deseo%20asesor%C3%ADa%20sobre%20suministros%20para%20mi%20negocio`}
+              href={`https://wa.me/${normalizeWhatsAppPhone(theme.whatsappNumber)}?text=Hola%20Sumilisto,%20deseo%20asesor%C3%ADa%20sobre%20suministros%20para%20mi%20negocio`}
               target="_blank"
               rel="noopener noreferrer"
               className="h-10 sm:h-11 px-5 rounded-xl bg-white text-brand hover:bg-slate-50 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-all"

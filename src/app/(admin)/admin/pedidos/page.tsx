@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { isAdminAuthenticated, loginAdmin, logoutAdmin } from "@/lib/actions/auth";
-import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
+import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from "@/lib/currency/format";
 import { Order, OrderItem, OrderStatus } from "@/types/order";
 import { Product } from "@/types/product";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -733,12 +733,7 @@ export default function AdminPedidosPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                   {filteredOrders.map((ord) => {
-                    // Normalizar teléfono
-                    let rawPhone = ord.clienteTelefono?.replace(/[^0-9]/g, "") || "";
-                    if (rawPhone.startsWith("0")) rawPhone = "58" + rawPhone.slice(1);
-                    else if (!rawPhone.startsWith("58") && rawPhone.length === 10) rawPhone = "58" + rawPhone;
-
-                    const whatsappChatUrl = `https://wa.me/${rawPhone}`;
+                    const whatsappChatUrl = `https://wa.me/${normalizeWhatsAppPhone(ord.clienteTelefono)}`;
 
                     // Temporizador de 2 minutos para pedidos cancelados
                     const isCancelled = ord.estado === "cancelado";
@@ -998,7 +993,16 @@ export default function AdminPedidosPage() {
                 <div>
                   <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Cliente y Contacto</p>
                   <p className="text-sm font-black text-slate-900 mt-0.5">{selectedOrderForPicking.clienteNombre}</p>
-                  <p className="text-slate-600 font-medium mt-0.5">{selectedOrderForPicking.clienteTelefono}</p>
+                  <a
+                    href={`https://wa.me/${normalizeWhatsAppPhone(selectedOrderForPicking.clienteTelefono)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 font-bold mt-1"
+                    title="Chatear con el cliente"
+                  >
+                    <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{selectedOrderForPicking.clienteTelefono} (Abrir Chat)</span>
+                  </a>
                   <p className="text-slate-500 mt-1">
                     <span className="font-bold text-slate-700">Método de Pago:</span> {selectedOrderForPicking.metodoPago}
                   </p>
