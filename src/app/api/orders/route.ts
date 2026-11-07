@@ -145,40 +145,30 @@ export async function POST(req: NextRequest) {
     }
 
     // Preparar el texto estructurado de WhatsApp para enviar al cliente
-    let whatsappText = `🛒 *RESUMEN DE TU PEDIDO ${orderCode} - SUMILISTO*\n\n`;
-    whatsappText += `Hola *${newOrder.clienteNombre}*, gracias por preferir a *Sumilisto* para tus suministros mayoristas.\n\n`;
-    whatsappText += `👤 *Cliente:* ${newOrder.clienteNombre}\n`;
-    whatsappText += `📱 *Teléfono:* ${newOrder.clienteTelefono}\n`;
-    if (newOrder.zonaEntrega) whatsappText += `📍 *Zona:* ${newOrder.zonaEntrega}\n`;
-    if (newOrder.direccion) whatsappText += `🏠 *Dirección:* ${newOrder.direccion}\n`;
-    whatsappText += `💳 *Método de Pago Acordado:* ${newOrder.metodoPago}\n`;
-    whatsappText += newOrder.conIva
-      ? `📄 *Comprobante:* Factura Fiscal (IVA 16% Incluido)\n`
-      : `📄 *Comprobante:* Nota de Entrega Mayorista\n`;
-    if (newOrder.notas) whatsappText += `📝 *Observaciones:* ${newOrder.notas}\n`;
+    const tasaBcvStr = parsedTasa.toLocaleString("es-VE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
-    whatsappText += `\n📦 *DETALLE DE ARTÍCULOS:*\n`;
+    let whatsappText = `_*SUMILISTO*_\n`;
+    whatsappText += `Resumen de su pedido *${orderCode}*\n\n`;
+    whatsappText += `Cliente: _*${newOrder.clienteNombre}*_\n`;
+    whatsappText += `Teléfono: ${newOrder.clienteTelefono}\n`;
+    if (newOrder.zonaEntrega) whatsappText += `Zona: ${newOrder.zonaEntrega}\n`;
+    if (newOrder.direccion) whatsappText += `Dirección: ${newOrder.direccion}\n`;
+    whatsappText += `Método de Pago Acordado: ${newOrder.metodoPago}\n`;
+    if (newOrder.notas) whatsappText += `Observaciones: ${newOrder.notas}\n`;
+
+    whatsappText += `\nDETALLES DE ARTÍCULOS:\n`;
     newOrder.items.forEach((it, idx) => {
       const tarifaDesc = it.tarifa === "gran_mayor" ? "Gran Mayor" : "Mayor";
       const pres = it.presentacion ? ` (${it.presentacion})` : "";
-      whatsappText += `${idx + 1}. ${it.nombre}${pres} - ${it.cantidad} unds (${tarifaDesc}) = ${formatUsd(it.subtotalUsd)}\n`;
+      whatsappText += `${idx + 1}. ${it.nombre}${pres} - _*${it.cantidad} unds (${tarifaDesc}) = ${formatUsd(it.subtotalUsd)}*_\n`;
     });
 
-    const isEnvioNacional = newOrder.zonaEntrega?.toLowerCase().includes("nacional");
-    if (isEnvioNacional) {
-      whatsappText += `\n📦 *DESPACHO:* Cobro en destino (Envío Nacional por Tealca / Zoom / MRW)\n`;
-    } else if (totalUsd >= 50) {
-      whatsappText += `\n🛵 *DESPACHO:* ¡DELIVERY GRATIS INCLUIDO! (Caracas / Guarenas / Guatire)\n`;
-    } else {
-      whatsappText += `\n🛵 *DESPACHO:* Tarifa acordada con asesor\n`;
-    }
-
-    whatsappText += `\n💰 *TOTAL A CANCELAR:* ${formatUsd(totalUsd)}`;
-    if (parsedTasa > 0) {
-      whatsappText += `\n💵 *TOTAL EN BS (BCV ${parsedTasa.toLocaleString("es-VE", { minimumFractionDigits: 2 })}):* ${formatVes(totalVes)}`;
-    }
-
-    whatsappText += `\n\nPor favor envíanos por aquí tu comprobante de pago una vez realizado para iniciar el empaque y despacho de inmediato. ¡Feliz día!`;
+    whatsappText += `\nTotal a pagar (BCV ${tasaBcvStr}): _*${formatUsd(totalUsd)} = ${formatVes(totalVes)}*_\n\n`;
+    whatsappText += `_*Gracias por preferir a *Sumilisto* para tus suministros mayoristas.*_\n`;
+    whatsappText += `_*¡Feliz día!*_`;
 
     // Normalizar número telefónico del cliente para abrir su chat de WhatsApp
     let rawPhone = newOrder.clienteTelefono.replace(/[^0-9]/g, "");
