@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       sku: body.sku.trim(),
       color: body.color.trim(),
       presentacion: body.presentacion || body.color || "Unidad",
+      costo_mayor_usd: body.costo_mayor_usd ? Number(body.costo_mayor_usd) : null,
+      costo_gran_mayor_usd: body.costo_gran_mayor_usd ? Number(body.costo_gran_mayor_usd) : null,
       precio_mayor_usd: Number(body.precio_mayor_usd) || 0,
       min_mayor: Number(body.min_mayor) || 1,
       precio_gran_mayor_usd: Number(body.precio_gran_mayor_usd) || 0,

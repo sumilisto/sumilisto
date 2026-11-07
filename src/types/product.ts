@@ -15,6 +15,8 @@ export interface ProductVariant {
   sku: string;
   color?: string;
   presentacion: string;
+  costoMayorUsd?: number;
+  costoGranMayorUsd?: number;
   precioMayorUsd?: number;
   minMayor: number;
   precioGranMayorUsd?: number;
@@ -36,6 +38,8 @@ export interface Product {
   color?: string;
   presentacion: string;           // Ej: "Roja", "Dorada", "50 Unidades"
   unidadVenta: string;            // Ej: "50 Unidades", "100 Unidades"
+  costoMayorUsd?: number;         // Costo base mayorista en USD
+  costoGranMayorUsd?: number;     // Costo gran mayor en USD
   precioMayorUsd?: number;        // Precio base al mayor en USD
   minMayor: number;               // Cantidad mínima para compra al mayor (def: 1)
   precioGranMayorUsd?: number;    // Precio con descuento por volumen

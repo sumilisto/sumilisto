@@ -15,6 +15,7 @@ import {
   Percent, DollarSign, Eye, ArrowUpDown, HelpCircle, Activity, Settings
 } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { ProductMatrix } from "@/components/admin/ProductMatrix";
 import { useTheme } from "@/lib/theme/ThemeContext";
 
 interface UploadPhotoItem {
@@ -214,6 +215,7 @@ export default function AdminProductosPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("todas");
   const [filterNoPhoto, setFilterNoPhoto] = useState(false);
   const [filterDestacados, setFilterDestacados] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState<"matriz" | "catalogo">("matriz");
 
   // Notificaciones flotantes
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
@@ -1495,14 +1497,14 @@ export default function AdminProductosPage() {
         )}
 
         {/* Encabezado Principal */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-200">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
               <Package className="w-7 h-7 text-brand" />
-              Gestión de Productos, Multimedia y Variantes
+              Gestión de Productos, Inventario y Catálogo
             </h1>
             <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-              Sube carruseles de hasta 10 fotos y 1 video optimizados, y gestiona colores o presentaciones con 1 clic.
+              Matriz maestra de inventario, costos por variante y catálogo con fotos para la tienda web.
             </p>
           </div>
 
@@ -1513,7 +1515,7 @@ export default function AdminProductosPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm transition-all"
             >
               <Plus className="w-4 h-4" />
-              <span>Nuevo Producto</span>
+              <span>Publicar en Web</span>
             </button>
             <button
               type="button"
@@ -1527,8 +1529,55 @@ export default function AdminProductosPage() {
           </div>
         </div>
 
-      {/* Contenido */}
-      <div className="space-y-6">
+        {/* Pestañas Principales: Matriz Maestra vs Catálogo Web */}
+        <div className="flex items-center gap-2 mb-6 border-b border-slate-200">
+          <button
+            type="button"
+            onClick={() => setActiveMainTab("matriz")}
+            className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${
+              activeMainTab === "matriz"
+                ? "border-brand text-brand bg-brand-50/70 rounded-t-xl"
+                : "border-transparent text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Matriz Maestra (Inventario & Costos)</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 ml-1">
+              {products.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMainTab("catalogo")}
+            className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${
+              activeMainTab === "catalogo"
+                ? "border-brand text-brand bg-brand-50/70 rounded-t-xl"
+                : "border-transparent text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            <Package className="w-4 h-4" />
+            <span>Catálogo Web (Fotos & Vitrina)</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 ml-1">
+              {products.filter((p) => p.activo).length}
+            </span>
+          </button>
+        </div>
+
+      {activeMainTab === "matriz" ? (
+        <ProductMatrix
+          products={products}
+          onRefresh={loadProducts}
+          onOpenEditProduct={(p) => {
+            setEditingProduct(p);
+            setEditActiveTab("general");
+          }}
+          onOpenMediaModal={(p) => setMediaProduct(p)}
+          onOpenVariantModal={(p) => setVariantProduct(p)}
+        />
+      ) : (
+        /* Contenido Catálogo */
+        <div className="space-y-6">
         {/* Métricas rápidas */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
@@ -1880,6 +1929,7 @@ export default function AdminProductosPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* ─────────────────────────────────────────────────────────
           MODAL: GESTOR MULTIMEDIA (FOTOS Y VIDEO)
@@ -2335,6 +2385,69 @@ export default function AdminProductosPage() {
 
             {/* Contenedor con Scroll Único */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
+              {/* Desplegable para cargar desde la Matriz si hay productos pendientes */}
+              {products.some((p) => !p.activo) && (
+                <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                    <div>
+                      <span className="font-extrabold text-amber-950 block text-xs">
+                        ¿Cargar desde un producto de la Matriz?
+                      </span>
+                      <span className="text-[10px] text-amber-800">
+                        Selecciona un producto pendiente para autocompletar nombre, categoría y todos sus SKUs de color.
+                      </span>
+                    </div>
+                  </div>
+
+                  <select
+                    onChange={(e) => {
+                      const selected = products.find((p) => p.id === e.target.value);
+                      if (selected) {
+                        setNewProduct((prev) => ({
+                          ...prev,
+                          nombre: selected.nombre,
+                          categoria: selected.categoria,
+                          descripcion: selected.descripcionLarga || "",
+                          unidad_venta: selected.unidadVenta || "50 Unidades",
+                        }));
+                        if (selected.variantes && selected.variantes.length > 0) {
+                          setNewProductVariants(
+                            selected.variantes.map((v) => ({
+                              id: v.id || `var-${Math.random()}`,
+                              sku: v.sku,
+                              color: v.color || "Estándar",
+                              presentacion: v.presentacion || selected.unidadVenta || "Unidad",
+                              stock: String(v.stock || 100),
+                              precio_mayor_usd: String(v.precioMayorUsd || ""),
+                              min_mayor: String(v.minMayor || 50),
+                              precio_gran_mayor_usd: String(v.precioGranMayorUsd || ""),
+                              min_gran_mayor: String(v.minGranMayor || 200),
+                            }))
+                          );
+                        }
+                        setFeedbackMsg({
+                          text: `¡Datos de "${selected.nombre}" cargados desde la matriz!`,
+                          type: "success",
+                        });
+                      }
+                    }}
+                    defaultValue=""
+                    className="h-9 px-3 rounded-xl bg-white border border-amber-300 text-xs font-bold text-amber-950 focus:outline-none focus:ring-2 focus:ring-brand/20 shrink-0"
+                  >
+                    <option value="" disabled>
+                      Seleccionar de la Matriz ({products.filter((p) => !p.activo).length} pendientes) ▼
+                    </option>
+                    {products
+                      .filter((p) => !p.activo)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre} ({p.variantes?.length || 1} SKUs)
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
               {/* ─────────────────────────────────────────────────────────
                   PESTAÑA 1: INFORMACIÓN GENERAL
                   ───────────────────────────────────────────────────────── */}

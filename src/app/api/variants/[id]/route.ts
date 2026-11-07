@@ -19,6 +19,8 @@ export async function PUT(
 
     const updates: Record<string, any> = {};
     if (body.sku !== undefined) updates.sku = body.sku.trim();
+    if (body.costo_mayor_usd !== undefined) updates.costo_mayor_usd = body.costo_mayor_usd !== null && body.costo_mayor_usd !== "" ? Number(body.costo_mayor_usd) : null;
+    if (body.costo_gran_mayor_usd !== undefined) updates.costo_gran_mayor_usd = body.costo_gran_mayor_usd !== null && body.costo_gran_mayor_usd !== "" ? Number(body.costo_gran_mayor_usd) : null;
     if (body.color !== undefined) updates.color = body.color.trim();
     if (body.presentacion !== undefined) updates.presentacion = body.presentacion;
     if (body.precio_mayor_usd !== undefined) updates.precio_mayor_usd = Number(body.precio_mayor_usd);

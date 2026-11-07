@@ -163,6 +163,8 @@ export async function createVariant(variant: {
   sku: string;
   color?: string;
   presentacion?: string;
+  costo_mayor_usd?: number | null;
+  costo_gran_mayor_usd?: number | null;
   precio_mayor_usd?: number;
   min_mayor?: number;
   precio_gran_mayor_usd?: number;
@@ -467,6 +469,8 @@ function mapDbToProduct(row: any): Product {
     sku: v.sku,
     color: v.color || "ESTÁNDAR",
     presentacion: v.presentacion || v.color || "Unidad",
+    costoMayorUsd: v.costo_mayor_usd ? Number(v.costo_mayor_usd) : undefined,
+    costoGranMayorUsd: v.costo_gran_mayor_usd ? Number(v.costo_gran_mayor_usd) : undefined,
     precioMayorUsd: v.precio_mayor_usd ? Number(v.precio_mayor_usd) : undefined,
     minMayor: v.min_mayor || 100,
     precioGranMayorUsd: v.precio_gran_mayor_usd ? Number(v.precio_gran_mayor_usd) : undefined,
@@ -524,6 +528,8 @@ function mapDbToProduct(row: any): Product {
     color: primaryVariant?.color,
     presentacion,
     unidadVenta: row.unidad_venta || "100 Unidades",
+    costoMayorUsd: row.costo_mayor_usd ? Number(row.costo_mayor_usd) : primaryVariant?.costoMayorUsd,
+    costoGranMayorUsd: row.costo_gran_mayor_usd ? Number(row.costo_gran_mayor_usd) : primaryVariant?.costoGranMayorUsd,
     precioMayorUsd: primaryVariant?.precioMayorUsd,
     minMayor: primaryVariant?.minMayor || 100,
     precioGranMayorUsd: primaryVariant?.precioGranMayorUsd,
