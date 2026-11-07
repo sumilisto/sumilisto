@@ -29,10 +29,13 @@ export interface Order {
   tasaBcv: number;
   // Costos operativos y variables:
   costoMercanciaUsd: number;
-  gastoFleteRetiroUsd: number; // $5.00 o prorrateado si se agruparon pedidos
+  gastoFleteRetiroUsd: number; // $5.00 o prorrateado si se agruparon pedidos del mismo día
   gastoEmbalajeUsd: number; // $0.50 por pedido
   gananciaBrutaUsd: number; // totalUsd - costoMercanciaUsd
-  gananciaNetaUsd: number; // gananciaBrutaUsd - flete - embalaje
+  // Gestión Fiscal venezolana (Con IVA vs Sin IVA):
+  conIva?: boolean; // false = Sin IVA / Nota de Entrega (100% de margen a ganancia), true = Con IVA (Factura fiscal 16% SENIAT)
+  ivaMontoUsd?: number; // Débito fiscal / cuota SENIAT si conIva = true
+  gananciaNetaUsd: number; // gananciaBrutaUsd - (conIva ? ivaMontoUsd : 0) - flete - embalaje
   // Distribución del 20% o utilidad neta:
   reparto: {
     reinversion: number; // 50%

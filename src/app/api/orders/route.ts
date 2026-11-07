@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
       const cantidad = Number(it.cantidad) || 1;
       const tarifa = it.tarifa === "gran_mayor" ? "gran_mayor" : "mayor";
-      
+
       const unidadesPorPaquete = tarifa === "gran_mayor"
         ? (variant?.minGranMayor || prod?.minGranMayor || 100)
         : (variant?.minMayor || prod?.minMayor || 50);
@@ -152,6 +152,9 @@ export async function POST(req: NextRequest) {
     if (newOrder.zonaEntrega) whatsappText += `📍 *Zona:* ${newOrder.zonaEntrega}\n`;
     if (newOrder.direccion) whatsappText += `🏠 *Dirección:* ${newOrder.direccion}\n`;
     whatsappText += `💳 *Método de Pago Acordado:* ${newOrder.metodoPago}\n`;
+    whatsappText += newOrder.conIva
+      ? `📄 *Comprobante:* Factura Fiscal (IVA 16% Incluido)\n`
+      : `📄 *Comprobante:* Nota de Entrega Mayorista\n`;
     if (newOrder.notas) whatsappText += `📝 *Observaciones:* ${newOrder.notas}\n`;
 
     whatsappText += `\n📦 *DETALLE DE ARTÍCULOS:*\n`;

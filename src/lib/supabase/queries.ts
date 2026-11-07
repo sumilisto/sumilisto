@@ -619,6 +619,39 @@ export async function saveOrder(order: Order): Promise<boolean> {
   }
 }
 
+export async function updateOrder(orderId: string, updates: Partial<Order>): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const pedidos: Order[] = currentData.pedidos || [];
+
+    const updatedPedidos = pedidos.map((p) =>
+      p.id === orderId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+    );
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          pedidos: updatedPedidos,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error actualizando pedido:", err);
+    return false;
+  }
+}
+
 export async function updateOrderStatus(orderId: string, estado: OrderStatus): Promise<boolean> {
   try {
     const { data, error } = await supabaseAdmin

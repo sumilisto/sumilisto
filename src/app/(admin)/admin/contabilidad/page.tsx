@@ -86,9 +86,10 @@ export default function AdminContabilidadPage() {
   const [selectedTarifa, setSelectedTarifa] = useState<"mayor" | "gran_mayor">("mayor");
   const [selectedCantidad, setSelectedCantidad] = useState("1");
 
-  // Flete y embalaje del pedido manual
+  // Flete, IVA y embalaje del pedido manual
   const [manualFleteOpcion, setManualFleteOpcion] = useState<string>("5.00");
   const [manualEmbalaje, setManualEmbalaje] = useState<string>("0.50");
+  const [manualConIva, setManualConIva] = useState<boolean>(false); // false = Sin IVA / Nota de Entrega (100% Ganancia Neta)
 
   useEffect(() => {
     isAdminAuthenticated().then((auth) => {
@@ -142,6 +143,12 @@ export default function AdminContabilidadPage() {
     }
   };
 
+  // Normalizador de fecha en formato YYYY-MM-DD para agrupar pedidos del mismo día
+  const getOrderDateKey = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
   // Filtrado de pedidos
   const filteredOrders = useMemo(() => {
     const now = new Date();
@@ -169,19 +176,88 @@ export default function AdminContabilidadPage() {
     });
   }, [orders, filterEstado, selectedRange, searchTerm]);
 
+  // Mapa de cuántos pedidos activos se registraron en cada fecha (para prorratear viaje al proveedor de $5)
+  const ordersCountByDate = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredOrders.forEach((o) => {
+      if (o.estado !== "cancelado") {
+        const key = getOrderDateKey(o.createdAt);
+        map[key] = (map[key] || 0) + 1;
+      }
+    });
+    return map;
+  }, [filteredOrders]);
+
+  // Cantidad de pedidos activos registrados hoy
+  const ordersTodayCount = useMemo(() => {
+    const todayKey = getOrderDateKey(new Date().toISOString());
+    return orders.filter((o) => o.estado !== "cancelado" && getOrderDateKey(o.createdAt) === todayKey).length;
+  }, [orders]);
+
+  // Flete efectivo de retiro asignado a cada pedido:
+  // Si hay más de un pedido en la misma fecha, el viaje de $5 se divide entre ellos ($2.50 si son 2, $1.67 si son 3, etc.)
+  // A menos que el usuario le haya asignado un flete personalizado explícito.
+  const getEffectiveFlete = (ord: Order) => {
+    const key = getOrderDateKey(ord.createdAt);
+    const countToday = ordersCountByDate[key] || 1;
+
+    if (ord.gastoFleteRetiroUsd !== undefined && ord.gastoFleteRetiroUsd !== 5.0) {
+      return ord.gastoFleteRetiroUsd;
+    }
+
+    if (countToday > 1) {
+      return Math.round((5.0 / countToday) * 100) / 100;
+    }
+
+    return ord.gastoFleteRetiroUsd !== undefined ? ord.gastoFleteRetiroUsd : 5.0;
+  };
+
+  // Cálculo exacto de Ganancia Neta por pedido:
+  // Si es Con IVA: se separa el 16% de débito fiscal para el SENIAT (no se computa como ganancia)
+  // Si es Sin IVA (Nota de Entrega): ese 16% se retiene íntegro y se suma como GANANCIA NETA
+  const getOrderGananciaNeta = (ord: Order) => {
+    const total = ord.totalUsd || 0;
+    const costo = ord.costoMercanciaUsd || 0;
+    const margenBruto = Math.max(0, total - costo);
+    const flete = getEffectiveFlete(ord);
+    const embalaje = ord.gastoEmbalajeUsd !== undefined ? ord.gastoEmbalajeUsd : 0.5;
+
+    const ivaMonto = ord.conIva
+      ? ord.ivaMontoUsd !== undefined
+        ? ord.ivaMontoUsd
+        : Math.round((total - total / 1.16) * 100) / 100
+      : 0;
+
+    return Math.max(0, Math.round((margenBruto - ivaMonto - flete - embalaje) * 100) / 100);
+  };
+
   // Cálculos Contables y P&L
   const metrics = useMemo(() => {
     let facturacionTotal = 0;
     let costoMercanciaTotal = 0;
     let fletesRetiroTotal = 0;
     let embalajeTotal = 0;
+    let ivaSeniatTotal = 0;
+    const uniqueDays = new Set<string>();
 
     filteredOrders.forEach((o) => {
       if (o.estado !== "cancelado") {
         facturacionTotal += o.totalUsd || 0;
         costoMercanciaTotal += o.costoMercanciaUsd || 0;
-        fletesRetiroTotal += o.gastoFleteRetiroUsd || 0;
-        embalajeTotal += o.gastoEmbalajeUsd || 0;
+        embalajeTotal += o.gastoEmbalajeUsd !== undefined ? o.gastoEmbalajeUsd : 0.5;
+
+        const flete = getEffectiveFlete(o);
+        fletesRetiroTotal += flete;
+
+        if (o.conIva) {
+          const iva =
+            o.ivaMontoUsd !== undefined
+              ? o.ivaMontoUsd
+              : Math.round(((o.totalUsd || 0) - (o.totalUsd || 0) / 1.16) * 100) / 100;
+          ivaSeniatTotal += iva;
+        }
+
+        uniqueDays.add(getOrderDateKey(o.createdAt));
       }
     });
 
@@ -201,8 +277,11 @@ export default function AdminContabilidadPage() {
     const progresoEquilibrio = Math.min(100, Math.round((facturacionTotal / ventasEquilibrioMeta) * 100));
     const faltaParaEquilibrio = Math.max(0, ventasEquilibrioMeta - facturacionTotal);
 
-    // Ganancia Neta Real (Utilidad Distribuible después de fletes, embalajes y cuota de fijos)
-    const gananciaNetaOperativa = Math.max(0, gananciaBruta - fletesRetiroTotal - embalajeTotal);
+    // Ganancia Neta Real (Utilidad Distribuible después de fletes, embalajes y cuota SENIAT si aplica)
+    const gananciaNetaOperativa = Math.max(
+      0,
+      gananciaBruta - ivaSeniatTotal - fletesRetiroTotal - embalajeTotal
+    );
 
     // Reparto de la ganancia con tu regla:
     const reparto = {
@@ -217,6 +296,8 @@ export default function AdminContabilidadPage() {
       costoMercanciaTotal: Math.round(costoMercanciaTotal * 100) / 100,
       fletesRetiroTotal: Math.round(fletesRetiroTotal * 100) / 100,
       embalajeTotal: Math.round(embalajeTotal * 100) / 100,
+      totalViajes: uniqueDays.size,
+      ivaSeniatTotal: Math.round(ivaSeniatTotal * 100) / 100,
       gananciaBruta: Math.round(gananciaBruta * 100) / 100,
       margenBrutoPorc: Math.round(margenBrutoPorc * 10) / 10,
       totalGastosFijos,
@@ -226,7 +307,7 @@ export default function AdminContabilidadPage() {
       gananciaNetaOperativa: Math.round(gananciaNetaOperativa * 100) / 100,
       reparto,
     };
-  }, [filteredOrders]);
+  }, [filteredOrders, ordersCountByDate]);
 
   // Manejo de productos en formulario manual
   const selectedProduct = useMemo(() => {
@@ -352,6 +433,7 @@ export default function AdminContabilidadPage() {
           metodoPago: manualMetodo,
           notas: manualNotas,
           items: manualItems,
+          conIva: manualConIva,
           gastoFleteRetiroUsd: parseFloat(manualFleteOpcion),
           gastoEmbalajeUsd: parseFloat(manualEmbalaje),
           tasaBcv: bcvRate,
@@ -369,6 +451,7 @@ export default function AdminContabilidadPage() {
         setManualDireccion("");
         setManualNotas("");
         setManualItems([]);
+        setManualConIva(false);
         setIsModalOpen(false);
 
         // Recargar pedidos
@@ -397,6 +480,51 @@ export default function AdminContabilidadPage() {
       }
     } catch (err) {
       console.error("Error actualizando estado:", err);
+    }
+  };
+
+  // Actualizar régimen fiscal (Con IVA vs Sin IVA)
+  const handleUpdateFiscal = async (orderId: string, newConIva: boolean) => {
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, conIva: newConIva }),
+      });
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => {
+            if (o.id !== orderId) return o;
+            const total = o.totalUsd || 0;
+            const iva = newConIva ? Math.round((total - total / 1.16) * 100) / 100 : 0;
+            return {
+              ...o,
+              conIva: newConIva,
+              ivaMontoUsd: iva,
+            };
+          })
+        );
+      }
+    } catch (err) {
+      console.error("Error actualizando régimen fiscal:", err);
+    }
+  };
+
+  // Actualizar costo de flete asignado al pedido
+  const handleUpdateFlete = async (orderId: string, newFlete: number) => {
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, gastoFleteRetiroUsd: newFlete }),
+      });
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, gastoFleteRetiroUsd: newFlete } : o))
+        );
+      }
+    } catch (err) {
+      console.error("Error actualizando flete:", err);
     }
   };
 
@@ -604,7 +732,7 @@ export default function AdminContabilidadPage() {
               {formatUsd(metrics.fletesRetiroTotal + metrics.embalajeTotal)}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              Fletes: {formatUsd(metrics.fletesRetiroTotal)} · Embalaje: {formatUsd(metrics.embalajeTotal)}
+              Fletes: {formatUsd(metrics.fletesRetiroTotal)} ({metrics.totalViajes} {metrics.totalViajes === 1 ? "viaje" : "viajes"}) · Embalaje: {formatUsd(metrics.embalajeTotal)}
             </p>
           </div>
 
@@ -614,7 +742,13 @@ export default function AdminContabilidadPage() {
               <TrendingUp className="w-4 h-4 text-emerald-700" />
             </div>
             <p className="text-2xl font-black text-emerald-800">{formatUsd(metrics.gananciaNetaOperativa)}</p>
-            <p className="text-xs text-emerald-700 mt-1">Margen Bruto: {metrics.margenBrutoPorc}%</p>
+            <p className="text-xs text-emerald-700 mt-1">
+              {metrics.ivaSeniatTotal > 0 ? (
+                <span>SENIAT apartado: <strong>{formatUsd(metrics.ivaSeniatTotal)}</strong></span>
+              ) : (
+                <span>100% Ventas Sin IVA (Utilidad Completa)</span>
+              )}
+            </p>
           </div>
         </div>
 
@@ -752,6 +886,8 @@ export default function AdminContabilidadPage() {
                     <th className="py-3 px-4">Fecha</th>
                     <th className="py-3 px-4">Total USD / Bs</th>
                     <th className="py-3 px-4">Costo Mercancía</th>
+                    <th className="py-3 px-4">Régimen (IVA)</th>
+                    <th className="py-3 px-4">Flete Retiro</th>
                     <th className="py-3 px-4">Ganancia Neta</th>
                     <th className="py-3 px-4">Estado</th>
                     <th className="py-3 px-4 text-right">Acción</th>
@@ -765,6 +901,14 @@ export default function AdminContabilidadPage() {
                     else if (!rawPhone.startsWith("58") && rawPhone.length === 10) rawPhone = "58" + rawPhone;
 
                     const whatsappChatUrl = `https://wa.me/${rawPhone}`;
+                    const effectiveFlete = getEffectiveFlete(ord);
+                    const sameDayCount = ordersCountByDate[getOrderDateKey(ord.createdAt)] || 1;
+                    const orderNetProfit = getOrderGananciaNeta(ord);
+                    const ivaSeparado = ord.conIva
+                      ? ord.ivaMontoUsd !== undefined
+                        ? ord.ivaMontoUsd
+                        : Math.round(((ord.totalUsd || 0) - (ord.totalUsd || 0) / 1.16) * 100) / 100
+                      : 0;
 
                     return (
                       <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors">
@@ -814,12 +958,59 @@ export default function AdminContabilidadPage() {
                           </p>
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-600">
+                        <td className="py-3.5 px-4 text-slate-600 font-semibold">
                           {formatUsd(ord.costoMercanciaUsd || 0)}
                         </td>
 
-                        <td className="py-3.5 px-4 font-black text-emerald-700">
-                          +{formatUsd(ord.gananciaNetaUsd || 0)}
+                        {/* SELECTOR INTERACTIVO DE RÉGIMEN FISCAL (CON IVA VS SIN IVA) */}
+                        <td className="py-3.5 px-4">
+                          <select
+                            value={ord.conIva ? "con_iva" : "sin_iva"}
+                            onChange={(e) => handleUpdateFiscal(ord.id, e.target.value === "con_iva")}
+                            className={`text-[11px] font-bold px-2 py-1 rounded-lg border cursor-pointer outline-none transition-colors ${
+                              ord.conIva
+                                ? "bg-blue-50 text-blue-800 border-blue-200"
+                                : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            }`}
+                          >
+                            <option value="sin_iva">🟢 Sin IVA (Ganancia 100%)</option>
+                            <option value="con_iva">🏛️ Con IVA (16% SENIAT)</option>
+                          </select>
+                        </td>
+
+                        {/* SELECTOR INTERACTIVO DE FLETE DE RETIRO (CON REGLA DEL MISMO DÍA) */}
+                        <td className="py-3.5 px-4">
+                          <div className="flex flex-col gap-0.5">
+                            <select
+                              value={String(ord.gastoFleteRetiroUsd !== undefined ? ord.gastoFleteRetiroUsd : effectiveFlete)}
+                              onChange={(e) => handleUpdateFlete(ord.id, parseFloat(e.target.value))}
+                              className="text-[11px] font-bold px-2 py-1 rounded-lg border bg-amber-50 text-amber-900 border-amber-200 cursor-pointer outline-none"
+                            >
+                              <option value="5">Solo 1: $5.00</option>
+                              <option value="2.5">2 pedidos hoy: $2.50</option>
+                              <option value="1.67">3 pedidos hoy: $1.67</option>
+                              <option value="1.25">4 pedidos hoy: $1.25</option>
+                              <option value="1">5 pedidos hoy: $1.00</option>
+                              <option value="0">Sin flete: $0.00</option>
+                            </select>
+                            {sameDayCount > 1 && (
+                              <span className="text-[9px] font-black text-amber-700 bg-amber-100/60 px-1.5 py-0.5 rounded">
+                                🚚 {sameDayCount} pedidos hoy
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* GANANCIA NETA RECALCULADA EN VIVO */}
+                        <td className="py-3.5 px-4">
+                          <p className="font-black text-emerald-700 text-sm">+{formatUsd(orderNetProfit)}</p>
+                          <p className="text-[10px] text-slate-500">
+                            {ord.conIva ? (
+                              <span className="text-blue-700 font-semibold">SENIAT: -{formatUsd(ivaSeparado)}</span>
+                            ) : (
+                              <span className="text-emerald-700 font-medium">Margen Íntegro</span>
+                            )}
+                          </p>
                         </td>
 
                         <td className="py-3.5 px-4">
@@ -1117,26 +1308,89 @@ export default function AdminContabilidadPage() {
                 )}
               </div>
 
+              {/* GESTIÓN FISCAL (CON IVA VS SIN IVA) */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                <label className="block text-xs font-bold text-slate-800">
+                  Régimen Fiscal de la Operación (IVA / Facturación)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setManualConIva(false)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      !manualConIva
+                        ? "bg-emerald-50/90 border-emerald-500 ring-1 ring-emerald-500/30 shadow-xs"
+                        : "bg-white border-slate-200 hover:border-slate-300 opacity-70"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        Sin IVA / Nota de Entrega
+                      </span>
+                      <span className="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">
+                        100% Ganancia
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-1">
+                      Comercio mayorista sin factura fiscal. No se retiene impuesto SENIAT; el margen se computa 100% como utilidad neta para tu empresa.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setManualConIva(true)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      manualConIva
+                        ? "bg-blue-50/90 border-blue-500 ring-1 ring-blue-500/30 shadow-xs"
+                        : "bg-white border-slate-200 hover:border-slate-300 opacity-70"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-blue-900 flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        Con IVA / Factura Fiscal (16%)
+                      </span>
+                      <span className="text-[10px] font-bold bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">
+                        Aparta SENIAT
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-1">
+                      El cliente exige factura formal. El 16% de IVA se aparta a la reserva SENIAT y no se contabiliza en tu ganancia neta.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
               {/* ASIGNACIÓN DE GASTOS LOGÍSTICOS DEL VIAJE */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/80">
                 <div>
-                  <label className="block text-xs font-bold text-amber-950 mb-1">
-                    Flete de Retiro al Proveedor (Asignado a este Pedido)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-amber-950">
+                      Flete de Retiro al Proveedor (Asignado a este Pedido)
+                    </label>
+                    {ordersTodayCount > 0 && (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        ⚡ {ordersTodayCount} pedido(s) ya hoy
+                      </span>
+                    )}
+                  </div>
                   <select
                     value={manualFleteOpcion}
                     onChange={(e) => setManualFleteOpcion(e.target.value)}
                     className="w-full px-3.5 py-2 bg-white border border-amber-200 rounded-xl text-xs font-bold text-amber-900"
                   >
                     <option value="5.00">Viaje individual exclusivo: $5.00</option>
-                    <option value="2.50">Agrupado con 2 pedidos: $2.50</option>
-                    <option value="1.67">Agrupado con 3 pedidos: $1.67</option>
-                    <option value="1.25">Agrupado con 4 pedidos: $1.25</option>
-                    <option value="1.00">Agrupado con 5 pedidos (Meta): $1.00</option>
+                    <option value="2.50">Agrupado con 2 pedidos hoy: $2.50</option>
+                    <option value="1.67">Agrupado con 3 pedidos hoy: $1.67</option>
+                    <option value="1.25">Agrupado con 4 pedidos hoy: $1.25</option>
+                    <option value="1.00">Agrupado con 5 pedidos hoy (Meta): $1.00</option>
                     <option value="0.00">Sin gasto de flete (Stock ya en almacén): $0.00</option>
                   </select>
                   <p className="text-[10px] text-amber-800 mt-1">
-                    El costo del viaje al proveedor son $5. Si agrupas pedidos, se divide entre ellos.
+                    {ordersTodayCount > 0
+                      ? `¡Hoy ya tienes ${ordersTodayCount} pedido(s)! Si este pedido va en el mismo viaje al proveedor, el flete de $5 se comparte ($${(5.0 / (ordersTodayCount + 1)).toFixed(2)} c/u).`
+                      : "El costo del viaje al proveedor son $5. Si agrupas pedidos el mismo día, se divide entre ellos."}
                   </p>
                 </div>
 

@@ -79,6 +79,8 @@ export async function POST(req: Request) {
         costoMercanciaUsd: costoMercanciaEstimado,
         gastoFleteRetiroUsd: fleteRetiro,
         gastoEmbalajeUsd: embalaje,
+        conIva: false,
+        ivaMontoUsd: 0,
         gananciaBrutaUsd: gananciaBruta,
         gananciaNetaUsd: gananciaNeta,
         reparto: {
