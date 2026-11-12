@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { isAdminAuthenticated, loginAdmin, logoutAdmin } from "@/lib/actions/auth";
 import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from "@/lib/currency/format";
+import { resolveWholesaleLine } from "@/lib/pricing/pricing";
 import { Order, OrderItem, OrderStatus } from "@/types/order";
 import { Product } from "@/types/product";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -343,10 +344,8 @@ export default function AdminPedidosPage() {
     const firstVarSku = prod.variantes?.[0]?.sku || prod.sku || "";
     setSelectedVariantSku(firstVarSku);
 
-    const minQty =
-      selectedTarifa === "gran_mayor"
-        ? prod.variantes?.[0]?.minGranMayor || prod.minGranMayor || 100
-        : prod.variantes?.[0]?.minMayor || prod.minMayor || 50;
+    const minQty = prod.variantes?.[0]?.minMayor || prod.minMayor || 50;
+    setSelectedTarifa("mayor");
     setSelectedCantidad(String(minQty));
   };
 
@@ -354,6 +353,7 @@ export default function AdminPedidosPage() {
     setSelectedProdId("");
     setSelectedVariantSku("");
     setProductSearchQuery("");
+    setSelectedTarifa("mayor");
     setIsProductSearchOpen(true);
   };
 
@@ -376,84 +376,83 @@ export default function AdminPedidosPage() {
       setSelectedProdId(firstP.id || firstP.sku);
       setProductSearchQuery(firstP.nombre || "");
       setSelectedVariantSku(firstP.variantes?.[0]?.sku || firstP.sku || "");
-      setSelectedCantidad(String(firstP.minMayor || 50));
+      setSelectedTarifa("mayor");
+      setSelectedCantidad(String(firstP.variantes?.[0]?.minMayor || firstP.minMayor || 50));
+    }
+  };
+
+  const selectedVariant = useMemo(
+    () => selectedProduct?.variantes?.find((v) => v.sku === selectedVariantSku) || selectedProduct?.variantes?.[0],
+    [selectedProduct, selectedVariantSku]
+  );
+
+  const currentStep = useMemo(() => {
+    if (!selectedProduct) return 50;
+    return selectedVariant?.minMayor || selectedProduct.minMayor || 50;
+  }, [selectedProduct, selectedVariant]);
+
+  const previewPricing = useMemo(() => {
+    const cant = parseInt(selectedCantidad, 10) || currentStep;
+    return resolveWholesaleLine(selectedProduct, selectedVariant, cant);
+  }, [selectedProduct, selectedVariant, selectedCantidad, currentStep]);
+
+  const syncCantidadAndTarifa = (
+    nextValue: number | string,
+    prod = selectedProduct,
+    variant = selectedVariant
+  ) => {
+    setSelectedCantidad(String(nextValue));
+    const parsed = typeof nextValue === "number" ? nextValue : parseInt(nextValue, 10);
+    if (prod && !isNaN(parsed) && parsed > 0) {
+      const resolved = resolveWholesaleLine(prod, variant, parsed);
+      setSelectedTarifa(resolved.tarifa);
     }
   };
 
   const handleChangeTarifa = (tarifa: "mayor" | "gran_mayor") => {
-    setSelectedTarifa(tarifa);
-    if (selectedProduct) {
-      const selectedVar = selectedProduct.variantes?.find((v) => v.sku === selectedVariantSku);
-      const minQty =
-        tarifa === "gran_mayor"
-          ? selectedVar?.minGranMayor || selectedProduct.minGranMayor || 100
-          : selectedVar?.minMayor || selectedProduct.minMayor || 50;
-      setSelectedCantidad(String(minQty));
+    if (tarifa === "gran_mayor" && previewPricing.hasGranMayor) {
+      setSelectedTarifa("gran_mayor");
+      if (selectedProduct) {
+        setSelectedCantidad(String(previewPricing.minGranMayor));
+      }
+    } else {
+      setSelectedTarifa("mayor");
+      if (selectedProduct) {
+        setSelectedCantidad(String(previewPricing.minMayor));
+      }
     }
   };
 
-  const currentStep = useMemo(() => {
-    if (!selectedProduct) return 50;
-    const selectedVar = selectedProduct.variantes?.find((v) => v.sku === selectedVariantSku);
-    if (selectedTarifa === "gran_mayor") {
-      return selectedVar?.minGranMayor || selectedProduct.minGranMayor || 100;
-    }
-    return selectedVar?.minMayor || selectedProduct.minMayor || 50;
-  }, [selectedProduct, selectedVariantSku, selectedTarifa]);
-
-  const currentEstimatedPrice = useMemo(() => {
-    if (!selectedProduct) return 0;
-    const selectedVar = selectedProduct.variantes?.find((v) => v.sku === selectedVariantSku);
-    const pricePerPack =
-      selectedTarifa === "gran_mayor"
-        ? selectedVar?.precioGranMayorUsd || selectedProduct.precioGranMayorUsd || 0
-        : selectedVar?.precioMayorUsd || selectedProduct.precioMayorUsd || 0;
-    const cant = parseInt(selectedCantidad, 10) || currentStep;
-    const packs = cant / currentStep;
-    return Math.round(pricePerPack * packs * 100) / 100;
-  }, [selectedProduct, selectedVariantSku, selectedTarifa, selectedCantidad, currentStep]);
-
   const handleAddProductToManual = () => {
     if (!selectedProduct) return;
-    const selectedVar = selectedProduct.variantes?.find((v) => v.sku === selectedVariantSku);
 
-    const unidadesPorPaquete = currentStep;
-    const precioPaquete =
-      selectedTarifa === "gran_mayor"
-        ? selectedVar?.precioGranMayorUsd || selectedProduct.precioGranMayorUsd || 0
-        : selectedVar?.precioMayorUsd || selectedProduct.precioMayorUsd || 0;
+    let parsedCantidad = parseInt(selectedCantidad, 10) || currentStep;
+    if (parsedCantidad < currentStep) parsedCantidad = currentStep;
+    const remainder = parsedCantidad % currentStep;
+    if (remainder !== 0) parsedCantidad += currentStep - remainder;
 
-    const costoPaquete =
-      selectedTarifa === "gran_mayor"
-        ? selectedVar?.costoGranMayorUsd || selectedProduct.costoGranMayorUsd || precioPaquete * 0.75
-        : selectedVar?.costoMayorUsd || selectedProduct.costoMayorUsd || precioPaquete * 0.75;
-
-    let parsedCantidad = parseInt(selectedCantidad, 10) || unidadesPorPaquete;
-    if (parsedCantidad < unidadesPorPaquete) parsedCantidad = unidadesPorPaquete;
-    const remainder = parsedCantidad % unidadesPorPaquete;
-    if (remainder !== 0) parsedCantidad += unidadesPorPaquete - remainder;
-
-    const paquetes = parsedCantidad / unidadesPorPaquete;
-    const subtotalUsd = Math.round(precioPaquete * paquetes * 100) / 100;
-    const costoTotalUsd = Math.round(costoPaquete * paquetes * 100) / 100;
+    const resolved = resolveWholesaleLine(selectedProduct, selectedVariant, parsedCantidad);
 
     setManualItems((prev) => [
       ...prev,
       {
         productoId: selectedProduct.id || selectedProduct.sku || "",
-        sku: selectedVar?.sku || selectedProduct.sku,
+        sku: selectedVariant?.sku || selectedProduct.sku,
         nombre: selectedProduct.nombre,
-        presentacion: selectedVar?.presentacion || selectedProduct.presentacion || undefined,
-        color: selectedVar?.color || undefined,
+        presentacion: selectedVariant?.presentacion || selectedProduct.presentacion || undefined,
+        color: selectedVariant?.color || undefined,
         cantidad: parsedCantidad,
-        tarifa: selectedTarifa,
-        precioPaquete,
-        costoPaquete,
-        subtotalUsd,
-        costoTotalUsd,
+        unidadesPorPaquete: resolved.unidadesPorPaquete,
+        tarifa: resolved.tarifa,
+        precioPaquete: resolved.precioPaquete,
+        costoPaquete: resolved.costoPaquete,
+        subtotalUsd: resolved.subtotalUsd,
+        costoTotalUsd: resolved.costoTotalUsd,
       },
     ]);
 
+    setSelectedTarifa("mayor");
+    setSelectedCantidad(String(currentStep));
     setProductSearchQuery("");
     setSelectedProdId("");
     setSelectedVariantSku("");
@@ -1399,10 +1398,9 @@ export default function AdminPedidosPage() {
                         value={selectedVariantSku}
                         onChange={(e) => {
                           setSelectedVariantSku(e.target.value);
-                          const minUnits =
-                            selectedTarifa === "gran_mayor"
-                              ? selectedProduct?.variantes?.find((v) => v.sku === e.target.value)?.minGranMayor || selectedProduct?.minGranMayor || 100
-                              : selectedProduct?.variantes?.find((v) => v.sku === e.target.value)?.minMayor || selectedProduct?.minMayor || 50;
+                          const nextVar = selectedProduct?.variantes?.find((v) => v.sku === e.target.value);
+                          const minUnits = nextVar?.minMayor || selectedProduct?.minMayor || 50;
+                          setSelectedTarifa("mayor");
                           setSelectedCantidad(String(minUnits));
                         }}
                         disabled={!selectedProduct || (selectedProduct.variantes || []).length <= 1}
@@ -1424,7 +1422,9 @@ export default function AdminPedidosPage() {
                         className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
                       >
                         <option value="mayor">Mayor</option>
-                        <option value="gran_mayor">Gran Mayor</option>
+                        <option value="gran_mayor" disabled={Boolean(selectedProduct) && !previewPricing.hasGranMayor}>
+                          Gran Mayor{selectedProduct && previewPricing.hasGranMayor ? ` (Mín. ${previewPricing.minGranMayor})` : ""}
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -1433,15 +1433,15 @@ export default function AdminPedidosPage() {
                   <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-1">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                        Cantidad (Mínimo {currentStep} unds · Suma de {currentStep} en {currentStep})
+                        Cantidad ({selectedProduct ? `Mínimo ${currentStep} unds · Suma de ${currentStep} en ${currentStep}` : "Unidades"})
                       </label>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => {
                             const cur = parseInt(selectedCantidad, 10) || currentStep;
                             const next = Math.max(currentStep, cur - currentStep);
-                            setSelectedCantidad(String(next));
+                            syncCantidadAndTarifa(next);
                           }}
                           className="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold flex items-center justify-center text-base"
                         >
@@ -1449,14 +1449,16 @@ export default function AdminPedidosPage() {
                         </button>
                         <input
                           type="number"
+                          min={currentStep}
+                          step={currentStep}
                           value={selectedCantidad}
-                          onChange={(e) => setSelectedCantidad(e.target.value)}
+                          onChange={(e) => syncCantidadAndTarifa(e.target.value)}
                           onBlur={() => {
                             let val = parseInt(selectedCantidad, 10) || currentStep;
                             if (val < currentStep) val = currentStep;
                             const rem = val % currentStep;
                             if (rem !== 0) val += currentStep - rem;
-                            setSelectedCantidad(String(val));
+                            syncCantidadAndTarifa(val);
                           }}
                           className="w-20 h-9 px-2 text-center bg-white border border-slate-200 rounded-xl text-xs font-black"
                         />
@@ -1464,7 +1466,7 @@ export default function AdminPedidosPage() {
                           type="button"
                           onClick={() => {
                             const cur = parseInt(selectedCantidad, 10) || currentStep;
-                            setSelectedCantidad(String(cur + currentStep));
+                            syncCantidadAndTarifa(cur + currentStep);
                           }}
                           className="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold flex items-center justify-center text-base"
                         >
@@ -1472,9 +1474,20 @@ export default function AdminPedidosPage() {
                         </button>
                         <span className="text-xs font-bold text-slate-500 ml-1">unds</span>
 
-                        <span className="ml-2 text-xs font-black text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-200">
-                          = {formatUsd(currentEstimatedPrice)}
-                        </span>
+                        {selectedProduct && (
+                          <span
+                            className={`ml-2 text-xs font-black px-2.5 py-1.5 rounded-xl border ${
+                              previewPricing.tarifa === "gran_mayor"
+                                ? "text-amber-900 bg-amber-100/80 border-amber-300"
+                                : "text-emerald-800 bg-emerald-50 border-emerald-200"
+                            }`}
+                          >
+                            = {formatUsd(previewPricing.subtotalUsd)}{" "}
+                            <span className="text-[10px] font-bold opacity-80">
+                              ({previewPricing.tarifa === "gran_mayor" ? "Gran Mayor" : "Mayor"})
+                            </span>
+                          </span>
+                        )}
                       </div>
                     </div>
 

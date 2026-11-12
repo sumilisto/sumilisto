@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateProductPrice } from "@/lib/pricing/pricing";
+import { calculateProductPrice, resolveWholesaleLine } from "@/lib/pricing/pricing";
 import { Product } from "@/types/product";
 
 describe("Motor de Precios Mayorista (Pricing Engine)", () => {
@@ -73,5 +73,61 @@ describe("Motor de Precios Mayorista (Pricing Engine)", () => {
     const result = calculateProductPrice(outOfStockProduct, 1);
     expect(result.isAvailable).toBe(false);
     expect(result.unavailabilityReason).toBe("Agotado");
+  });
+});
+
+describe("Escala automática Mayor y Gran Mayor (resolveWholesaleLine)", () => {
+  const moldeNavideno: Pick<
+    Product,
+    "minMayor" | "precioMayorUsd" | "minGranMayor" | "precioGranMayorUsd"
+  > = {
+    minMayor: 50,
+    precioMayorUsd: 31.57,
+    minGranMayor: 200,
+    precioGranMayorUsd: 99.47,
+  };
+
+  it("mantiene tarifa Mayor por debajo de minGranMayor (50 y 150 unds)", () => {
+    const r50 = resolveWholesaleLine(moldeNavideno, null, 50);
+    expect(r50.tarifa).toBe("mayor");
+    expect(r50.unidadesPorPaquete).toBe(50);
+    expect(r50.precioPaquete).toBe(31.57);
+    expect(r50.subtotalUsd).toBe(31.57);
+
+    const r150 = resolveWholesaleLine(moldeNavideno, null, 150);
+    expect(r150.tarifa).toBe("mayor");
+    expect(r150.unidadesPorPaquete).toBe(50);
+    expect(r150.subtotalUsd).toBe(94.71);
+  });
+
+  it("escala automáticamente a Gran Mayor al alcanzar 200 unds", () => {
+    const r200 = resolveWholesaleLine(moldeNavideno, null, 200);
+    expect(r200.tarifa).toBe("gran_mayor");
+    expect(r200.unidadesPorPaquete).toBe(200);
+    expect(r200.precioPaquete).toBe(99.47);
+    expect(r200.subtotalUsd).toBe(99.47);
+  });
+
+  it("calcula proporcionalmente en Gran Mayor por encima de 200 unds (250 unds)", () => {
+    const r250 = resolveWholesaleLine(moldeNavideno, null, 250);
+    expect(r250.tarifa).toBe("gran_mayor");
+    expect(r250.unidadesPorPaquete).toBe(200);
+    expect(r250.subtotalUsd).toBe(124.34);
+  });
+
+  it("respeta precios de variante y cae a Mayor si no hay Gran Mayor configurado", () => {
+    const soloMayor = { minMayor: 50, precioMayorUsd: 10 };
+    const r = resolveWholesaleLine(soloMayor, null, 300);
+    expect(r.hasGranMayor).toBe(false);
+    expect(r.tarifa).toBe("mayor");
+    expect(r.subtotalUsd).toBe(60);
+
+    const conVariante = resolveWholesaleLine(
+      moldeNavideno,
+      { minMayor: 50, precioMayorUsd: 35, minGranMayor: 200, precioGranMayorUsd: 110 },
+      200
+    );
+    expect(conVariante.tarifa).toBe("gran_mayor");
+    expect(conVariante.subtotalUsd).toBe(110);
   });
 });

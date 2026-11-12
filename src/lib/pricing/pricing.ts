@@ -103,3 +103,72 @@ export function calculateProductPrice(
     isAvailable: true,
   };
 }
+
+export interface WholesalePriceInput {
+  minMayor?: number;
+  precioMayorUsd?: number;
+  costoMayorUsd?: number;
+  minGranMayor?: number;
+  precioGranMayorUsd?: number;
+  costoGranMayorUsd?: number;
+}
+
+export interface WholesaleLineResult {
+  tarifa: "mayor" | "gran_mayor";
+  minMayor: number;
+  minGranMayor: number;
+  hasGranMayor: boolean;
+  unidadesPorPaquete: number;
+  precioMayor: number;
+  precioGranMayor: number;
+  precioPaquete: number;
+  costoPaquete: number;
+  subtotalUsd: number;
+  costoTotalUsd: number;
+}
+
+/**
+ * Resuelve la tarifa efectiva (Mayor vs Gran Mayor) y los montos de una línea de pedido
+ * aplicando la escala mayorista de forma uniforme en admin, carrito y API.
+ */
+export function resolveWholesaleLine(
+  product: WholesalePriceInput | null | undefined,
+  variant: WholesalePriceInput | null | undefined,
+  quantity: number
+): WholesaleLineResult {
+  const minMayor = Math.max(1, variant?.minMayor || product?.minMayor || 50);
+  const minGranMayor = variant?.minGranMayor || product?.minGranMayor || 0;
+  const precioMayor = variant?.precioMayorUsd || product?.precioMayorUsd || 0;
+  const precioGranMayor = variant?.precioGranMayorUsd || product?.precioGranMayorUsd || 0;
+
+  const hasGranMayor = precioGranMayor > 0 && minGranMayor > minMayor;
+  const effectiveQty = Number.isFinite(quantity) && quantity > 0 ? quantity : minMayor;
+  const qualifiesGranMayor = hasGranMayor && effectiveQty >= minGranMayor;
+
+  const tarifa: "mayor" | "gran_mayor" = qualifiesGranMayor ? "gran_mayor" : "mayor";
+  const unidadesPorPaquete = qualifiesGranMayor ? minGranMayor : minMayor;
+  const precioPaquete = qualifiesGranMayor ? precioGranMayor : precioMayor;
+
+  const costoMayor = variant?.costoMayorUsd || product?.costoMayorUsd || precioMayor * 0.75;
+  const costoGranMayor =
+    variant?.costoGranMayorUsd || product?.costoGranMayorUsd || precioGranMayor * 0.75;
+  const costoPaquete = qualifiesGranMayor ? costoGranMayor : costoMayor;
+
+  const paquetes = effectiveQty / unidadesPorPaquete;
+  const subtotalUsd = Math.round(precioPaquete * paquetes * 100) / 100;
+  const costoTotalUsd = Math.round(costoPaquete * paquetes * 100) / 100;
+
+  return {
+    tarifa,
+    minMayor,
+    minGranMayor,
+    hasGranMayor,
+    unidadesPorPaquete,
+    precioMayor,
+    precioGranMayor,
+    precioPaquete,
+    costoPaquete,
+    subtotalUsd,
+    costoTotalUsd,
+  };
+}

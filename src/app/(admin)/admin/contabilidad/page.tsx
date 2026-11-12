@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isAdminAuthenticated, loginAdmin, logoutAdmin } from "@/lib/actions/auth";
 import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from "@/lib/currency/format";
+import { resolveWholesaleLine } from "@/lib/pricing/pricing";
 import { Order, OrderItem, OrderStatus, DEFAULT_ACCOUNTING_SETTINGS } from "@/types/order";
 import { Product } from "@/types/product";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -341,14 +342,29 @@ export default function AdminContabilidadPage() {
     return variants.find((v) => v.sku === selectedVariantSku) || variants[0];
   }, [selectedProduct, selectedVariantSku]);
 
-  // Cantidad mínima y salto según producto y tarifa seleccionada (Mayor vs Gran Mayor)
+  // Salto por empaque base (minMayor) para que al cruzar minGranMayor escale automáticamente
   const currentStep = useMemo(() => {
     if (!selectedProduct) return 50;
-    if (selectedTarifa === "gran_mayor") {
-      return selectedVariant?.minGranMayor || selectedProduct.minGranMayor || 100;
-    }
     return selectedVariant?.minMayor || selectedProduct.minMayor || 50;
-  }, [selectedProduct, selectedVariant, selectedTarifa]);
+  }, [selectedProduct, selectedVariant]);
+
+  const previewPricing = useMemo(() => {
+    const qty = parseInt(selectedCantidad, 10) || currentStep;
+    return resolveWholesaleLine(selectedProduct, selectedVariant, qty);
+  }, [selectedProduct, selectedVariant, selectedCantidad, currentStep]);
+
+  const syncCantidadAndTarifa = (
+    nextValue: number | string,
+    prod = selectedProduct,
+    variant = selectedVariant
+  ) => {
+    setSelectedCantidad(String(nextValue));
+    const parsed = typeof nextValue === "number" ? nextValue : parseInt(nextValue, 10);
+    if (prod && !isNaN(parsed) && parsed > 0) {
+      const resolved = resolveWholesaleLine(prod, variant, parsed);
+      setSelectedTarifa(resolved.tarifa);
+    }
+  };
 
   // Filtro de productos para la búsqueda inteligente
   const searchFilteredProducts = useMemo(() => {
@@ -383,11 +399,8 @@ export default function AdminContabilidadPage() {
     const firstSku = firstVariant?.sku || "";
     setSelectedVariantSku(firstSku);
 
-    const minUnits =
-      selectedTarifa === "gran_mayor"
-        ? firstVariant?.minGranMayor || prod?.minGranMayor || 100
-        : firstVariant?.minMayor || prod?.minMayor || 50;
-
+    const minUnits = firstVariant?.minMayor || prod?.minMayor || 50;
+    setSelectedTarifa("mayor");
     setSelectedCantidad(String(minUnits));
   };
 
@@ -395,45 +408,32 @@ export default function AdminContabilidadPage() {
     setSelectedProdId("");
     setSelectedVariantSku("");
     setProductSearchQuery("");
+    setSelectedTarifa("mayor");
     setSelectedCantidad("1");
     setIsProductSearchOpen(false);
   };
 
   const handleChangeTarifa = (tarifa: "mayor" | "gran_mayor") => {
-    setSelectedTarifa(tarifa);
-    const minUnits =
-      tarifa === "gran_mayor"
-        ? selectedVariant?.minGranMayor || selectedProduct?.minGranMayor || 100
-        : selectedVariant?.minMayor || selectedProduct?.minMayor || 50;
-
-    setSelectedCantidad(String(minUnits));
+    if (tarifa === "gran_mayor" && previewPricing.hasGranMayor) {
+      setSelectedTarifa("gran_mayor");
+      setSelectedCantidad(String(previewPricing.minGranMayor));
+    } else {
+      setSelectedTarifa("mayor");
+      setSelectedCantidad(String(previewPricing.minMayor));
+    }
   };
 
   const handleAddProductToManual = () => {
     if (!selectedProduct) return;
     const variants = selectedProduct.variantes || [];
     const variant = variants.find((v) => v.sku === selectedVariantSku) || variants[0];
-    const qty = parseInt(selectedCantidad, 10);
-    if (isNaN(qty) || qty <= 0) return;
 
-    const unidadesPorPaquete =
-      selectedTarifa === "gran_mayor"
-        ? variant?.minGranMayor || selectedProduct.minGranMayor || 100
-        : variant?.minMayor || selectedProduct.minMayor || 50;
+    let qty = parseInt(selectedCantidad, 10) || currentStep;
+    if (qty < currentStep) qty = currentStep;
+    const remainder = qty % currentStep;
+    if (remainder !== 0) qty += currentStep - remainder;
 
-    const precioPaquete =
-      selectedTarifa === "gran_mayor"
-        ? variant?.precioGranMayorUsd || selectedProduct.precioGranMayorUsd || 0
-        : variant?.precioMayorUsd || selectedProduct.precioMayorUsd || 0;
-
-    const costoPaquete =
-      selectedTarifa === "gran_mayor"
-        ? variant?.costoGranMayorUsd || selectedProduct.costoGranMayorUsd || precioPaquete * 0.75
-        : variant?.costoMayorUsd || selectedProduct.costoMayorUsd || precioPaquete * 0.75;
-
-    const paquetes = qty / unidadesPorPaquete;
-    const subtotalUsd = Math.round(precioPaquete * paquetes * 100) / 100;
-    const costoTotalUsd = Math.round(costoPaquete * paquetes * 100) / 100;
+    const resolved = resolveWholesaleLine(selectedProduct, variant, qty);
 
     setManualItems((prev) => [
       ...prev,
@@ -444,15 +444,16 @@ export default function AdminContabilidadPage() {
         color: variant?.color,
         presentacion: variant?.presentacion || selectedProduct.presentacion,
         cantidad: qty,
-        unidadesPorPaquete,
-        tarifa: selectedTarifa,
-        precioPaquete,
-        costoPaquete,
-        subtotalUsd,
-        costoTotalUsd,
+        unidadesPorPaquete: resolved.unidadesPorPaquete,
+        tarifa: resolved.tarifa,
+        precioPaquete: resolved.precioPaquete,
+        costoPaquete: resolved.costoPaquete,
+        subtotalUsd: resolved.subtotalUsd,
+        costoTotalUsd: resolved.costoTotalUsd,
       },
     ]);
 
+    setSelectedTarifa("mayor");
     setSelectedCantidad(String(currentStep));
     setSelectedProdId("");
     setSelectedVariantSku("");
@@ -1361,10 +1362,9 @@ export default function AdminContabilidadPage() {
                       value={selectedVariantSku}
                       onChange={(e) => {
                         setSelectedVariantSku(e.target.value);
-                        const minUnits =
-                          selectedTarifa === "gran_mayor"
-                            ? selectedProduct?.variantes?.find((v) => v.sku === e.target.value)?.minGranMayor || selectedProduct?.minGranMayor || 100
-                            : selectedProduct?.variantes?.find((v) => v.sku === e.target.value)?.minMayor || selectedProduct?.minMayor || 50;
+                        const nextVar = selectedProduct?.variantes?.find((v) => v.sku === e.target.value);
+                        const minUnits = nextVar?.minMayor || selectedProduct?.minMayor || 50;
+                        setSelectedTarifa("mayor");
                         setSelectedCantidad(String(minUnits));
                       }}
                       disabled={!selectedProduct || (selectedProduct.variantes || []).length <= 1}
@@ -1386,7 +1386,9 @@ export default function AdminContabilidadPage() {
                       className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
                     >
                       <option value="mayor">Mayor</option>
-                      <option value="gran_mayor">Gran Mayor</option>
+                      <option value="gran_mayor" disabled={Boolean(selectedProduct) && !previewPricing.hasGranMayor}>
+                        Gran Mayor{selectedProduct && previewPricing.hasGranMayor ? ` (Mín. ${previewPricing.minGranMayor})` : ""}
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -1396,13 +1398,13 @@ export default function AdminContabilidadPage() {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Cantidad ({selectedProduct ? `Mínimo ${currentStep} unds · Suma de ${currentStep} en ${currentStep}` : "Unidades"})
                     </label>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => {
                           const cur = parseInt(selectedCantidad, 10) || currentStep;
                           const next = Math.max(currentStep, cur - currentStep);
-                          setSelectedCantidad(String(next));
+                          syncCantidadAndTarifa(next);
                         }}
                         className="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold flex items-center justify-center text-base transition-colors"
                       >
@@ -1413,14 +1415,21 @@ export default function AdminContabilidadPage() {
                         min={currentStep}
                         step={currentStep}
                         value={selectedCantidad}
-                        onChange={(e) => setSelectedCantidad(e.target.value)}
+                        onChange={(e) => syncCantidadAndTarifa(e.target.value)}
+                        onBlur={() => {
+                          let val = parseInt(selectedCantidad, 10) || currentStep;
+                          if (val < currentStep) val = currentStep;
+                          const rem = val % currentStep;
+                          if (rem !== 0) val += currentStep - rem;
+                          syncCantidadAndTarifa(val);
+                        }}
                         className="w-24 h-9 px-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-center focus:outline-emerald-600"
                       />
                       <button
                         type="button"
                         onClick={() => {
                           const cur = parseInt(selectedCantidad, 10) || currentStep;
-                          setSelectedCantidad(String(cur + currentStep));
+                          syncCantidadAndTarifa(cur + currentStep);
                         }}
                         className="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold flex items-center justify-center text-base transition-colors"
                       >
@@ -1429,16 +1438,17 @@ export default function AdminContabilidadPage() {
                       <span className="text-xs font-bold text-slate-600 ml-1">unds</span>
 
                       {selectedProduct && (
-                        <span className="text-xs font-black text-emerald-800 bg-emerald-100/70 border border-emerald-300 rounded-xl px-2.5 py-1.5 ml-2 shadow-2xs">
-                          = {formatUsd(
-                            Math.round(
-                              ((selectedTarifa === "gran_mayor"
-                                ? selectedVariant?.precioGranMayorUsd || selectedProduct.precioGranMayorUsd || 0
-                                : selectedVariant?.precioMayorUsd || selectedProduct.precioMayorUsd || 0) *
-                                ((parseInt(selectedCantidad, 10) || currentStep) / currentStep)) *
-                                100
-                            ) / 100
-                          )}
+                        <span
+                          className={`text-xs font-black rounded-xl px-2.5 py-1.5 ml-2 shadow-2xs border ${
+                            previewPricing.tarifa === "gran_mayor"
+                              ? "text-amber-900 bg-amber-100/80 border-amber-300"
+                              : "text-emerald-800 bg-emerald-100/70 border-emerald-300"
+                          }`}
+                        >
+                          = {formatUsd(previewPricing.subtotalUsd)}{" "}
+                          <span className="text-[10px] font-bold opacity-80">
+                            ({previewPricing.tarifa === "gran_mayor" ? "Gran Mayor" : "Mayor"})
+                          </span>
                         </span>
                       )}
                     </div>

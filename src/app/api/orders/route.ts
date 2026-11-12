@@ -4,6 +4,7 @@ import { getOrders, saveOrder, updateOrder, updateOrderStatus, deleteOrder, getA
 import { generateOrderCode } from "@/lib/orders/orderCode";
 import { Order, OrderItem, OrderStatus } from "@/types/order";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
+import { resolveWholesaleLine } from "@/lib/pricing/pricing";
 
 // GET /api/orders — Listar todos los pedidos (admin)
 export async function GET() {
@@ -58,27 +59,29 @@ export async function POST(req: NextRequest) {
     let costoMercanciaTotal = 0;
 
     const formattedItems: OrderItem[] = items.map((it: any) => {
-      const prod = allProducts.find((p) => p.sku === it.sku || p.id === it.productoId);
-      const variant = (prod?.variantes || []).find((v) => v.sku === it.sku || v.color === it.color);
+      const prod = allProducts.find((p) => p.sku === it.sku || p.id === it.productoId || (p.variantes || []).some((v) => v.sku === it.sku));
+      const variant = (prod?.variantes || []).find((v) => v.sku === it.sku || (it.color && v.color === it.color));
 
       const cantidad = Number(it.cantidad) || 1;
-      const tarifa = it.tarifa === "gran_mayor" ? "gran_mayor" : "mayor";
+      let tarifa: "mayor" | "gran_mayor" = it.tarifa === "gran_mayor" ? "gran_mayor" : "mayor";
+      let precioPaquete = Number(it.precioPaquete) || 0;
+      let costoPaquete = Number(it.costoPaquete) || precioPaquete * 0.75;
+      let subtotal = it.subtotalUsd !== undefined ? Number(it.subtotalUsd) : 0;
+      let costoTotalItem = it.costoTotalUsd !== undefined ? Number(it.costoTotalUsd) : 0;
 
-      const unidadesPorPaquete = tarifa === "gran_mayor"
-        ? (variant?.minGranMayor || prod?.minGranMayor || 100)
-        : (variant?.minMayor || prod?.minMayor || 50);
-
-      const precioPaquete = tarifa === "gran_mayor"
-        ? (variant?.precioGranMayorUsd || prod?.precioGranMayorUsd || Number(it.precioPaquete) || 0)
-        : (variant?.precioMayorUsd || prod?.precioMayorUsd || Number(it.precioPaquete) || 0);
-
-      const costoPaquete = tarifa === "gran_mayor"
-        ? (variant?.costoGranMayorUsd || prod?.costoGranMayorUsd || Number(it.costoPaquete) || precioPaquete * 0.75)
-        : (variant?.costoMayorUsd || prod?.costoMayorUsd || Number(it.costoPaquete) || precioPaquete * 0.75);
-
-      const paquetes = cantidad / unidadesPorPaquete;
-      const subtotal = it.subtotalUsd !== undefined ? Number(it.subtotalUsd) : Math.round(precioPaquete * paquetes * 100) / 100;
-      const costoTotalItem = it.costoTotalUsd !== undefined ? Number(it.costoTotalUsd) : Math.round(costoPaquete * paquetes * 100) / 100;
+      if (prod) {
+        const resolved = resolveWholesaleLine(prod, variant, cantidad);
+        tarifa = resolved.tarifa;
+        precioPaquete = resolved.precioPaquete || Number(it.precioPaquete) || 0;
+        costoPaquete = resolved.costoPaquete || Number(it.costoPaquete) || precioPaquete * 0.75;
+        subtotal = resolved.subtotalUsd;
+        costoTotalItem = resolved.costoTotalUsd;
+      } else if (it.subtotalUsd === undefined) {
+        const fallbackStep = tarifa === "gran_mayor" ? 100 : 50;
+        const paquetes = cantidad / fallbackStep;
+        subtotal = Math.round(precioPaquete * paquetes * 100) / 100;
+        costoTotalItem = Math.round(costoPaquete * paquetes * 100) / 100;
+      }
 
       totalUsd += subtotal;
       costoMercanciaTotal += costoTotalItem;
