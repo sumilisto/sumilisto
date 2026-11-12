@@ -70,7 +70,7 @@ export default function CartPage() {
           setAssignedOrderCode(data.code);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -307,7 +307,8 @@ export default function CartPage() {
     message += `Cliente: _*${cleanNombre}*_\n`;
     message += `Teléfono: ${cleanTelefono}\n`;
     message += `Zona de Entrega: ${cleanZona}\n`;
-    message += `Dirección: ${cleanDireccion}\n`;
+    const formattedDireccion = cleanDireccion.replace(/[\r\n]+/g, ' ').replace(/[*_]/g, '').trim();
+    message += `Dirección: _*${formattedDireccion}*_\n`;
 
     const mapsLink = gpsLocation
       ? `https://maps.google.com/?q=${gpsLocation.lat},${gpsLocation.lng}`
@@ -411,8 +412,8 @@ export default function CartPage() {
 
       {/* Banner de Delivery Gratis */}
       <div className={`mb-6 p-4 rounded-2xl border transition-all ${qualifiesForFreeDelivery
-          ? "bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-emerald-300 shadow-xs"
-          : "bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-amber-200 shadow-xs"
+        ? "bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-emerald-300 shadow-xs"
+        : "bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-amber-200 shadow-xs"
         }`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
           <div className="flex items-center gap-3">
