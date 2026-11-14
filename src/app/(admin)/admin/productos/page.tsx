@@ -228,6 +228,7 @@ export default function AdminProductosPage() {
   const [mediaViewMode, setMediaViewMode] = useState<"grid" | "carousel">("grid");
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const [savingVariant, setSavingVariant] = useState(false);
 
   // Modal: Agregar Producto Nuevo (Completo con Variantes y Fotos)
   const [showAddModal, setShowAddModal] = useState(false);
