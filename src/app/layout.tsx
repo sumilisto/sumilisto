@@ -59,6 +59,22 @@ export const metadata: Metadata = {
     title: "Sumilisto | Empaques, Vasos, Descartables, Cajas y Bolsas al Mayor en Venezuela",
     description:
       "Distribución de empaques, vasos, descartables, cajas y bolsas al mayor y gran mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
+    images: [
+      {
+        url: "https://sumilisto.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Sumilisto - Empaques, Vasos, Descartables, Cajas y Bolsas al Mayor en Venezuela",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sumilisto | Empaques, Vasos, Descartables, Cajas y Bolsas al Mayor en Venezuela",
+    description:
+      "Distribución de empaques, vasos, descartables, cajas y bolsas al mayor y gran mayor en Caracas, Guarenas, Guatire y envíos nacionales.",
+    images: ["https://sumilisto.com/og-image.png"],
   },
   verification: {
     google: "googleabd0cc64cc0da3d2",

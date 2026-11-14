@@ -145,8 +145,8 @@ export default function AdminPedidosPage() {
       const productList: Product[] = Array.isArray(prodRes)
         ? prodRes
         : Array.isArray(prodRes?.products)
-        ? prodRes.products
-        : [];
+          ? prodRes.products
+          : [];
 
       if (productList.length > 0) {
         setProducts(productList);
@@ -186,7 +186,7 @@ export default function AdminPedidosPage() {
             if (elapsed >= 120000) {
               changed = true;
               // Llamar a DELETE en segundo plano para limpiar permanentemente y liberar el #SUMI-XXXX
-              fetch(`/api/orders?id=${ord.id}`, { method: "DELETE" }).catch(() => {});
+              fetch(`/api/orders?id=${ord.id}`, { method: "DELETE" }).catch(() => { });
               return false;
             }
           }
@@ -647,11 +647,10 @@ export default function AdminPedidosPage() {
               <button
                 key={tab.id}
                 onClick={() => setFilterEstado(tab.id)}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                  isActive
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${isActive
                     ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
                     : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-[11px] font-bold uppercase tracking-wider ${isActive ? "text-slate-300" : "text-slate-500"}`}>
@@ -753,9 +752,8 @@ export default function AdminPedidosPage() {
                     return (
                       <tr
                         key={ord.id}
-                        className={`transition-colors ${
-                          isCancelled ? "bg-rose-50/40 hover:bg-rose-50/70" : "hover:bg-slate-50/80"
-                        }`}
+                        className={`transition-colors ${isCancelled ? "bg-rose-50/40 hover:bg-rose-50/70" : "hover:bg-slate-50/80"
+                          }`}
                       >
                         {/* CÓDIGO */}
                         <td className="py-3.5 px-4">
@@ -764,11 +762,10 @@ export default function AdminPedidosPage() {
                               {ord.codigo}
                             </span>
                             <span
-                              className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
-                                ord.origen === "web"
+                              className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${ord.origen === "web"
                                   ? "bg-emerald-100 text-emerald-800"
                                   : "bg-blue-100 text-blue-800"
-                              }`}
+                                }`}
                             >
                               {ord.origen === "web" ? "Web" : "Manual"}
                             </span>
@@ -830,17 +827,16 @@ export default function AdminPedidosPage() {
                             <select
                               value={ord.estado}
                               onChange={(e) => handleUpdateStatus(ord.id, e.target.value as OrderStatus)}
-                              className={`text-xs font-bold px-2.5 py-1 rounded-xl border outline-none cursor-pointer transition-colors ${
-                                ord.estado === "entregado"
+                              className={`text-xs font-bold px-2.5 py-1 rounded-xl border outline-none cursor-pointer transition-colors ${ord.estado === "entregado"
                                   ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                   : ord.estado === "pagado"
-                                  ? "bg-blue-50 text-blue-800 border-blue-200"
-                                  : ord.estado === "despachado"
-                                  ? "bg-purple-50 text-purple-800 border-purple-200"
-                                  : ord.estado === "cancelado"
-                                  ? "bg-rose-50 text-rose-800 border-rose-200"
-                                  : "bg-amber-50 text-amber-800 border-amber-200"
-                              }`}
+                                    ? "bg-blue-50 text-blue-800 border-blue-200"
+                                    : ord.estado === "despachado"
+                                      ? "bg-purple-50 text-purple-800 border-purple-200"
+                                      : ord.estado === "cancelado"
+                                        ? "bg-rose-50 text-rose-800 border-rose-200"
+                                        : "bg-amber-50 text-amber-800 border-amber-200"
+                                }`}
                             >
                               <option value="pendiente">🕒 Pendiente</option>
                               <option value="pagado">💳 Pagado</option>
@@ -877,21 +873,20 @@ export default function AdminPedidosPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedOrderForPicking(ord)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs ${
-                              isAllPacked
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs ${isAllPacked
                                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                                 : packedCount > 0
-                                ? "bg-amber-500 hover:bg-amber-600 text-white"
-                                : "bg-slate-900 hover:bg-emerald-800 text-white"
-                            }`}
+                                  ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                  : "bg-slate-900 hover:bg-emerald-800 text-white"
+                              }`}
                           >
                             <Package className="w-3.5 h-3.5" />
                             <span>
                               {isAllPacked
                                 ? "¡Listo para Enviar!"
                                 : packedCount > 0
-                                ? `Armando (${packedCount}/${totalArticulosCount})`
-                                : "📦 Armar Pedido"}
+                                  ? `Armando (${packedCount}/${totalArticulosCount})`
+                                  : "📦 Armar Pedido"}
                             </span>
                           </button>
                         </td>
@@ -950,11 +945,10 @@ export default function AdminPedidosPage() {
                       {selectedOrderForPicking.codigo}
                     </h3>
                     <span
-                      className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                        selectedOrderForPicking.origen === "web"
+                      className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${selectedOrderForPicking.origen === "web"
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-blue-100 text-blue-800"
-                      }`}
+                        }`}
                     >
                       {selectedOrderForPicking.origen === "web" ? "Tienda Web" : "Carga Manual"}
                     </span>
@@ -1087,29 +1081,26 @@ export default function AdminPedidosPage() {
                       <div
                         key={idx}
                         onClick={() => toggleItemPacked(selectedOrderForPicking.id, idx)}
-                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                          isPacked
+                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${isPacked
                             ? "bg-emerald-50/70 border-emerald-300 shadow-xs"
                             : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <button
                             type="button"
-                            className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
-                              isPacked
+                            className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors shrink-0 ${isPacked
                                 ? "bg-emerald-600 text-white"
                                 : "border-2 border-slate-300 hover:border-slate-400 text-transparent"
-                            }`}
+                              }`}
                           >
                             <CheckSquare className="w-4 h-4" />
                           </button>
 
                           <div className="min-w-0">
                             <p
-                              className={`text-xs font-black leading-tight ${
-                                isPacked ? "line-through text-slate-400" : "text-slate-900"
-                              }`}
+                              className={`text-xs font-black leading-tight ${isPacked ? "line-through text-slate-400" : "text-slate-900"
+                                }`}
                             >
                               {it.nombre}
                             </p>
@@ -1127,11 +1118,10 @@ export default function AdminPedidosPage() {
 
                         <div className="text-right shrink-0">
                           <span
-                            className={`text-sm font-black px-2.5 py-1 rounded-xl block ${
-                              isPacked
+                            className={`text-sm font-black px-2.5 py-1 rounded-xl block ${isPacked
                                 ? "bg-emerald-100 text-emerald-950"
                                 : "bg-amber-100 text-amber-950 font-black"
-                            }`}
+                              }`}
                           >
                             {it.cantidad} unds
                           </span>
@@ -1156,10 +1146,10 @@ export default function AdminPedidosPage() {
                   <p className="text-base font-extrabold text-emerald-100">
                     {formatVes(
                       selectedOrderForPicking.totalVes ||
-                        calculateVesTotal(
-                          selectedOrderForPicking.totalUsd,
-                          selectedOrderForPicking.tasaBcv || bcvRate
-                        )
+                      calculateVesTotal(
+                        selectedOrderForPicking.totalUsd,
+                        selectedOrderForPicking.tasaBcv || bcvRate
+                      )
                     )}
                   </p>
                   <p className="text-[10px] text-emerald-300">
@@ -1370,9 +1360,8 @@ export default function AdminPedidosPage() {
                                     key={p.id || p.sku}
                                     type="button"
                                     onClick={() => handleSelectProduct(p.id || p.sku || "")}
-                                    className={`w-full text-left p-2.5 transition-colors flex items-center justify-between gap-2.5 cursor-pointer ${
-                                      isSelected ? "bg-emerald-50 text-emerald-950 font-bold" : "hover:bg-slate-50 text-slate-800"
-                                    }`}
+                                    className={`w-full text-left p-2.5 transition-colors flex items-center justify-between gap-2.5 cursor-pointer ${isSelected ? "bg-emerald-50 text-emerald-950 font-bold" : "hover:bg-slate-50 text-slate-800"
+                                      }`}
                                   >
                                     <div className="min-w-0 flex-1">
                                       <p className="text-xs font-bold truncate">{p.nombre}</p>
@@ -1476,11 +1465,10 @@ export default function AdminPedidosPage() {
 
                         {selectedProduct && (
                           <span
-                            className={`ml-2 text-xs font-black px-2.5 py-1.5 rounded-xl border ${
-                              previewPricing.tarifa === "gran_mayor"
+                            className={`ml-2 text-xs font-black px-2.5 py-1.5 rounded-xl border ${previewPricing.tarifa === "gran_mayor"
                                 ? "text-amber-900 bg-amber-100/80 border-amber-300"
                                 : "text-emerald-800 bg-emerald-50 border-emerald-200"
-                            }`}
+                              }`}
                           >
                             = {formatUsd(previewPricing.subtotalUsd)}{" "}
                             <span className="text-[10px] font-bold opacity-80">
