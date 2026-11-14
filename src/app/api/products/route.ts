@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllProductsAdmin, createProduct, createVariant, deleteProduct } from "@/lib/supabase/queries";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 // GET /api/products — Lista todos los productos (admin)
 export async function GET() {
@@ -14,7 +15,7 @@ export async function GET() {
     const products = await getAllProductsAdmin();
     return NextResponse.json(products);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudieron obtener los productos.");
   }
 }
 
@@ -95,6 +96,6 @@ export async function POST(request: NextRequest) {
       // Rollback: limpiar el producto huérfano si falló la creación de variantes para evitar bloqueos de sku_key
       await deleteProduct(createdProductId).catch(() => {});
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo crear el producto.");
   }
 }

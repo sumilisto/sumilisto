@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimit";
+import { isBotSubmission } from "@/lib/security/antiBot";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +17,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+
+    // Protección anti-bot: si llenó el campo trampa, simular éxito sin procesar
+    if (isBotSubmission(body)) {
+      return NextResponse.json({ success: true });
+    }
     const {
       sessionId,
       nombre,
@@ -100,7 +107,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, storage: "config_fallback" });
   } catch (err: any) {
-    console.error("Error guardando carrito:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "No se pudo actualizar el carrito.");
   }
 }

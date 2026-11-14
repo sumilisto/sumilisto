@@ -10,6 +10,7 @@ import {
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 // GET /api/products/[id] — Obtener un producto por ID
 export async function GET(
@@ -42,7 +43,7 @@ export async function GET(
 
     return NextResponse.json(data);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo obtener el producto.");
   }
 }
 
@@ -121,7 +122,7 @@ export async function PUT(
     revalidateTag("products");
     return NextResponse.json(updated);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo actualizar el producto.");
   }
 }
 
@@ -170,6 +171,6 @@ export async function DELETE(
     revalidateTag("products");
     return NextResponse.json({ ok: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo eliminar el producto.");
   }
 }

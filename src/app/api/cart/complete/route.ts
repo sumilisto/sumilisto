@@ -4,6 +4,8 @@ import { saveOrder, getOrders } from "@/lib/supabase/queries";
 import { generateUniqueOrderCode } from "@/lib/orders/orderCode";
 import { Order, OrderItem } from "@/types/order";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimit";
+import { isBotSubmission } from "@/lib/security/antiBot";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 export async function POST(req: Request) {
   try {
@@ -18,6 +20,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+
+    // 0. Protección contra bots: si activó algún campo trampa, rechazar silenciosamente
+    if (isBotSubmission(body)) {
+      return NextResponse.json({ ok: true });
+    }
     const {
       sessionId,
       orderCode,
@@ -144,7 +151,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("Error completando carrito:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "No se pudo registrar el pedido.");
   }
 }

@@ -5,6 +5,7 @@ import { generateOrderCode } from "@/lib/orders/orderCode";
 import { Order, OrderItem, OrderStatus } from "@/types/order";
 import { formatUsd, formatVes, calculateVesTotal } from "@/lib/currency/format";
 import { resolveWholesaleLine } from "@/lib/pricing/pricing";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 // GET /api/orders — Listar todos los pedidos (admin)
 export async function GET() {
@@ -17,7 +18,7 @@ export async function GET() {
     const orders = await getOrders();
     return NextResponse.json({ ok: true, orders });
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudieron obtener los pedidos.", 500, true);
   }
 }
 
@@ -197,7 +198,7 @@ export async function POST(req: NextRequest) {
       whatsappUrl,
     });
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo registrar el pedido.", 500, true);
   }
 }
 
@@ -238,7 +239,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ ok: true, updates });
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo actualizar el pedido.", 500, true);
   }
 }
 
@@ -260,6 +261,6 @@ export async function DELETE(req: NextRequest) {
     const ok = await deleteOrder(orderId);
     return NextResponse.json({ ok });
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo eliminar el pedido.", 500, true);
   }
 }

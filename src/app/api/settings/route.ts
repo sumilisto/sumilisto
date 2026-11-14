@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSettings, updateSettings } from "@/lib/supabase/queries";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { revalidateTag } from "next/cache";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 // GET /api/settings — Obtener configuración
 export async function GET() {
@@ -25,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json(publicSettings);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo obtener la configuración.");
   }
 }
 
@@ -41,13 +42,13 @@ export async function PUT(request: NextRequest) {
     const ok = await updateSettings(body);
 
     if (!ok) {
-      return NextResponse.json({ error: "No se pudo guardar" }, { status: 500 });
+      return NextResponse.json({ error: "No se pudo guardar la configuración." }, { status: 500 });
     }
 
     revalidateTag("settings");
     revalidateTag("bcv");
     return NextResponse.json({ ok: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createSafeErrorResponse(error, "No se pudo actualizar la configuración.");
   }
 }
