@@ -258,6 +258,35 @@ export default function AdminContabilidadPage() {
     const progresoEquilibrio = Math.min(100, Math.round((facturacionTotal / ventasEquilibrioMeta) * 100));
     const faltaParaEquilibrio = Math.max(0, ventasEquilibrioMeta - facturacionTotal);
 
+    // Días laborables en el mes (Lunes a Sábado, excluyendo Domingos)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+    const currentDay = now.getDate();
+
+    let diasLaborablesMes = 0;
+    let diasLaborablesRestantes = 0;
+
+    for (let d = 1; d <= totalDaysInMonth; d++) {
+      const dateObj = new Date(year, month, d);
+      // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+      if (dateObj.getDay() !== 0) {
+        diasLaborablesMes++;
+        if (d >= currentDay) {
+          diasLaborablesRestantes++;
+        }
+      }
+    }
+
+    // Cuota diaria base (Lunes a Sábado) para el punto de equilibrio
+    const metaDiariaBase = Math.round((ventasEquilibrioMeta / Math.max(1, diasLaborablesMes)) * 100) / 100;
+
+    // Cuota diaria mínima requerida según lo que falta y los días laborables que restan en el mes
+    const metaDiariaRestante = faltaParaEquilibrio > 0
+      ? Math.round((faltaParaEquilibrio / Math.max(1, diasLaborablesRestantes)) * 100) / 100
+      : 0;
+
     // Ganancia Neta Real (Utilidad Distribuible después de fletes, embalajes y cuota SENIAT si aplica)
     const gananciaNetaOperativa = Math.max(
       0,
@@ -285,6 +314,10 @@ export default function AdminContabilidadPage() {
       ventasEquilibrioMeta,
       progresoEquilibrio,
       faltaParaEquilibrio: Math.round(faltaParaEquilibrio * 100) / 100,
+      diasLaborablesMes,
+      diasLaborablesRestantes,
+      metaDiariaBase,
+      metaDiariaRestante,
       gananciaNetaOperativa: Math.round(gananciaNetaOperativa * 100) / 100,
       reparto,
     };
@@ -456,9 +489,15 @@ export default function AdminContabilidadPage() {
               </div>
               <div className="h-10 w-px bg-white/20" />
               <div>
-                <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Tasa BCV del Día</p>
-                <p className="text-xl font-black text-white">{bcvRate.toLocaleString("es-VE", { minimumFractionDigits: 2 })}</p>
-                <p className="text-[10px] text-emerald-400 mt-0.5">Bs./USD Oficial</p>
+                <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">Mínimo Diario (Lun a Sáb)</p>
+                <p className="text-xl font-black text-white">
+                  {formatUsd(metrics.faltaParaEquilibrio === 0 ? 0 : (metrics.metaDiariaRestante > 0 ? metrics.metaDiariaRestante : metrics.metaDiariaBase))}
+                </p>
+                <p className="text-[10px] text-slate-300 mt-0.5">
+                  {metrics.faltaParaEquilibrio === 0
+                    ? "🎉 ¡Meta alcanzada!"
+                    : `${metrics.diasLaborablesRestantes} de ${metrics.diasLaborablesMes} días laborables`}
+                </p>
               </div>
             </div>
           </div>
@@ -470,7 +509,7 @@ export default function AdminContabilidadPage() {
               <span className={metrics.faltaParaEquilibrio === 0 ? "text-emerald-400 font-extrabold" : "text-amber-300 font-semibold"}>
                 {metrics.faltaParaEquilibrio === 0
                   ? "🎉 ¡Punto de equilibrio superado! A partir de aquí todo es utilidad extra"
-                  : `Faltan ${formatUsd(metrics.faltaParaEquilibrio)} para cubrir sueldo y gastos fijos`}
+                  : `Faltan ${formatUsd(metrics.faltaParaEquilibrio)} para cubrir sueldo y gastos fijos (${formatUsd(metrics.metaDiariaRestante)}/día en ${metrics.diasLaborablesRestantes} días restantes)`}
               </span>
             </div>
             <div className="w-full h-3.5 bg-slate-700/80 rounded-full overflow-hidden p-0.5">
