@@ -7,8 +7,22 @@ import { revalidateTag } from "next/cache";
 export async function GET() {
   try {
     const settings = await getSettings();
-    // Capa extra de protección: excluir carritos, pedidos y datos contables de la respuesta pública
-    const { carritos_abandonados, pedidos, accounting_settings, ...publicSettings } = settings;
+    const isAuth = await isAdminAuthenticated();
+
+    // Si es administrador autenticado, entregar configuración completa
+    if (isAuth) {
+      return NextResponse.json(settings);
+    }
+
+    // Blindaje de privacidad para usuarios públicos: excluir carritos, pedidos, datos contables y cronograma de publicaciones (grilla)
+    const {
+      carritos_abandonados,
+      pedidos,
+      accounting_settings,
+      grilla_contenido,
+      ...publicSettings
+    } = settings;
+
     return NextResponse.json(publicSettings);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
