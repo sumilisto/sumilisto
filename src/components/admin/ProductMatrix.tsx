@@ -1323,61 +1323,105 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-2 text-[10px]">
-                        <div>
-                          <label className="font-bold text-amber-900 block mb-0.5">Costo Mayor ($)</label>
-                          <input
-                            type="text"
-                            value={v.costoMayorUsd}
-                            onChange={(e) => {
-                              const updated = [...createForm.variantes];
-                              updated[idx].costoMayorUsd = e.target.value;
-                              setCreateForm({ ...createForm, variantes: updated });
-                            }}
-                            placeholder="22.00"
-                            className="w-full h-8 px-2 rounded-lg bg-white border border-amber-300 font-bold"
-                          />
+                      {/* Bloque Escala Mayor */}
+                      <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/80 mb-2">
+                        <span className="text-[10px] font-black text-amber-900 block mb-1.5 uppercase tracking-wider">
+                          1. Escala Mayor (Lote Inicial)
+                        </span>
+                        <div className="grid grid-cols-3 gap-2 text-[10px]">
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-0.5">Costo Mayor ($)</label>
+                            <input
+                              type="text"
+                              value={v.costoMayorUsd}
+                              onChange={(e) => {
+                                const updated = [...createForm.variantes];
+                                updated[idx].costoMayorUsd = e.target.value;
+                                setCreateForm({ ...createForm, variantes: updated });
+                              }}
+                              placeholder="22.00"
+                              className="w-full h-8 px-2 rounded-lg bg-white border border-amber-300 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-0.5">Cant. Mínima Mayor (u)</label>
+                            <input
+                              type="number"
+                              value={v.minMayor}
+                              onChange={(e) => {
+                                const updated = [...createForm.variantes];
+                                updated[idx].minMayor = Number(e.target.value);
+                                setCreateForm({ ...createForm, variantes: updated });
+                              }}
+                              placeholder="50"
+                              className="w-full h-8 px-2 rounded-lg bg-white border border-amber-300 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-bold text-emerald-900 block mb-0.5">PVP Venta Mayor ($)</label>
+                            <input
+                              type="text"
+                              value={v.precioMayorUsd}
+                              onChange={(e) => {
+                                const updated = [...createForm.variantes];
+                                updated[idx].precioMayorUsd = e.target.value;
+                                setCreateForm({ ...createForm, variantes: updated });
+                              }}
+                              placeholder="31.57"
+                              className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-black text-emerald-900"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="font-bold text-amber-900 block mb-0.5">Cant Mayor (u)</label>
-                          <input
-                            type="number"
-                            value={v.minMayor}
-                            onChange={(e) => {
-                              const updated = [...createForm.variantes];
-                              updated[idx].minMayor = Number(e.target.value);
-                              setCreateForm({ ...createForm, variantes: updated });
-                            }}
-                            className="w-full h-8 px-2 rounded-lg bg-white border border-amber-300 font-bold"
-                          />
-                        </div>
-                        <div>
-                          <label className="font-bold text-emerald-900 block mb-0.5">PVP Mayor ($)</label>
-                          <input
-                            type="text"
-                            value={v.precioMayorUsd}
-                            onChange={(e) => {
-                              const updated = [...createForm.variantes];
-                              updated[idx].precioMayorUsd = e.target.value;
-                              setCreateForm({ ...createForm, variantes: updated });
-                            }}
-                            placeholder="31.57"
-                            className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-black text-emerald-900"
-                          />
-                        </div>
-                        <div>
-                          <label className="font-bold text-brand block mb-0.5">PVP Gran Mayor ($)</label>
-                          <input
-                            type="text"
-                            value={v.precioGranMayorUsd}
-                            onChange={(e) => {
-                              const updated = [...createForm.variantes];
-                              updated[idx].precioGranMayorUsd = e.target.value;
-                              setCreateForm({ ...createForm, variantes: updated });
-                            }}
-                            placeholder="99.47"
-                            className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-black text-brand"
-                          />
+                      </div>
+
+                      {/* Bloque Escala Gran Mayor */}
+                      <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-200/80">
+                        <span className="text-[10px] font-black text-emerald-900 block mb-1.5 uppercase tracking-wider">
+                          2. Escala Gran Mayor (Descuento por Volumen)
+                        </span>
+                        <div className="grid grid-cols-3 gap-2 text-[10px]">
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-0.5">Costo Gran Mayor ($)</label>
+                            <input
+                              type="text"
+                              value={v.costoGranMayorUsd}
+                              onChange={(e) => {
+                                const updated = [...createForm.variantes];
+                                updated[idx].costoGranMayorUsd = e.target.value;
+                                setCreateForm({ ...createForm, variantes: updated });
+                              }}
+                              placeholder="70.00"
+                              className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-0.5">Cant. Mínima Gran Mayor (u)</label>
+                            <input
+                              type="number"
+                              value={v.minGranMayor}
+                              onChange={(e) => {
+                                const updated = [...createForm.variantes];
+                                updated[idx].minGranMayor = Number(e.target.value);
+                                setCreateForm({ ...createForm, variantes: updated });
+                              }}
+                              placeholder="200"
+                              className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-bold text-brand block mb-0.5">PVP Venta Gran Mayor ($)</label>
+                            <input
+                              type="text"
+                              value={v.precioGranMayorUsd}
+                              onChange={(e) => {
+                                const updated = [...createForm.variantes];
+                                updated[idx].precioGranMayorUsd = e.target.value;
+                                setCreateForm({ ...createForm, variantes: updated });
+                              }}
+                              placeholder="99.47"
+                              className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-black text-brand"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
