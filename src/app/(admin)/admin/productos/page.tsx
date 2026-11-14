@@ -229,29 +229,6 @@ export default function AdminProductosPage() {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  // Modal: Gestión de Variantes
-  const [variantProduct, setVariantProduct] = useState<Product | null>(null);
-  const [editingVariant, setEditingVariant] = useState<ProductVariant | null>(null);
-  const [isAddingVariant, setIsAddingVariant] = useState(false);
-  const [savingVariant, setSavingVariant] = useState(false);
-  const [variantForm, setVariantForm] = useState({
-    color: "",
-    sku: "",
-    presentacion: "",
-    stock: "100",
-    precio_mayor_usd: "",
-    min_mayor: "1",
-    precio_gran_mayor_usd: "",
-    min_gran_mayor: "5",
-  });
-  // Calculadora en Modal Variantes
-  const [showVarCalc, setShowVarCalc] = useState(false);
-  const [varCostBase, setVarCostBase] = useState("");
-  const [varApplyIvaCompra, setVarApplyIvaCompra] = useState(false);
-  const [varApplyIvaVenta, setVarApplyIvaVenta] = useState(true);
-  const [varMarginMayor, setVarMarginMayor] = useState("0.70");
-  const [varMarginGranMayor, setVarMarginGranMayor] = useState("0.80");
-
   // Modal: Agregar Producto Nuevo (Completo con Variantes y Fotos)
   const [showAddModal, setShowAddModal] = useState(false);
   const [createActiveTab, setCreateActiveTab] = useState<"general" | "variants" | "photos">("general");
@@ -538,7 +515,7 @@ export default function AdminProductosPage() {
 
   // Bloquear scroll de la página de fondo cuando cualquier modal esté abierto (elimina la doble barra de desplazamiento)
   useEffect(() => {
-    const isModalOpen = Boolean(showAddModal || variantProduct || mediaProduct || editingProduct);
+    const isModalOpen = Boolean(showAddModal || mediaProduct || editingProduct);
     if (isModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -547,7 +524,7 @@ export default function AdminProductosPage() {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [showAddModal, variantProduct, mediaProduct, editingProduct]);
+  }, [showAddModal, mediaProduct, editingProduct]);
 
   const showToast = (text: string, type: "success" | "error" | "info" = "success") => {
     setFeedbackMsg({ text, type });
@@ -565,10 +542,6 @@ export default function AdminProductosPage() {
         if (mediaProduct) {
           const fresh = data.find((p: Product) => p.id === mediaProduct.id);
           if (fresh) setMediaProduct(fresh);
-        }
-        if (variantProduct) {
-          const fresh = data.find((p: Product) => p.id === variantProduct.id);
-          if (fresh) setVariantProduct(fresh);
         }
         if (editingProduct) {
           const fresh = data.find((p: Product) => p.id === editingProduct.id);
@@ -858,67 +831,6 @@ export default function AdminProductosPage() {
     } finally {
       setIsProcessingMedia(false);
       setMediaStatusText("");
-    }
-  };
-
-  // ─────────────────────────────────────────────────────────
-  // GESTIÓN DE VARIANTES (Colores / Presentaciones)
-  // ─────────────────────────────────────────────────────────
-  const handleOpenVariantsModal = (prod: Product) => {
-    setVariantProduct(prod);
-    setIsAddingVariant(false);
-    setEditingVariant(null);
-    setVariantForm({
-      color: "",
-      sku: `${prod.sku}-VAR`,
-      presentacion: prod.unidadVenta || "50 Und",
-      stock: "100",
-      precio_mayor_usd: prod.precioMayorUsd ? String(prod.precioMayorUsd) : "",
-      min_mayor: String(prod.minMayor || 1),
-      precio_gran_mayor_usd: prod.precioGranMayorUsd ? String(prod.precioGranMayorUsd) : "",
-      min_gran_mayor: String(prod.minGranMayor || 5),
-    });
-  };
-
-  const handleSaveVariant = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!variantProduct || !variantForm.color.trim() || !variantForm.sku.trim()) {
-      showToast("Color/Nombre y SKU son obligatorios", "error");
-      return;
-    }
-
-    setSavingVariant(true);
-    try {
-      if (editingVariant && editingVariant.id) {
-        // Actualizar variante existente
-        const res = await fetch(`/api/variants/${editingVariant.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(variantForm),
-        });
-        if (!res.ok) throw new Error("Error al actualizar variante");
-        showToast("Variante actualizada con éxito");
-      } else {
-        // Crear nueva variante
-        const res = await fetch("/api/variants", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            producto_id: variantProduct.id,
-            ...variantForm,
-          }),
-        });
-        if (!res.ok) throw new Error("Error al crear variante");
-        showToast(`Variante ${variantForm.color} agregada`);
-      }
-
-      setIsAddingVariant(false);
-      setEditingVariant(null);
-      await loadProducts();
-    } catch (err: any) {
-      showToast(err.message || "Error al guardar variante", "error");
-    } finally {
-      setSavingVariant(false);
     }
   };
 
@@ -1305,9 +1217,6 @@ export default function AdminProductosPage() {
       if (mediaProduct?.id === prod.id) {
         setMediaProduct(null);
       }
-      if (variantProduct?.id === prod.id) {
-        setVariantProduct(null);
-      }
       await loadProducts();
     } catch (err: any) {
       showToast(err.message || "Error al eliminar el producto", "error");
@@ -1573,7 +1482,10 @@ export default function AdminProductosPage() {
             setEditActiveTab("general");
           }}
           onOpenMediaModal={(p) => setMediaProduct(p)}
-          onOpenVariantModal={(p) => setVariantProduct(p)}
+          onOpenVariantModal={(p) => {
+            setEditingProduct(p);
+            setEditActiveTab("variants");
+          }}
         />
       ) : (
         /* Contenido Catálogo */

@@ -168,6 +168,12 @@ export default function AdminPedidosPage() {
   useEffect(() => {
     if (isAuthenticated) {
       loadData();
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("nuevo") === "1") {
+          setIsModalOpen(true);
+        }
+      }
     }
   }, [isAuthenticated]);
 

@@ -44,11 +44,11 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
       active: pathname === "/admin/pedidos",
     },
     {
-      label: "Contabilidad y Finanzas",
-      shortLabel: "Contabilidad",
-      href: "/admin/contabilidad",
-      icon: Calculator,
-      active: pathname === "/admin/contabilidad",
+      label: "Carritos Abandonados",
+      shortLabel: "Carritos",
+      href: "/admin/carritos",
+      icon: ShoppingCart,
+      active: pathname === "/admin/carritos",
     },
     {
       label: "Productos y Variantes",
@@ -58,18 +58,11 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
       active: pathname === "/admin/productos" || pathname === "/admin",
     },
     {
-      label: "Carritos Abandonados",
-      shortLabel: "Carritos",
-      href: "/admin/carritos",
-      icon: ShoppingCart,
-      active: pathname === "/admin/carritos",
-    },
-    {
-      label: "Grilla de Contenido",
-      shortLabel: "Grilla",
-      href: "/admin/grilla",
-      icon: Calendar,
-      active: pathname === "/admin/grilla",
+      label: "Contabilidad y Finanzas",
+      shortLabel: "Contabilidad",
+      href: "/admin/contabilidad",
+      icon: Calculator,
+      active: pathname === "/admin/contabilidad",
     },
     {
       label: "Estadísticas en Vivo",
@@ -79,11 +72,18 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
       active: pathname === "/admin/estadisticas",
     },
     {
+      label: "Grilla de Contenido",
+      shortLabel: "Grilla",
+      href: "/admin/grilla",
+      icon: Calendar,
+      active: pathname === "/admin/grilla",
+    },
+    {
       label: "Ajustes de Tienda",
       shortLabel: "Ajustes",
       href: "/admin/settings",
       icon: Settings,
-      active: pathname === "/admin/settings" || pathname === "/settings",
+      active: pathname === "/admin/settings",
     },
   ];
 
