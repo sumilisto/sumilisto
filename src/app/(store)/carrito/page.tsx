@@ -13,6 +13,7 @@ import { useCart } from '@/lib/cart/CartContext';
 import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from '@/lib/currency/format';
+import { resolveWholesaleLine } from '@/lib/pricing/pricing';
 import { LocationPickerModal } from '@/components/cart/LocationPickerModal';
 import { generateOrderCode } from '@/lib/orders/orderCode';
 
@@ -99,22 +100,8 @@ export default function CartPage() {
       }
       if (!product) continue;
 
-      const precioMayor = variant?.precioMayorUsd ?? product.precioMayorUsd ?? 0;
-      const precioGranMayor = variant?.precioGranMayorUsd ?? product.precioGranMayorUsd ?? 0;
-      const minMayor = variant?.minMayor || product.minMayor || 50;
-      const minGranMayor = variant?.minGranMayor || product.minGranMayor || 100;
+      const resolved = resolveWholesaleLine(product, variant, item.cantidad);
       const stock = variant?.stock ?? product.stock ?? 0;
-
-      // Gran Mayor se aplica cuando la cantidad llega al mínimo establecido
-      const aplicaGranMayor =
-        precioGranMayor > 0 && minGranMayor > 0 && item.cantidad >= minGranMayor;
-
-      // El precio es por paquete: Mayor = minMayor unidades, Gran Mayor = minGranMayor unidades
-      const unidadesPorPaquete = aplicaGranMayor ? minGranMayor : minMayor;
-      const precioPaquete = aplicaGranMayor ? precioGranMayor : precioMayor;
-      const subtotal =
-        Math.round(precioPaquete * (item.cantidad / unidadesPorPaquete) * 100) / 100;
-
       const presentacion = variant?.presentacion ?? product.presentacion ?? '';
       const color = variant?.color ?? '';
 
@@ -124,12 +111,12 @@ export default function CartPage() {
         presentacion: [color, presentacion].filter(Boolean).join(' - '),
         foto: variant?.fotos?.[0]?.url || product.fotos?.[0]?.url || FALLBACK_IMAGE,
         cantidad: item.cantidad,
-        step: minMayor,
+        step: resolved.minMayor,
         maxStock: stock > 0 ? stock : 999999,
-        precioPaquete,
-        unidadesPorPaquete,
-        subtotal,
-        nivel: aplicaGranMayor ? 'gran_mayor' : 'mayor',
+        precioPaquete: resolved.precioPaquete,
+        unidadesPorPaquete: resolved.unidadesPorPaquete,
+        subtotal: resolved.subtotalUsd,
+        nivel: resolved.tarifa,
       });
     }
     return result;

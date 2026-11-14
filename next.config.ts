@@ -4,7 +4,7 @@ const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co https://*.vercel.app;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' blob: data: https://*.supabase.co https://images.unsplash.com https://placehold.co;
+  img-src 'self' blob: data: https://*.supabase.co https://images.unsplash.com https://placehold.co https://*.tile.openstreetmap.org https://tile.openstreetmap.org;
   font-src 'self' data: https://fonts.gstatic.com;
   media-src 'self' blob: data: https://*.supabase.co;
   connect-src 'self' https://*.supabase.co https://www.bcv.org.ve https://*.vercel.app https://vitals.vercel-insights.com;

@@ -481,22 +481,28 @@ export default function AdminContabilidadPage() {
               </p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-center gap-4 shrink-0">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-wrap items-center gap-4 shrink-0">
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Gastos Fijos Asignados</p>
                 <p className="text-xl font-black text-emerald-300">{formatUsd(metrics.totalGastosFijos)}</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">$800 sueldo + $36 servicios</p>
               </div>
+              <div className="hidden sm:block h-10 w-px bg-white/20" />
+              <div>
+                <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Meta Diaria Base</p>
+                <p className="text-xl font-black text-white">{formatUsd(metrics.metaDiariaBase)}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{metrics.diasLaborablesMes} días laborables (Lun a Sáb)</p>
+              </div>
               <div className="h-10 w-px bg-white/20" />
               <div>
-                <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">Mínimo Diario (Lun a Sáb)</p>
-                <p className="text-xl font-black text-white">
-                  {formatUsd(metrics.faltaParaEquilibrio === 0 ? 0 : (metrics.metaDiariaRestante > 0 ? metrics.metaDiariaRestante : metrics.metaDiariaBase))}
+                <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">Ritmo Diario Restante</p>
+                <p className="text-xl font-black text-amber-300">
+                  {formatUsd(metrics.faltaParaEquilibrio === 0 ? 0 : metrics.metaDiariaRestante)}
                 </p>
                 <p className="text-[10px] text-slate-300 mt-0.5">
                   {metrics.faltaParaEquilibrio === 0
-                    ? "🎉 ¡Meta alcanzada!"
-                    : `${metrics.diasLaborablesRestantes} de ${metrics.diasLaborablesMes} días laborables`}
+                    ? "🎉 ¡Meta mensual alcanzada!"
+                    : `${metrics.diasLaborablesRestantes} días restantes para cerrar`}
                 </p>
               </div>
             </div>

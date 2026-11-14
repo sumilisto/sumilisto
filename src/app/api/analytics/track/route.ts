@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { resolveLocation } from "@/lib/analytics/geo";
 import { isBotUserAgent } from "@/lib/analytics/botDetection";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimit";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -94,13 +95,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (insertError) {
-      console.error("Error al registrar visita:", insertError);
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      return createSafeErrorResponse(insertError, "No se pudo registrar la visita.", 500, true);
     }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("Excepción en track route:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "Error al procesar el seguimiento.", 500, true);
   }
 }

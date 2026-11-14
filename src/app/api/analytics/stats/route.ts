@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getProducts } from "@/lib/api/store";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { isHumanTraffic } from "@/lib/analytics/botDetection";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -449,7 +450,6 @@ export async function GET(req: NextRequest) {
       generatedAt: new Date().toISOString(),
     });
   } catch (err: any) {
-    console.error("Error en analytics stats API:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "No se pudieron obtener las estadísticas analíticas.", 500, true);
   }
 }

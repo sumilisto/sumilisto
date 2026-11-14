@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 export async function GET() {
   try {
@@ -28,8 +29,7 @@ export async function GET() {
     const carritos = configRow?.data?.carritos_abandonados || [];
     return NextResponse.json({ carritos });
   } catch (err: any) {
-    console.error("Error obteniendo carritos abandonados:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "No se pudieron obtener los carritos abandonados.", 500, true);
   }
 }
 
@@ -90,7 +90,6 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("Error actualizando carrito:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "No se pudo actualizar el estado del carrito.", 500, true);
   }
 }

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart/CartContext";
 import { useProducts } from "@/lib/products/ProductsContext";
 import { formatUsd } from "@/lib/currency/format";
+import { resolveWholesaleLine } from "@/lib/pricing/pricing";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 
 export const FloatingCartBar: React.FC = () => {
@@ -28,20 +29,8 @@ export const FloatingCartBar: React.FC = () => {
       }
 
       if (product) {
-        const precioMayor = variant?.precioMayorUsd ?? product.precioMayorUsd ?? 0;
-        const precioGranMayor = variant?.precioGranMayorUsd ?? product.precioGranMayorUsd ?? 0;
-        const minMayor = variant?.minMayor || product.minMayor || 50;
-        const minGranMayor = variant?.minGranMayor || product.minGranMayor || 100;
-
-        const aplicaGranMayor =
-          precioGranMayor > 0 && minGranMayor > 0 && cartItem.cantidad >= minGranMayor;
-
-        const unidadesPorPaquete = aplicaGranMayor ? minGranMayor : minMayor;
-        const precioPaquete = aplicaGranMayor ? precioGranMayor : precioMayor;
-        const subtotal =
-          Math.round(precioPaquete * (cartItem.cantidad / unidadesPorPaquete) * 100) / 100;
-
-        return acc + subtotal;
+        const resolved = resolveWholesaleLine(product, variant, cartItem.cantidad);
+        return acc + resolved.subtotalUsd;
       }
 
       // 2. Fallback resiliente si el item almacenó su subtotal en el carrito

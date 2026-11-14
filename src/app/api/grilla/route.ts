@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isAdminAuthenticated } from "@/lib/actions/auth";
 import { getDefaultGrillaItems } from "@/lib/grilla/defaults";
 import { GrillaDia, GrillaItem } from "@/types/grilla";
+import { createSafeErrorResponse } from "@/lib/security/errors";
 
 // GET /api/grilla?fecha=YYYY-MM-DD
 export async function GET(request: NextRequest) {
@@ -74,8 +75,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err: any) {
-    console.error("Error obteniendo grilla:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "No se pudo obtener la grilla de contenido.", 500, true);
   }
 }
 
@@ -160,7 +160,6 @@ export async function POST(request: NextRequest) {
       message: "Grilla guardada exitosamente",
     });
   } catch (err: any) {
-    console.error("Error guardando grilla:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return createSafeErrorResponse(err, "No se pudo guardar la grilla de contenido.", 500, true);
   }
 }
