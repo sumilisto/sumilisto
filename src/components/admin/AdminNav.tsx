@@ -37,50 +37,43 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
 
   const navItems = [
     {
-      label: "Pedidos y Despacho",
-      shortLabel: "Pedidos",
+      label: "Pedidos",
       href: "/admin/pedidos",
       icon: ClipboardList,
       active: pathname === "/admin/pedidos",
     },
     {
-      label: "Carritos Abandonados",
-      shortLabel: "Carritos",
+      label: "Abandonados",
       href: "/admin/carritos",
       icon: ShoppingCart,
       active: pathname === "/admin/carritos",
     },
     {
-      label: "Productos y Variantes",
-      shortLabel: "Productos",
+      label: "Productos",
       href: "/admin/productos",
       icon: Package,
       active: pathname === "/admin/productos" || pathname === "/admin",
     },
     {
-      label: "Contabilidad y Finanzas",
-      shortLabel: "Contabilidad",
+      label: "Contabilidad",
       href: "/admin/contabilidad",
       icon: Calculator,
       active: pathname === "/admin/contabilidad",
     },
     {
-      label: "Estadísticas en Vivo",
-      shortLabel: "Estadísticas",
+      label: "Estadísticas",
       href: "/admin/estadisticas",
       icon: Activity,
       active: pathname === "/admin/estadisticas",
     },
     {
-      label: "Grilla de Contenido",
-      shortLabel: "Grilla",
+      label: "Grilla",
       href: "/admin/grilla",
       icon: Calendar,
       active: pathname === "/admin/grilla",
     },
     {
-      label: "Ajustes de Tienda",
-      shortLabel: "Ajustes",
+      label: "Ajustes",
       href: "/admin/settings",
       icon: Settings,
       active: pathname === "/admin/settings",
@@ -154,8 +147,7 @@ export const AdminNav: React.FC<AdminNavProps> = ({ onLogout }) => {
                     item.active ? "text-emerald-800" : "text-white/70"
                   }`}
                 />
-                <span className="hidden md:inline">{item.label}</span>
-                <span className="md:hidden">{item.shortLabel}</span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
