@@ -887,19 +887,19 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
 
       {/* 4. Tabla Jerárquica Expandible (Padre ➔ Variantes/SKUs) */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-100/80 text-slate-600 border-b border-slate-200 font-black uppercase text-[10px] tracking-wider">
-                <th className="py-3 px-3 w-10 text-center">Exp</th>
-                <th className="py-3 px-3">Producto / Publicación</th>
-                <th className="py-3 px-3">Categoría</th>
-                <th className="py-3 px-3 text-center">Variantes</th>
-                <th className="py-3 px-3 text-right">Stock Total</th>
-                <th className="py-3 px-4 text-right">Venta Mayor</th>
-                <th className="py-3 px-4 text-right">Venta G. Mayor</th>
-                <th className="py-3 px-4 text-center">Estado Web</th>
-                <th className="py-3 px-4 text-center">Acciones</th>
+                <th className="py-2.5 px-2 w-8 text-center">Exp</th>
+                <th className="py-2.5 px-2 sm:px-3">Producto / Publicación</th>
+                <th className="py-2.5 px-2 text-center">Categoría</th>
+                <th className="py-2.5 px-2 text-center">Variantes</th>
+                <th className="py-2.5 px-2 text-right">Stock</th>
+                <th className="py-2.5 px-2.5 text-right">Venta Mayor</th>
+                <th className="py-2.5 px-2.5 text-right">Venta G. Mayor</th>
+                <th className="py-2.5 px-2 text-center">Estado Web</th>
+                <th className="py-2.5 px-2 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -928,7 +928,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                           } ${!product.activo ? "border-l-4 border-l-amber-400" : "border-l-4 border-l-emerald-500"}`}
                       >
                         {/* Botón Expandir */}
-                        <td className="py-3.5 px-3 text-center">
+                        <td className="py-2.5 px-2 text-center">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -945,9 +945,9 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                         </td>
 
                         {/* Nombre y Miniatura */}
-                        <td className="py-3.5 px-3">
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                        <td className="py-2.5 px-2 sm:px-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                               {product.fotos?.[0]?.url ? (
                                 <img
                                   src={product.fotos[0].url}
@@ -960,11 +960,14 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                 </div>
                               )}
                             </div>
-                            <div className="min-w-0 max-w-xs sm:max-w-md">
-                              <span className="font-extrabold text-slate-900 block truncate text-xs sm:text-sm">
+                            <div className="min-w-0 flex-1">
+                              <span
+                                className="font-extrabold text-slate-900 block truncate text-xs sm:text-sm"
+                                title={product.nombre}
+                              >
                                 {product.nombre}
                               </span>
-                              <span className="text-[10px] text-slate-400 block font-mono">
+                              <span className="text-[10px] text-slate-400 block font-mono truncate">
                                 SKU Base: {product.sku}
                               </span>
                             </div>
@@ -972,57 +975,57 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                         </td>
 
                         {/* Categoría */}
-                        <td className="py-3.5 px-3">
-                          <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
+                        <td className="py-2.5 px-2 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
                             {product.categoria}
                           </span>
                         </td>
 
                         {/* Cantidad de Variantes / SKUs */}
-                        <td className="py-3.5 px-3 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold ${variants.length > 1
+                        <td className="py-2.5 px-2 text-center">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${variants.length > 1
                               ? "bg-purple-100 text-purple-900 border border-purple-200"
                               : "bg-slate-100 text-slate-700"
                             }`}>
-                            <Palette className="w-3 h-3" />
+                            <Palette className="w-2.5 h-2.5" />
                             <span>{variants.length} SKU{variants.length !== 1 ? "s" : ""}</span>
                           </span>
                         </td>
 
                         {/* Stock Total */}
-                        <td className="py-3.5 px-3 text-right">
-                          <span className={`font-black text-xs sm:text-sm ${isLowStock ? "text-rose-600" : "text-slate-800"
+                        <td className="py-2.5 px-2 text-right">
+                          <span className={`font-black text-xs ${isLowStock ? "text-rose-600" : "text-slate-800"
                             }`}>
                             {(product.stock || 0).toLocaleString("es-VE")}
                           </span>
-                          <span className="text-[10px] text-slate-400 block">unidades</span>
+                          <span className="text-[9px] text-slate-400 block -mt-0.5">unidades</span>
                         </td>
 
                         {/* Precios de Venta */}
-                        <td className="py-3.5 px-4 text-right">
-                          <span className="font-extrabold text-emerald-800 block">
+                        <td className="py-2.5 px-2.5 text-right">
+                          <span className="font-extrabold text-emerald-800 block text-xs">
                             {product.precioMayorUsd ? formatUsd(product.precioMayorUsd) : "$0,00"}
                           </span>
-                          <span className="text-[10px] text-slate-400 block">
+                          <span className="text-[9px] text-slate-400 block -mt-0.5">
                             x {product.minMayor || 50} u.
                           </span>
                         </td>
 
-                        <td className="py-3.5 px-4 text-right">
-                          <span className="font-extrabold text-brand block">
+                        <td className="py-2.5 px-2.5 text-right">
+                          <span className="font-extrabold text-brand block text-xs">
                             {product.precioGranMayorUsd ? formatUsd(product.precioGranMayorUsd) : "$0,00"}
                           </span>
-                          <span className="text-[10px] text-slate-400 block">
+                          <span className="text-[9px] text-slate-400 block -mt-0.5">
                             x {product.minGranMayor || 200} u.
                           </span>
                         </td>
 
                         {/* Estado Web: Switch / Toggle */}
-                        <td className="py-3.5 px-4 text-center">
+                        <td className="py-2.5 px-2 text-center">
                           <button
                             type="button"
                             onClick={(e) => togglePublication(product, e)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black transition-all ${product.activo
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-black transition-all ${product.activo
                                 ? "bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border border-emerald-300"
                                 : "bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300"
                               }`}
@@ -1034,8 +1037,8 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                         </td>
 
                         {/* Acciones */}
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-2.5 px-2 text-center">
+                          <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {onOpenEditProduct && (
                               <button
                                 type="button"
@@ -1085,21 +1088,21 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                 )}
                               </div>
 
-                              <div className="overflow-x-auto">
+                              <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 <table className="w-full text-left text-[11px]">
                                   <thead>
                                     <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 font-black uppercase text-[9px] tracking-wider">
-                                      <th className="py-2.5 px-3">Variante / Color</th>
-                                      <th className="py-2.5 px-3 font-mono">SKU Único</th>
-                                      <th className="py-2.5 px-3 text-right">Stock</th>
-                                      <th className="py-2.5 px-3 text-right text-amber-900 bg-amber-50/50">Costo Mayor</th>
-                                      <th className="py-2.5 px-2 text-center text-amber-900 bg-amber-50/50">Cant. M</th>
-                                      <th className="py-2.5 px-3 text-right text-amber-900 bg-amber-50/50">Costo G. Mayor</th>
-                                      <th className="py-2.5 px-2 text-center text-amber-900 bg-amber-50/50">Cant. GM</th>
-                                      <th className="py-2.5 px-3 text-right text-emerald-900 bg-emerald-50/40">PVP Mayor</th>
-                                      <th className="py-2.5 px-3 text-right text-emerald-900 bg-emerald-50/40">PVP G. Mayor</th>
-                                      <th className="py-2.5 px-3 text-center text-indigo-900">Margen Mayor</th>
-                                      <th className="py-2.5 px-3 text-center">Acción</th>
+                                      <th className="py-2.5 px-2">Variante / Color</th>
+                                      <th className="py-2.5 px-2 font-mono">SKU Único</th>
+                                      <th className="py-2.5 px-2 text-right">Stock</th>
+                                      <th className="py-2.5 px-2 text-right text-amber-900 bg-amber-50/50">Costo M</th>
+                                      <th className="py-2.5 px-1.5 text-center text-amber-900 bg-amber-50/50">Cant. M</th>
+                                      <th className="py-2.5 px-2 text-right text-amber-900 bg-amber-50/50">Costo GM</th>
+                                      <th className="py-2.5 px-1.5 text-center text-amber-900 bg-amber-50/50">Cant. GM</th>
+                                      <th className="py-2.5 px-2 text-right text-emerald-900 bg-emerald-50/40">PVP M</th>
+                                      <th className="py-2.5 px-2 text-right text-emerald-900 bg-emerald-50/40">PVP GM</th>
+                                      <th className="py-2.5 px-2 text-center text-indigo-900">Margen</th>
+                                      <th className="py-2.5 px-2 text-center">Acción</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-slate-100">
@@ -1114,7 +1117,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                       return (
                                         <tr key={variant.id || variant.sku} className="hover:bg-slate-50/80 transition-colors">
                                           {/* Color */}
-                                          <td className="py-2.5 px-3 font-bold text-slate-800">
+                                          <td className="py-2 px-2 font-bold text-slate-800">
                                             <div className="flex items-center gap-1.5">
                                               <span className="w-2 h-2 rounded-full bg-brand shrink-0" />
                                               <span>{variant.color || "Estándar"}</span>
@@ -1122,61 +1125,61 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                           </td>
 
                                           {/* SKU */}
-                                          <td className="py-2.5 px-3 font-mono text-slate-600 font-semibold">
+                                          <td className="py-2 px-2 font-mono text-slate-600 font-semibold">
                                             {variant.sku}
                                           </td>
 
                                           {/* Stock */}
-                                          <td className="py-2.5 px-3 text-right font-black">
+                                          <td className="py-2 px-2 text-right font-black">
                                             <span className={(variant.stock || 0) < 50 ? "text-rose-600" : "text-slate-800"}>
                                               {variant.stock || 0}
                                             </span>
                                           </td>
 
                                           {/* Costo Mayor */}
-                                          <td className="py-2.5 px-3 text-right font-bold text-amber-950 bg-amber-50/30">
+                                          <td className="py-2 px-2 text-right font-bold text-amber-950 bg-amber-50/30">
                                             {variant.costoMayorUsd !== undefined && variant.costoMayorUsd > 0
                                               ? formatUsd(variant.costoMayorUsd)
                                               : <span className="text-slate-300 italic">No asignado</span>}
                                           </td>
 
                                           {/* Cant. Mayor */}
-                                          <td className="py-2.5 px-2 text-center text-slate-600 bg-amber-50/30">
+                                          <td className="py-2 px-1.5 text-center text-slate-600 bg-amber-50/30">
                                             {variant.minMayor || 50} u.
                                           </td>
 
                                           {/* Costo Gran Mayor */}
-                                          <td className="py-2.5 px-3 text-right font-bold text-amber-950 bg-amber-50/30">
+                                          <td className="py-2 px-2 text-right font-bold text-amber-950 bg-amber-50/30">
                                             {variant.costoGranMayorUsd !== undefined && variant.costoGranMayorUsd > 0
                                               ? formatUsd(variant.costoGranMayorUsd)
                                               : <span className="text-slate-300 italic">No asignado</span>}
                                           </td>
 
                                           {/* Cant. Gran Mayor */}
-                                          <td className="py-2.5 px-2 text-center text-slate-600 bg-amber-50/30">
+                                          <td className="py-2 px-1.5 text-center text-slate-600 bg-amber-50/30">
                                             {variant.minGranMayor || 200} u.
                                           </td>
 
                                           {/* PVP Mayor */}
-                                          <td className="py-2.5 px-3 text-right font-extrabold text-emerald-800 bg-emerald-50/30">
+                                          <td className="py-2 px-2 text-right font-extrabold text-emerald-800 bg-emerald-50/30">
                                             {variant.precioMayorUsd ? formatUsd(variant.precioMayorUsd) : "$0,00"}
                                           </td>
 
                                           {/* PVP Gran Mayor */}
-                                          <td className="py-2.5 px-3 text-right font-extrabold text-brand bg-emerald-50/30">
+                                          <td className="py-2 px-2 text-right font-extrabold text-brand bg-emerald-50/30">
                                             {variant.precioGranMayorUsd ? formatUsd(variant.precioGranMayorUsd) : "$0,00"}
                                           </td>
 
                                           {/* Margen Mayor */}
-                                          <td className="py-2.5 px-3 text-center">
+                                          <td className="py-2 px-2 text-center">
                                             {marginPctM > 0 ? (
-                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-black text-[10px] ${marginPctM >= 25
+                                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full font-black text-[9.5px] ${marginPctM >= 25
                                                   ? "bg-emerald-100 text-emerald-900"
                                                   : marginPctM >= 15
                                                     ? "bg-blue-100 text-blue-900"
                                                     : "bg-amber-100 text-amber-900"
                                                 }`}>
-                                                +{marginPctM}% (${profitM.toFixed(2).replace(".", ",")})
+                                                +{marginPctM}%
                                               </span>
                                             ) : (
                                               <span className="text-slate-300">—</span>
@@ -1184,7 +1187,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                           </td>
 
                                           {/* Botón Edición Rápida */}
-                                          <td className="py-2.5 px-3 text-center">
+                                          <td className="py-2 px-2 text-center">
                                             <button
                                               type="button"
                                               onClick={(e) => handleOpenEditVariant(product, variant, e)}
