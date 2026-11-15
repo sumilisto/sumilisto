@@ -67,19 +67,19 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
     nombre: "",
     categoria: "Envases",
     descripcion: "",
-    unidadVenta: "50 Unidades",
+    unidadVenta: "",
     variantes: [
       {
         sku: "",
-        color: "Estándar",
-        presentacion: "50 Unidades",
-        stock: 100,
+        color: "",
+        presentacion: "",
+        stock: "" as any,
         costoMayorUsd: "",
-        minMayor: 50,
-        factorMayor: "0.70",
+        minMayor: "" as any,
+        factorMayor: "",
         costoGranMayorUsd: "",
-        minGranMayor: 200,
-        factorGranMayor: "0.80",
+        minGranMayor: "" as any,
+        factorGranMayor: "",
         precioMayorUsd: "",
         precioGranMayorUsd: "",
       },
@@ -97,13 +97,13 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
     sku: "",
     color: "",
     presentacion: "",
-    stock: 0,
+    stock: "" as any,
     costoMayorUsd: "",
-    minMayor: 50,
-    factorMayor: "0.70",
+    minMayor: "" as any,
+    factorMayor: "",
     costoGranMayorUsd: "",
-    minGranMayor: 200,
-    factorGranMayor: "0.80",
+    minGranMayor: "" as any,
+    factorGranMayor: "",
     precioMayorUsd: "",
     precioGranMayorUsd: "",
   });
@@ -430,17 +430,17 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
     });
     setVariantEditForm({
       sku: variant.sku || "",
-      color: variant.color || "Estándar",
-      presentacion: variant.presentacion || "50 Unidades",
-      stock: variant.stock || 0,
-      costoMayorUsd: variant.costoMayorUsd !== undefined ? String(variant.costoMayorUsd) : "",
-      minMayor: variant.minMayor || 50,
-      factorMayor: "0.70",
-      costoGranMayorUsd: variant.costoGranMayorUsd !== undefined ? String(variant.costoGranMayorUsd) : "",
-      minGranMayor: variant.minGranMayor || 200,
-      factorGranMayor: "0.80",
-      precioMayorUsd: variant.precioMayorUsd !== undefined ? String(variant.precioMayorUsd) : "",
-      precioGranMayorUsd: variant.precioGranMayorUsd !== undefined ? String(variant.precioGranMayorUsd) : "",
+      color: variant.color || "",
+      presentacion: variant.presentacion || "",
+      stock: variant.stock !== undefined && variant.stock !== null ? variant.stock : ("" as any),
+      costoMayorUsd: variant.costoMayorUsd !== undefined && variant.costoMayorUsd !== null ? String(variant.costoMayorUsd) : "",
+      minMayor: variant.minMayor !== undefined && variant.minMayor !== null && variant.minMayor > 0 ? variant.minMayor : ("" as any),
+      factorMayor: "",
+      costoGranMayorUsd: variant.costoGranMayorUsd !== undefined && variant.costoGranMayorUsd !== null ? String(variant.costoGranMayorUsd) : "",
+      minGranMayor: variant.minGranMayor !== undefined && variant.minGranMayor !== null && variant.minGranMayor > 0 ? variant.minGranMayor : ("" as any),
+      factorGranMayor: "",
+      precioMayorUsd: variant.precioMayorUsd !== undefined && variant.precioMayorUsd !== null ? String(variant.precioMayorUsd) : "",
+      precioGranMayorUsd: variant.precioGranMayorUsd !== undefined && variant.precioGranMayorUsd !== null ? String(variant.precioGranMayorUsd) : "",
     });
   };
 
@@ -490,14 +490,14 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
         {
           sku: "",
           color: "",
-          presentacion: prev.unidadVenta || "50 Unidades",
-          stock: 100,
+          presentacion: prev.unidadVenta || "",
+          stock: "" as any,
           costoMayorUsd: "",
-          minMayor: 50,
-          factorMayor: "0.70",
+          minMayor: "" as any,
+          factorMayor: "",
           costoGranMayorUsd: "",
-          minGranMayor: 200,
-          factorGranMayor: "0.80",
+          minGranMayor: "" as any,
+          factorGranMayor: "",
           precioMayorUsd: "",
           precioGranMayorUsd: "",
         },
@@ -546,12 +546,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
         variantes: createForm.variantes.map((v, i) => ({
           sku: v.sku.trim() || `${mainSku}-VAR${i + 1}`,
           color: v.color.trim() || "Estándar",
-          presentacion: v.presentacion.trim() || createForm.unidadVenta || "50 Unidades",
+          presentacion: v.presentacion.trim() || createForm.unidadVenta || "Unidad",
           stock: Number(v.stock) || 0,
           costo_mayor_usd: v.costoMayorUsd ? Number(v.costoMayorUsd) : null,
-          min_mayor: Number(v.minMayor) || 50,
+          min_mayor: v.minMayor !== "" && !isNaN(Number(v.minMayor)) ? Number(v.minMayor) : 1,
           costo_gran_mayor_usd: v.costoGranMayorUsd ? Number(v.costoGranMayorUsd) : null,
-          min_gran_mayor: Number(v.minGranMayor) || 200,
+          min_gran_mayor: v.minGranMayor !== "" && !isNaN(Number(v.minGranMayor)) ? Number(v.minGranMayor) : 0,
           precio_mayor_usd: Number(v.precioMayorUsd) || 0,
           precio_gran_mayor_usd: Number(v.precioGranMayorUsd) || 0,
           activo: true,
@@ -573,21 +573,21 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
       setShowCreateMatrixModal(false);
       setCreateForm({
         nombre: "",
-        categoria: "Envases",
+        categoria: availableCategories[0] || "Envases",
         descripcion: "",
-        unidadVenta: "50 Unidades",
+        unidadVenta: "",
         variantes: [
           {
             sku: "",
-            color: "Estándar",
-            presentacion: "50 Unidades",
-            stock: 100,
+            color: "",
+            presentacion: "",
+            stock: "" as any,
             costoMayorUsd: "",
-            minMayor: 50,
-            factorMayor: "0.70",
+            minMayor: "" as any,
+            factorMayor: "",
             costoGranMayorUsd: "",
-            minGranMayor: 200,
-            factorGranMayor: "0.80",
+            minGranMayor: "" as any,
+            factorGranMayor: "",
             precioMayorUsd: "",
             precioGranMayorUsd: "",
           },
@@ -802,12 +802,28 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
           <button
             type="button"
             onClick={() => {
-              setCreateForm((prev) => ({
-                ...prev,
-                categoria: availableCategories.includes(prev.categoria)
-                  ? prev.categoria
-                  : (availableCategories[0] || "Envases"),
-              }));
+              setCreateForm({
+                nombre: "",
+                categoria: availableCategories[0] || "Envases",
+                descripcion: "",
+                unidadVenta: "",
+                variantes: [
+                  {
+                    sku: "",
+                    color: "",
+                    presentacion: "",
+                    stock: "" as any,
+                    costoMayorUsd: "",
+                    minMayor: "" as any,
+                    factorMayor: "",
+                    costoGranMayorUsd: "",
+                    minGranMayor: "" as any,
+                    factorGranMayor: "",
+                    precioMayorUsd: "",
+                    precioGranMayorUsd: "",
+                  },
+                ],
+              });
               setIsAddingCategory(false);
               setShowCreateMatrixModal(true);
             }}
@@ -1305,12 +1321,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                     <div className="flex items-center justify-between mb-1">
                       <label className="font-bold text-amber-900">Factor Mayor</label>
                       <span className="text-[10px] text-emerald-800 font-bold">
-                        {variantEditForm.factorMayor === "0.70" ? "30% ganancia" : "÷ factor"}
+                        {variantEditForm.factorMayor ? `${Math.round((1 - (parseFloat(variantEditForm.factorMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
                       </span>
                     </div>
                     <input
                       type="text"
-                      value={variantEditForm.factorMayor || "0.70"}
+                      value={variantEditForm.factorMayor || ""}
                       onChange={(e) => {
                         const newFactor = e.target.value;
                         const auto = computePvpFromFactor(variantEditForm.costoMayorUsd, newFactor);
@@ -1328,8 +1344,9 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                     <label className="font-bold text-amber-900 block mb-1">Cant. Mayor (Unds)</label>
                     <input
                       type="number"
-                      value={variantEditForm.minMayor}
-                      onChange={(e) => setVariantEditForm({ ...variantEditForm, minMayor: Number(e.target.value) })}
+                      value={variantEditForm.minMayor !== undefined && variantEditForm.minMayor !== "" ? variantEditForm.minMayor : ""}
+                      onChange={(e) => setVariantEditForm({ ...variantEditForm, minMayor: e.target.value === "" ? "" : Number(e.target.value) })}
+                      placeholder="Ej: 50"
                       className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
                     />
                   </div>
@@ -1359,12 +1376,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                     <div className="flex items-center justify-between mb-1">
                       <label className="font-bold text-amber-900">Factor Gran Mayor</label>
                       <span className="text-[10px] text-emerald-800 font-bold">
-                        {variantEditForm.factorGranMayor === "0.80" ? "20% ganancia" : "÷ factor"}
+                        {variantEditForm.factorGranMayor ? `${Math.round((1 - (parseFloat(variantEditForm.factorGranMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
                       </span>
                     </div>
                     <input
                       type="text"
-                      value={variantEditForm.factorGranMayor || "0.80"}
+                      value={variantEditForm.factorGranMayor || ""}
                       onChange={(e) => {
                         const newFactor = e.target.value;
                         const auto = computePvpFromFactor(variantEditForm.costoGranMayorUsd, newFactor);
@@ -1382,8 +1399,9 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                     <label className="font-bold text-amber-900 block mb-1">Cant. Gran Mayor (Unds)</label>
                     <input
                       type="number"
-                      value={variantEditForm.minGranMayor}
-                      onChange={(e) => setVariantEditForm({ ...variantEditForm, minGranMayor: Number(e.target.value) })}
+                      value={variantEditForm.minGranMayor !== undefined && variantEditForm.minGranMayor !== "" ? variantEditForm.minGranMayor : ""}
+                      onChange={(e) => setVariantEditForm({ ...variantEditForm, minGranMayor: e.target.value === "" ? "" : Number(e.target.value) })}
+                      placeholder="Ej: 200"
                       className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
                     />
                   </div>
@@ -1673,12 +1691,13 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                           <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Stock</label>
                           <input
                             type="number"
-                            value={v.stock}
+                            value={v.stock !== undefined && v.stock !== "" ? v.stock : ""}
                             onChange={(e) => {
                               const updated = [...createForm.variantes];
-                              updated[idx].stock = Number(e.target.value);
+                              updated[idx].stock = e.target.value === "" ? "" : Number(e.target.value);
                               setCreateForm({ ...createForm, variantes: updated });
                             }}
+                            placeholder="0"
                             className="w-full h-8 px-2.5 rounded-lg bg-white border border-slate-200 text-xs font-black"
                           />
                         </div>
@@ -1716,12 +1735,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                             <div className="flex items-center justify-between mb-0.5">
                               <label className="font-bold text-slate-700">Factor Divisor</label>
                               <span className="text-[9px] text-emerald-800 font-bold">
-                                {v.factorMayor === "0.70" ? "30% ganancia" : "÷ factor"}
+                                {v.factorMayor ? `${Math.round((1 - (parseFloat(v.factorMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
                               </span>
                             </div>
                             <input
                               type="text"
-                              value={v.factorMayor || "0.70"}
+                              value={v.factorMayor || ""}
                               onChange={(e) => {
                                 const newFactor = e.target.value;
                                 const updated = [...createForm.variantes];
@@ -1738,13 +1757,13 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                             <label className="font-bold text-slate-700 block mb-0.5">Cant. Mínima Mayor (u)</label>
                             <input
                               type="number"
-                              value={v.minMayor}
+                              value={v.minMayor !== undefined && v.minMayor !== "" ? v.minMayor : ""}
                               onChange={(e) => {
                                 const updated = [...createForm.variantes];
-                                updated[idx].minMayor = Number(e.target.value);
+                                updated[idx].minMayor = e.target.value === "" ? "" : Number(e.target.value);
                                 setCreateForm({ ...createForm, variantes: updated });
                               }}
-                              placeholder="50"
+                              placeholder="Ej: 50"
                               className="w-full h-8 px-2 rounded-lg bg-white border border-amber-300 font-bold"
                             />
                           </div>
@@ -1752,13 +1771,13 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                             <label className="font-bold text-emerald-900 block mb-0.5">PVP Venta Mayor ($)</label>
                             <input
                               type="text"
-                              value={v.precioMayorUsd}
+                              value={v.precioMayorUsd || ""}
                               onChange={(e) => {
                                 const updated = [...createForm.variantes];
                                 updated[idx].precioMayorUsd = e.target.value;
                                 setCreateForm({ ...createForm, variantes: updated });
                               }}
-                              placeholder="50.00"
+                              placeholder="Ej: 50.00"
                               className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-black text-emerald-900"
                             />
                           </div>
@@ -1780,7 +1799,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                             <label className="font-bold text-slate-700 block mb-0.5">Costo Gran Mayor ($)</label>
                             <input
                               type="text"
-                              value={v.costoGranMayorUsd}
+                              value={v.costoGranMayorUsd || ""}
                               onChange={(e) => {
                                 const newCost = e.target.value;
                                 const updated = [...createForm.variantes];
@@ -1797,12 +1816,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                             <div className="flex items-center justify-between mb-0.5">
                               <label className="font-bold text-slate-700">Factor Divisor</label>
                               <span className="text-[9px] text-emerald-800 font-bold">
-                                {v.factorGranMayor === "0.80" ? "20% ganancia" : "÷ factor"}
+                                {v.factorGranMayor ? `${Math.round((1 - (parseFloat(v.factorGranMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
                               </span>
                             </div>
                             <input
                               type="text"
-                              value={v.factorGranMayor || "0.80"}
+                              value={v.factorGranMayor || ""}
                               onChange={(e) => {
                                 const newFactor = e.target.value;
                                 const updated = [...createForm.variantes];
@@ -1819,13 +1838,13 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                             <label className="font-bold text-slate-700 block mb-0.5">Cant. Mínima Gran Mayor (u)</label>
                             <input
                               type="number"
-                              value={v.minGranMayor}
+                              value={v.minGranMayor !== undefined && v.minGranMayor !== "" ? v.minGranMayor : ""}
                               onChange={(e) => {
                                 const updated = [...createForm.variantes];
-                                updated[idx].minGranMayor = Number(e.target.value);
+                                updated[idx].minGranMayor = e.target.value === "" ? "" : Number(e.target.value);
                                 setCreateForm({ ...createForm, variantes: updated });
                               }}
-                              placeholder="200"
+                              placeholder="Ej: 200"
                               className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-bold"
                             />
                           </div>
@@ -1833,13 +1852,13 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                             <label className="font-bold text-brand block mb-0.5">PVP Venta Gran Mayor ($)</label>
                             <input
                               type="text"
-                              value={v.precioGranMayorUsd}
+                              value={v.precioGranMayorUsd || ""}
                               onChange={(e) => {
                                 const updated = [...createForm.variantes];
                                 updated[idx].precioGranMayorUsd = e.target.value;
                                 setCreateForm({ ...createForm, variantes: updated });
                               }}
-                              placeholder="99.47"
+                              placeholder="Ej: 99.47"
                               className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-black text-brand"
                             />
                           </div>
