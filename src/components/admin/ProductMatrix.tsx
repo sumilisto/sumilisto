@@ -814,7 +814,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Nuevo en Matriz</span>
+            <span>Nuevo en Matriz</span>
           </button>
         </div>
       </div>
