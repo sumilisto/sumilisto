@@ -2256,7 +2256,7 @@ export default function AdminProductosPage() {
                           nombre: selected.nombre,
                           categoria: selected.categoria,
                           descripcion: selected.descripcionLarga || "",
-                          unidad_venta: selected.unidadVenta || "50 Unidades",
+                          unidad_venta: selected.unidadVenta || "Unidad",
                         }));
                         if (selected.variantes && selected.variantes.length > 0) {
                           setNewProductVariants(
@@ -2411,17 +2411,6 @@ export default function AdminProductosPage() {
                         <span>Crear y Asignar</span>
                       </button>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Unidad de Venta *</label>
-                    <input
-                      type="text"
-                      value={newProduct.unidad_venta}
-                      onChange={(e) => setNewProduct({ ...newProduct, unidad_venta: e.target.value })}
-                      placeholder="ej. Unidad, 50 Und, Bulto, Paquete"
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
-                    />
                   </div>
 
                   <div>
@@ -3394,17 +3383,6 @@ export default function AdminProductosPage() {
                         <span>Crear y Asignar</span>
                       </button>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Unidad de Venta</label>
-                    <input
-                      type="text"
-                      value={editingProduct.unidadVenta || ""}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, unidadVenta: e.target.value })}
-                      placeholder="ej. Unidad, 50 Und, Bulto"
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold"
-                    />
                   </div>
 
                   <div>

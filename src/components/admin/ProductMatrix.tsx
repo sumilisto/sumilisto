@@ -540,7 +540,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
         slug: `${slug}-${Math.random().toString(36).substring(2, 6)}`,
         categoria: createForm.categoria,
         descripcion: createForm.descripcion.trim() || undefined,
-        unidad_venta: createForm.unidadVenta || "50 Unidades",
+        unidad_venta: createForm.unidadVenta || "Unidad",
         activo: false, // Nace en la Matriz como pendiente por publicar
         destacado: false,
         variantes: createForm.variantes.map((v, i) => ({
