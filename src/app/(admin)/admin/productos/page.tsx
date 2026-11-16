@@ -2424,28 +2424,6 @@ export default function AdminProductosPage() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-6 pt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={newProduct.activo}
-                        onChange={(e) => setNewProduct({ ...newProduct, activo: e.target.checked })}
-                        className="rounded text-brand focus:ring-brand w-4 h-4"
-                      />
-                      <span className="font-bold text-slate-700">Producto Activo en tienda</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={newProduct.destacado}
-                        onChange={(e) => setNewProduct({ ...newProduct, destacado: e.target.checked })}
-                        className="rounded text-brand focus:ring-brand w-4 h-4"
-                      />
-                      <span className="font-bold text-slate-700">Destacado en portada</span>
-                    </label>
-                  </div>
-
                   <div className="pt-4 flex justify-end">
                     <button
                       type="button"
@@ -3394,28 +3372,6 @@ export default function AdminProductosPage() {
                       placeholder="Descripción detallada del producto..."
                       className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
                     />
-                  </div>
-
-                  <div className="flex items-center gap-6 pt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={editingProduct.activo}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, activo: e.target.checked })}
-                        className="rounded text-brand focus:ring-brand w-4 h-4"
-                      />
-                      <span className="font-bold text-slate-700">Producto Activo en tienda</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={editingProduct.destacado || false}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, destacado: e.target.checked })}
-                        className="rounded text-brand focus:ring-brand w-4 h-4"
-                      />
-                      <span className="font-bold text-slate-700">Destacado</span>
-                    </label>
                   </div>
                 </form>
               )}
