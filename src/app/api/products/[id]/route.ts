@@ -19,7 +19,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
+
     // Intentar buscar por ID primero
     const { data, error } = await supabaseAdmin
       .from("productos")

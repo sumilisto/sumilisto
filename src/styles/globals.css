@@ -84,4 +84,20 @@
     min-width: var(--min-touch-target);
     min-height: var(--min-touch-target);
   }
+
+  /* Protección contra descarga y arrastre de imágenes */
+  .no-drag,
+  img,
+  picture,
+  video,
+  [data-protected-media] {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+  }
 }

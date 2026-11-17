@@ -362,7 +362,7 @@ export default function AdminProductosPage() {
         deletedCategories: updatedDeleted,
         customCategories: updatedCustom,
       });
-    } catch {}
+    } catch { }
 
     if (forEdit && editingProduct) {
       const current = (editingProduct.categoria || "")
@@ -1344,13 +1344,12 @@ export default function AdminProductosPage() {
         {/* Toast Feedback */}
         {feedbackMsg && (
           <div
-            className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in slide-in-from-bottom-2 ${
-              feedbackMsg.type === "success"
+            className={`fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in slide-in-from-bottom-2 ${feedbackMsg.type === "success"
                 ? "bg-slate-900 text-white border-slate-800"
                 : feedbackMsg.type === "error"
-                ? "bg-rose-600 text-white border-rose-700"
-                : "bg-blue-600 text-white border-blue-700"
-            }`}
+                  ? "bg-rose-600 text-white border-rose-700"
+                  : "bg-blue-600 text-white border-blue-700"
+              }`}
           >
             {feedbackMsg.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
             {feedbackMsg.type === "error" && <AlertCircle className="w-4 h-4 text-white" />}
@@ -1397,11 +1396,10 @@ export default function AdminProductosPage() {
           <button
             type="button"
             onClick={() => setActiveMainTab("matriz")}
-            className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${
-              activeMainTab === "matriz"
+            className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${activeMainTab === "matriz"
                 ? "border-brand text-brand bg-brand-50/70 rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
-            }`}
+              }`}
           >
             <Layers className="w-4 h-4" />
             <span>Matriz Maestra (Inventario & Costos)</span>
@@ -1413,11 +1411,10 @@ export default function AdminProductosPage() {
           <button
             type="button"
             onClick={() => setActiveMainTab("catalogo")}
-            className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${
-              activeMainTab === "catalogo"
+            className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${activeMainTab === "catalogo"
                 ? "border-brand text-brand bg-brand-50/70 rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
-            }`}
+              }`}
           >
             <Package className="w-4 h-4" />
             <span>Catálogo Web (Fotos & Vitrina)</span>
@@ -1427,2509 +1424,1205 @@ export default function AdminProductosPage() {
           </button>
         </div>
 
-      {activeMainTab === "matriz" ? (
-        <ProductMatrix
-          products={products}
-          onRefresh={loadProducts}
-          onOpenEditProduct={(p) => {
-            setEditingProduct(p);
-            setEditActiveTab("general");
-          }}
-          onOpenMediaModal={(p) => setMediaProduct(p)}
-          onOpenVariantModal={(p) => {
-            setEditingProduct(p);
-            setEditActiveTab("variants");
-          }}
-        />
-      ) : (
-        /* Contenido Catálogo */
-        <div className="space-y-6">
-        {/* Métricas rápidas */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Total Catálogo
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-slate-800 mt-1 block">
-              {stats.total}
-            </span>
-          </div>
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
-            <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Con Foto
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-emerald-800 mt-1 block">
-              {stats.conFoto}
-            </span>
-          </div>
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
-            <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wider block flex items-center gap-1">
-              <Film className="w-3.5 h-3.5" /> Con Video
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-purple-800 mt-1 block">
-              {stats.conVideo}
-            </span>
-          </div>
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
-            <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider block flex items-center gap-1">
-              <AlertCircle className="w-3.5 h-3.5" /> Sin Foto
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-amber-800 mt-1 block">
-              {stats.sinFoto}
-            </span>
-          </div>
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
-            <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Carrusel Destacados
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-amber-900 mt-1 block">
-              {stats.destacados} <span className="text-xs font-semibold text-slate-400">/ 15</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Buscador y Filtros */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por nombre, SKU o color de variante..."
-                className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setFilterDestacados(!filterDestacados)}
-                className={`h-10 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
-                  filterDestacados
-                    ? "bg-amber-400 text-amber-950 border-amber-500 shadow-sm"
-                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                }`}
-              >
-                <Star className={`w-3.5 h-3.5 ${filterDestacados ? "fill-amber-950 text-amber-950" : "text-amber-500 fill-amber-500"}`} />
-                <span>{filterDestacados ? "Mostrando: Destacados" : `Destacados (${stats.destacados}/15)`}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFilterNoPhoto(!filterNoPhoto)}
-                className={`h-10 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
-                  filterNoPhoto
-                    ? "bg-amber-500 text-white border-amber-600 shadow-sm"
-                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                }`}
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>{filterNoPhoto ? "Mostrando: Sin Foto" : "Sin Foto"}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Categorías */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
-            {["todas", ...availableCategories].map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`py-1.5 px-3 rounded-lg text-xs font-bold capitalize whitespace-nowrap transition-all ${
-                  selectedCategory.toLowerCase() === cat.toLowerCase()
-                    ? "bg-brand text-white shadow-2xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {cat === "todas" ? "Todas las categorías" : cat}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => setShowCategoryManager(true)}
-              className="py-1.5 px-3 rounded-lg text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 hover:text-brand flex items-center gap-1.5 whitespace-nowrap shadow-2xs transition-all flex-shrink-0 ml-auto"
-              title="Administrar o eliminar categorías"
-            >
-              <Settings className="w-3.5 h-3.5 text-slate-500" />
-              <span>Gestionar / Eliminar Categorías</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Listado de Productos */}
-        {loading ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-3" />
-            <p className="text-xs text-slate-400">Cargando productos de Supabase...</p>
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-3">
-            <Package className="w-12 h-12 text-slate-300 mx-auto" />
-            <h3 className="text-base font-bold text-slate-700">No se encontraron productos</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              {searchQuery || filterNoPhoto || selectedCategory !== "todas"
-                ? "Prueba cambiando los filtros de búsqueda o categoría."
-                : "No hay productos registrados en tu base de datos de Supabase."}
-            </p>
-          </div>
+        {activeMainTab === "matriz" ? (
+          <ProductMatrix
+            products={products}
+            onRefresh={loadProducts}
+            onOpenEditProduct={(p) => {
+              setEditingProduct(p);
+              setEditActiveTab("general");
+            }}
+            onOpenMediaModal={(p) => setMediaProduct(p)}
+            onOpenVariantModal={(p) => {
+              setEditingProduct(p);
+              setEditActiveTab("variants");
+            }}
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredProducts.map((p) => {
-              const realPhotos = (p.fotos || []).filter((f) => !f.url.includes("placehold.co"));
-              const mainPhoto = realPhotos.length > 0 ? realPhotos[0] : null;
-              const hasRealPhoto = Boolean(mainPhoto);
-              const hasVideo = Boolean(p.videoUrl);
-              const variants = p.variantes || [];
+          /* Contenido Catálogo */
+          <div className="space-y-6">
+            {/* Métricas rápidas */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Total Catálogo
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-slate-800 mt-1 block">
+                  {stats.total}
+                </span>
+              </div>
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Con Foto
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-emerald-800 mt-1 block">
+                  {stats.conFoto}
+                </span>
+              </div>
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+                <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wider block flex items-center gap-1">
+                  <Film className="w-3.5 h-3.5" /> Con Video
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-purple-800 mt-1 block">
+                  {stats.conVideo}
+                </span>
+              </div>
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+                <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider block flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" /> Sin Foto
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-amber-800 mt-1 block">
+                  {stats.sinFoto}
+                </span>
+              </div>
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block flex items-center gap-1">
+                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Carrusel Destacados
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-amber-900 mt-1 block">
+                  {stats.destacados} <span className="text-xs font-semibold text-slate-400">/ 15</span>
+                </span>
+              </div>
+            </div>
 
-              return (
-                <div
-                  key={p.sku}
-                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+            {/* Buscador y Filtros */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3">
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar por nombre, SKU o color de variante..."
+                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFilterDestacados(!filterDestacados)}
+                    className={`h-10 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${filterDestacados
+                        ? "bg-amber-400 text-amber-950 border-amber-500 shadow-sm"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                  >
+                    <Star className={`w-3.5 h-3.5 ${filterDestacados ? "fill-amber-950 text-amber-950" : "text-amber-500 fill-amber-500"}`} />
+                    <span>{filterDestacados ? "Mostrando: Destacados" : `Destacados (${stats.destacados}/15)`}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFilterNoPhoto(!filterNoPhoto)}
+                    className={`h-10 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${filterNoPhoto
+                        ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>{filterNoPhoto ? "Mostrando: Sin Foto" : "Sin Foto"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Categorías */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+                {["todas", ...availableCategories].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-bold capitalize whitespace-nowrap transition-all ${selectedCategory.toLowerCase() === cat.toLowerCase()
+                        ? "bg-brand text-white shadow-2xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                  >
+                    {cat === "todas" ? "Todas las categorías" : cat}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryManager(true)}
+                  className="py-1.5 px-3 rounded-lg text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 hover:text-brand flex items-center gap-1.5 whitespace-nowrap shadow-2xs transition-all flex-shrink-0 ml-auto"
+                  title="Administrar o eliminar categorías"
                 >
-                  <div>
-                    {/* Zona Superior: Visualización de Portada */}
-                    <div className="relative w-full h-48 bg-slate-100 border-b border-slate-100 flex items-center justify-center overflow-hidden group">
-                      {hasRealPhoto ? (
-                        <img
-                          src={mainPhoto!.url}
-                          alt={p.nombre}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="text-center p-4">
-                          <ImageIcon className="w-10 h-10 text-slate-300 mx-auto mb-1" />
-                          <span className="text-[11px] font-bold text-slate-400 block">
-                            Sin foto asignada
-                          </span>
-                        </div>
-                      )}
+                  <Settings className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Gestionar / Eliminar Categorías</span>
+                </button>
+              </div>
+            </div>
 
-                      {/* Badges superiores: Categoría, Fotos y Video */}
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap z-10 max-w-[65%]">
-                        {(p.categoria || "")
-                          .split(",")
-                          .map((c) => c.trim())
-                          .filter(Boolean)
-                          .map((cat) => (
-                            <span
-                              key={cat}
-                              className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs"
-                            >
-                              {cat}
+            {/* Listado de Productos */}
+            {loading ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto mb-3" />
+                <p className="text-xs text-slate-400">Cargando productos de Supabase...</p>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-3">
+                <Package className="w-12 h-12 text-slate-300 mx-auto" />
+                <h3 className="text-base font-bold text-slate-700">No se encontraron productos</h3>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  {searchQuery || filterNoPhoto || selectedCategory !== "todas"
+                    ? "Prueba cambiando los filtros de búsqueda o categoría."
+                    : "No hay productos registrados en tu base de datos de Supabase."}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredProducts.map((p) => {
+                  const realPhotos = (p.fotos || []).filter((f) => !f.url.includes("placehold.co"));
+                  const mainPhoto = realPhotos.length > 0 ? realPhotos[0] : null;
+                  const hasRealPhoto = Boolean(mainPhoto);
+                  const hasVideo = Boolean(p.videoUrl);
+                  const variants = p.variantes || [];
+
+                  return (
+                    <div
+                      key={p.sku}
+                      className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Zona Superior: Visualización de Portada */}
+                        <div className="relative w-full h-48 bg-slate-100 border-b border-slate-100 flex items-center justify-center overflow-hidden group">
+                          {hasRealPhoto ? (
+                            <img
+                              src={mainPhoto!.url}
+                              alt={p.nombre}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="text-center p-4">
+                              <ImageIcon className="w-10 h-10 text-slate-300 mx-auto mb-1" />
+                              <span className="text-[11px] font-bold text-slate-400 block">
+                                Sin foto asignada
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Badges superiores: Categoría, Fotos y Video */}
+                          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap z-10 max-w-[65%]">
+                            {(p.categoria || "")
+                              .split(",")
+                              .map((c) => c.trim())
+                              .filter(Boolean)
+                              .map((cat) => (
+                                <span
+                                  key={cat}
+                                  className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs"
+                                >
+                                  {cat}
+                                </span>
+                              ))}
+                            <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
+                              <ImageIcon className="w-3 h-3 text-emerald-400" />
+                              <span>{realPhotos.length}/10 fotos</span>
                             </span>
-                          ))}
-                        <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
-                          <ImageIcon className="w-3 h-3 text-emerald-400" />
-                          <span>{realPhotos.length}/10 fotos</span>
-                        </span>
-                        {hasVideo && (
-                          <span className="px-2 py-0.5 rounded-lg bg-purple-600/90 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
-                            <Film className="w-3 h-3" />
-                            <span>Video</span>
-                          </span>
-                        )}
+                            {hasVideo && (
+                              <span className="px-2 py-0.5 rounded-lg bg-purple-600/90 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
+                                <Film className="w-3 h-3" />
+                                <span>Video</span>
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Botón rápido para Destacar en el Carrusel (hasta 15) */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleDestacado(p);
+                            }}
+                            title={p.destacado ? "Quitar del carrusel Recomendado para ti" : "Destacar en carrusel Recomendado para ti"}
+                            className={`absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 ${p.destacado
+                                ? "bg-amber-400 text-amber-950 hover:bg-amber-300 ring-2 ring-amber-400/50"
+                                : "bg-black/60 hover:bg-black/80 text-white/90 backdrop-blur-xs"
+                              }`}
+                          >
+                            <Star className={`w-3.5 h-3.5 ${p.destacado ? "fill-amber-950 text-amber-950" : "text-amber-400"}`} />
+                            <span>{p.destacado ? "Destacado" : "Destacar"}</span>
+                          </button>
+
+                          {/* Botón rápido para abrir gestor multimedia */}
+                          <div className="absolute bottom-3 inset-x-3 z-10">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingProduct(p);
+                                setEditActiveTab("photos");
+                              }}
+                              className="w-full py-2 px-3 bg-white/95 hover:bg-white text-slate-800 hover:text-brand font-bold text-xs rounded-xl shadow-md backdrop-blur-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200/80 active:scale-95"
+                            >
+                              <Upload className="w-3.5 h-3.5 text-brand" />
+                              <span>Gestionar Fotos y Video</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Zona Media: Datos del Producto y Variantes */}
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                              {p.sku}
+                            </span>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.activo
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : "bg-slate-100 text-slate-500"
+                                }`}
+                            >
+                              {p.activo ? "Activo" : "Inactivo"}
+                            </span>
+                          </div>
+
+                          <h4 className="text-xs sm:text-sm font-black text-slate-800 line-clamp-2 leading-snug">
+                            {p.nombre}
+                          </h4>
+
+                          {/* Bloque de Variantes de Color */}
+                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1.5">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="font-bold text-slate-600 flex items-center gap-1">
+                                <Palette className="w-3.5 h-3.5 text-brand" />
+                                <span>Variantes ({variants.length || 1})</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingProduct(p);
+                                  setEditActiveTab("variants");
+                                }}
+                                className="text-brand hover:underline font-bold text-[10px]"
+                              >
+                                Administrar
+                              </button>
+                            </div>
+
+                            {variants.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {variants.map((v) => (
+                                  <span
+                                    key={v.sku}
+                                    className="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700 shadow-2xs"
+                                  >
+                                    {v.color || "Estándar"} <span className="text-slate-400 font-normal">({v.stock} u.)</span>
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 block italic">
+                                1 variante estándar
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Costos y Precios */}
+                          <div className="grid grid-cols-3 gap-1.5 text-xs pt-1">
+                            <div className="bg-amber-50/80 p-2 rounded-xl border border-amber-200/70">
+                              <span className="text-[10px] text-amber-800 block font-bold">Costo Base</span>
+                              <span className="font-black text-amber-950 text-xs sm:text-sm">
+                                {p.costoMayorUsd ? formatUsd(p.costoMayorUsd) : "—"}
+                              </span>
+                              <span className="text-[9px] text-amber-700 block truncate" title={p.costoGranMayorUsd ? `Gran Mayor: ${formatUsd(p.costoGranMayorUsd)}` : "Costo de compra proveedor"}>
+                                {p.costoGranMayorUsd ? `GM: ${formatUsd(p.costoGranMayorUsd)}` : "Compra"}
+                              </span>
+                            </div>
+
+                            <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                              <span className="text-[10px] text-slate-500 block font-bold">Al Mayor</span>
+                              <span className="font-black text-slate-800 text-xs sm:text-sm">
+                                {p.precioMayorUsd ? formatUsd(p.precioMayorUsd) : "Sin precio"}
+                              </span>
+                              <span className="text-[9px] text-slate-500 block">min: {p.minMayor} u.</span>
+                            </div>
+
+                            <div className="bg-emerald-50/70 p-2 rounded-xl border border-emerald-200">
+                              <span className="text-[10px] text-emerald-800 block font-bold">Gran Mayor</span>
+                              <span className="font-black text-emerald-950 text-xs sm:text-sm">
+                                {p.precioGranMayorUsd ? formatUsd(p.precioGranMayorUsd) : "Sin precio"}
+                              </span>
+                              <span className="text-[9px] text-emerald-700 block">min: {p.minGranMayor || 5} u.</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Botón rápido para Destacar en el Carrusel (hasta 15) */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleDestacado(p);
-                        }}
-                        title={p.destacado ? "Quitar del carrusel Recomendado para ti" : "Destacar en carrusel Recomendado para ti"}
-                        className={`absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 ${
-                          p.destacado
-                            ? "bg-amber-400 text-amber-950 hover:bg-amber-300 ring-2 ring-amber-400/50"
-                            : "bg-black/60 hover:bg-black/80 text-white/90 backdrop-blur-xs"
-                        }`}
-                      >
-                        <Star className={`w-3.5 h-3.5 ${p.destacado ? "fill-amber-950 text-amber-950" : "text-amber-400"}`} />
-                        <span>{p.destacado ? "Destacado" : "Destacar"}</span>
-                      </button>
-
-                      {/* Botón rápido para abrir gestor multimedia */}
-                      <div className="absolute bottom-3 inset-x-3 z-10">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingProduct(p);
-                            setEditActiveTab("photos");
-                          }}
-                          className="w-full py-2 px-3 bg-white/95 hover:bg-white text-slate-800 hover:text-brand font-bold text-xs rounded-xl shadow-md backdrop-blur-xs flex items-center justify-center gap-1.5 transition-all border border-slate-200/80 active:scale-95"
-                        >
-                          <Upload className="w-3.5 h-3.5 text-brand" />
-                          <span>Gestionar Fotos y Video</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Zona Media: Datos del Producto y Variantes */}
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                          {p.sku}
+                      {/* Zona Inferior: Botones de Acción */}
+                      <div className="px-4 pb-4 pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+                        <span className="text-[11px] text-slate-500">
+                          Stock total: <strong className="text-slate-800">{p.stock}</strong> u.
                         </span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            p.activo
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          {p.activo ? "Activo" : "Inactivo"}
-                        </span>
-                      </div>
 
-                      <h4 className="text-xs sm:text-sm font-black text-slate-800 line-clamp-2 leading-snug">
-                        {p.nombre}
-                      </h4>
-
-                      {/* Bloque de Variantes de Color */}
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-bold text-slate-600 flex items-center gap-1">
-                            <Palette className="w-3.5 h-3.5 text-brand" />
-                            <span>Variantes ({variants.length || 1})</span>
-                          </span>
+                        <div className="flex items-center gap-1.5">
+                          <Link
+                            href={`/producto/${p.slug}`}
+                            target="_blank"
+                            title="Ver en la tienda"
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
                           <button
                             type="button"
                             onClick={() => {
                               setEditingProduct(p);
-                              setEditActiveTab("variants");
+                              setEditActiveTab("general");
                             }}
-                            className="text-brand hover:underline font-bold text-[10px]"
+                            className="py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors"
                           >
-                            Administrar
+                            <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Editar</span>
                           </button>
-                        </div>
-
-                        {variants.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {variants.map((v) => (
-                              <span
-                                key={v.sku}
-                                className="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700 shadow-2xs"
-                              >
-                                {v.color || "Estándar"} <span className="text-slate-400 font-normal">({v.stock} u.)</span>
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 block italic">
-                            1 variante estándar
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Costos y Precios */}
-                      <div className="grid grid-cols-3 gap-1.5 text-xs pt-1">
-                        <div className="bg-amber-50/80 p-2 rounded-xl border border-amber-200/70">
-                          <span className="text-[10px] text-amber-800 block font-bold">Costo Base</span>
-                          <span className="font-black text-amber-950 text-xs sm:text-sm">
-                            {p.costoMayorUsd ? formatUsd(p.costoMayorUsd) : "—"}
-                          </span>
-                          <span className="text-[9px] text-amber-700 block truncate" title={p.costoGranMayorUsd ? `Gran Mayor: ${formatUsd(p.costoGranMayorUsd)}` : "Costo de compra proveedor"}>
-                            {p.costoGranMayorUsd ? `GM: ${formatUsd(p.costoGranMayorUsd)}` : "Compra"}
-                          </span>
-                        </div>
-
-                        <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-                          <span className="text-[10px] text-slate-500 block font-bold">Al Mayor</span>
-                          <span className="font-black text-slate-800 text-xs sm:text-sm">
-                            {p.precioMayorUsd ? formatUsd(p.precioMayorUsd) : "Sin precio"}
-                          </span>
-                          <span className="text-[9px] text-slate-500 block">min: {p.minMayor} u.</span>
-                        </div>
-
-                        <div className="bg-emerald-50/70 p-2 rounded-xl border border-emerald-200">
-                          <span className="text-[10px] text-emerald-800 block font-bold">Gran Mayor</span>
-                          <span className="font-black text-emerald-950 text-xs sm:text-sm">
-                            {p.precioGranMayorUsd ? formatUsd(p.precioGranMayorUsd) : "Sin precio"}
-                          </span>
-                          <span className="text-[9px] text-emerald-700 block">min: {p.minGranMayor || 5} u.</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Zona Inferior: Botones de Acción */}
-                  <div className="px-4 pb-4 pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
-                    <span className="text-[11px] text-slate-500">
-                      Stock total: <strong className="text-slate-800">{p.stock}</strong> u.
-                    </span>
-
-                    <div className="flex items-center gap-1.5">
-                      <Link
-                        href={`/producto/${p.slug}`}
-                        target="_blank"
-                        title="Ver en la tienda"
-                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingProduct(p);
-                          setEditActiveTab("general");
-                        }}
-                        className="py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Editar</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteProduct(p)}
-                        title="Eliminar producto"
-                        className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-      )}
-
-      {/* ─────────────────────────────────────────────────────────
-          MODAL: GESTOR MULTIMEDIA (FOTOS Y VIDEO)
-          ───────────────────────────────────────────────────────── */}
-      {mediaProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
-            {/* Header Fijo */}
-            <div className="flex items-start justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
-              <div>
-                <span className="text-[11px] font-bold text-brand uppercase tracking-wider block">
-                  Galería Multimedia del Producto
-                </span>
-                <h3 className="text-lg font-black text-slate-900 leading-snug">
-                  {mediaProduct.nombre}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Hasta 10 fotos optimizadas y 1 video para el carrusel de la tienda.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setMediaProduct(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Contenido con scroll único */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-
-            {/* Estado de procesamiento en vivo */}
-            {isProcessingMedia && (
-              <div className="p-3.5 rounded-2xl bg-brand/10 border border-brand/20 flex items-center gap-3 text-brand">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand" />
-                <span className="text-xs font-bold">{mediaStatusText || "Procesando multimedia..."}</span>
-              </div>
-            )}
-
-            {/* SECCIÓN 1: FOTOS (Máx 10) */}
-            <div className="space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4 text-brand" />
-                    <span>Fotos ({mediaProduct.fotos?.filter(f => !f.url.includes("placehold.co")).length || 0} / 10)</span>
-                  </h4>
-
-                  {/* Switch vista cuadrícula vs carrusel */}
-                  {(mediaProduct.fotos?.filter(f => !f.url.includes("placehold.co")).length || 0) > 0 && (
-                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg ml-2">
-                      <button
-                        type="button"
-                        onClick={() => setMediaViewMode("grid")}
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                          mediaViewMode === "grid"
-                            ? "bg-white text-slate-900 shadow-2xs"
-                            : "text-slate-500 hover:text-slate-800"
-                        }`}
-                      >
-                        🗂️ Cuadrícula y Orden
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMediaViewMode("carousel");
-                          setMediaActiveCarouselIdx(0);
-                        }}
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                          mediaViewMode === "carousel"
-                            ? "bg-brand text-white shadow-2xs"
-                            : "text-slate-500 hover:text-slate-800"
-                        }`}
-                      >
-                        🖼️ Vista Carrusel
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Input de subida de fotos múltiple */}
-                <input
-                  ref={photoInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  disabled={isProcessingMedia}
-                  onChange={(e) => {
-                    if (e.target.files && mediaProduct.id) {
-                      handleUploadPhotos(mediaProduct.id, e.target.files);
-                      e.target.value = "";
-                    }
-                  }}
-                  className="hidden"
-                  id="media-photos-input"
-                />
-                <label
-                  htmlFor="media-photos-input"
-                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all self-start sm:self-auto"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Subir Fotos</span>
-                </label>
-              </div>
-
-              {/* VISTA CARRUSEL INTERACTIVO */}
-              {mediaViewMode === "carousel" && (
-                (() => {
-                  const realPhotos = (mediaProduct.fotos || []).filter((f) => !f.url.includes("placehold.co"));
-                  if (realPhotos.length === 0) return null;
-                  const currentPhoto = realPhotos[mediaActiveCarouselIdx] || realPhotos[0];
-                  return (
-                    <div className="space-y-3 p-4 rounded-2xl bg-slate-900 text-white">
-                      <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
-                        <span className="font-bold flex items-center gap-1.5 text-slate-300">
-                          <Eye className="w-3.5 h-3.5 text-brand" />
-                          Previsualización del Carrusel (así lo ven los clientes en la tienda)
-                        </span>
-                        <span className="font-mono text-xs text-slate-400">
-                          {mediaActiveCarouselIdx + 1} / {realPhotos.length}
-                        </span>
-                      </div>
-
-                      {/* Visor Principal con Flechas */}
-                      <div className="relative aspect-video max-h-72 rounded-xl overflow-hidden bg-black flex items-center justify-center">
-                        <img
-                          src={currentPhoto.url}
-                          alt={currentPhoto.alt}
-                          className="max-h-72 w-full object-contain"
-                        />
-
-                        {/* Botón Anterior */}
-                        <button
-                          type="button"
-                          onClick={() => setMediaActiveCarouselIdx((prev) => (prev > 0 ? prev - 1 : realPhotos.length - 1))}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors"
-                        >
-                          <ChevronLeft className="w-5 h-5" />
-                        </button>
-
-                        {/* Botón Siguiente */}
-                        <button
-                          type="button"
-                          onClick={() => setMediaActiveCarouselIdx((prev) => (prev < realPhotos.length - 1 ? prev + 1 : 0))}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors"
-                        >
-                          <ChevronRight className="w-5 h-5" />
-                        </button>
-
-                        {/* Badge de Portada en el carrusel */}
-                        <div className="absolute top-2 left-2 flex items-center gap-2">
-                          {currentPhoto.isPrimary ? (
-                            <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[11px] font-black flex items-center gap-1 shadow-md">
-                              <Star className="w-3.5 h-3.5 fill-white" /> Portada Principal de la Tienda
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, currentPhoto.publicId!)}
-                              className="px-2.5 py-1 rounded-md bg-black/80 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 transition-colors shadow-md"
-                            >
-                              <Star className="w-3 h-3" /> Hacer Portada Principal
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Tira de Miniaturas del Carrusel */}
-                      <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
-                        {realPhotos.map((f, i) => (
                           <button
-                            key={f.publicId || f.url}
                             type="button"
-                            onClick={() => setMediaActiveCarouselIdx(i)}
-                            className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                              i === mediaActiveCarouselIdx
-                                ? "border-brand ring-2 ring-brand/40 scale-105"
-                                : "border-slate-700 opacity-60 hover:opacity-100"
-                            }`}
+                            onClick={() => handleDeleteProduct(p)}
+                            title="Eliminar producto"
+                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors"
                           >
-                            <img src={f.url} alt="" className="w-full h-full object-cover" />
-                            {f.isPrimary && (
-                              <Star className="w-3 h-3 fill-amber-400 text-amber-400 absolute top-0.5 right-0.5" />
-                            )}
-                            <span className="absolute bottom-0.5 left-1 text-[8px] font-mono font-bold bg-black/70 px-1 rounded text-white">
-                              #{i + 1}
-                            </span>
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        ))}
+                        </div>
                       </div>
                     </div>
                   );
-                })()
-              )}
-
-              {/* Grid de Fotos Actuales (Vista Cuadrícula y Orden) */}
-              {mediaViewMode === "grid" && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                  {(mediaProduct.fotos || [])
-                    .filter((f) => !f.url.includes("placehold.co"))
-                    .map((foto, idx, arr) => (
-                      <div
-                        key={foto.publicId || foto.url}
-                        className={`bg-white rounded-2xl border p-2 shadow-2xs space-y-1.5 flex flex-col justify-between transition-all ${
-                          foto.isPrimary ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200"
-                        }`}
-                      >
-                        <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-50 border border-slate-100">
-                          <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
-
-                          {/* Badge de Portada Principal */}
-                          {foto.isPrimary ? (
-                            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center gap-0.5 shadow-sm">
-                              <Star className="w-2.5 h-2.5 fill-white" /> Portada
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, foto.publicId!)}
-                              title="Hacer foto principal de portada"
-                              className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 hover:bg-emerald-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              Hacer Portada
-                            </button>
-                          )}
-
-                          {/* Botón Eliminar Foto */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePhoto(mediaProduct.id!, foto.publicId!, foto.url)}
-                            title="Eliminar foto"
-                            className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-
-                          <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-white bg-black/50 px-1 rounded">
-                            #{idx + 1}
-                          </span>
-                        </div>
-
-                        {/* Botones de orden: Mover antes / después */}
-                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
-                          <button
-                            type="button"
-                            disabled={idx === 0 || isProcessingMedia}
-                            onClick={() => handleMoveExistingPhoto(mediaProduct.id!, idx, idx - 1)}
-                            title="Mover foto antes en el carrusel"
-                            className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
-                          >
-                            <ChevronLeft className="w-3 h-3" />
-                            <span>Antes</span>
-                          </button>
-                          <button
-                            type="button"
-                            disabled={idx === arr.length - 1 || isProcessingMedia}
-                            onClick={() => handleMoveExistingPhoto(mediaProduct.id!, idx, idx + 1)}
-                            title="Mover foto después en el carrusel"
-                            className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
-                          >
-                            <span>Después</span>
-                            <ChevronRight className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        {/* Selector de Variante / Color Asociado */}
-                        <div className="space-y-0.5 pt-1 border-t border-slate-100">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Variante:
-                          </span>
-                          <select
-                            value={foto.varianteColor || ""}
-                            disabled={isProcessingMedia}
-                            onChange={(e) => handleSetPhotoVariant(mediaProduct.id!, foto.publicId!, e.target.value)}
-                            className={`w-full text-[10px] font-bold py-1 px-1.5 rounded-lg border transition-colors ${
-                              foto.varianteColor
-                                ? "bg-brand/10 text-brand border-brand/30"
-                                : "bg-slate-50 text-slate-600 border-slate-200"
-                            }`}
-                          >
-                            <option value="">🌐 General (Todas)</option>
-                            {(mediaProduct.variantes || []).map((v) => (
-                              <option key={v.sku} value={v.color}>
-                                🎨 {v.color}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ))}
-
-                  {(mediaProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length === 0 && (
-                    <div className="col-span-2 sm:col-span-4 p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs">
-                      No hay fotos subidas todavía. Toca &ldquo;Subir Fotos&rdquo; para agregar fotos directamente desde tu galería.
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* SECCIÓN 2: VIDEO DEL PRODUCTO (Máx 1) */}
-            <div className="space-y-3 pt-3 border-t border-slate-100">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <Film className="w-4 h-4 text-purple-600" />
-                  <span>Video Demostrativo del Producto ({mediaProduct.videoUrl ? "1 / 1" : "0 / 1"})</span>
-                </h4>
-
-                <input
-                  ref={videoInputRef}
-                  type="file"
-                  accept="video/mp4,video/webm,video/quicktime"
-                  disabled={isProcessingMedia}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file && mediaProduct.id) {
-                      handleUploadVideo(mediaProduct.id, file);
-                    }
-                  }}
-                  className="hidden"
-                  id="media-video-input"
-                />
-                <label
-                  htmlFor="media-video-input"
-                  className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-600 text-white hover:bg-purple-700 shadow-xs active:scale-95 transition-all"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{mediaProduct.videoUrl ? "Cambiar Video" : "Subir Video (máx 30 MB)"}</span>
-                </label>
+                })}
               </div>
-
-              {mediaProduct.videoUrl ? (
-                <div className="relative rounded-2xl overflow-hidden bg-black border border-slate-800 max-h-56 flex items-center justify-center">
-                  <video
-                    src={mediaProduct.videoUrl}
-                    controls
-                    preload="metadata"
-                    className="max-h-56 w-full object-contain"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteVideo(mediaProduct.id!, mediaProduct.videoUrl!)}
-                    className="absolute top-2.5 right-2.5 py-1 px-2.5 rounded-lg bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md flex items-center gap-1"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>Eliminar Video</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 text-xs text-purple-800 flex items-center gap-3">
-                  <Play className="w-5 h-5 text-purple-500 flex-shrink-0" />
-                  <span>
-                    Agrega un video de 10 a 30 segundos mostrando el producto en uso o sus acabados para aumentar las ventas.
-                  </span>
-                </div>
-              )}
-            </div>
-
-            </div>
-
-            {/* Footer Fijo */}
-            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex justify-end flex-shrink-0 bg-slate-50/90">
-              <button
-                type="button"
-                onClick={() => setMediaProduct(null)}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
-              >
-                Listo / Cerrar
-              </button>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-         {/* ─────────────────────────────────────────────────────────
-          MODAL: NUEVO PRODUCTO (COMPLETO: DATOS, SKUs Y FOTOS CON VARIANTE)
+        {/* ─────────────────────────────────────────────────────────
+          MODAL: GESTOR MULTIMEDIA (FOTOS Y VIDEO)
           ───────────────────────────────────────────────────────── */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
-            {/* Header Fijo Siempre Visible Arriba */}
-            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
-                  <Plus className="w-5 h-5" />
-                </div>
+        {mediaProduct && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+              {/* Header Fijo */}
+              <div className="flex items-start justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
                 <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    Agregar Nuevo Producto
-                  </h3>
-                  <span className="text-[11px] text-slate-500">
-                    Información general, todos los SKUs y fotos del carrusel
+                  <span className="text-[11px] font-bold text-brand uppercase tracking-wider block">
+                    Galería Multimedia del Producto
                   </span>
+                  <h3 className="text-lg font-black text-slate-900 leading-snug">
+                    {mediaProduct.nombre}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Hasta 10 fotos optimizadas y 1 video para el carrusel de la tienda.
+                  </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setMediaProduct(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAddModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Barra de Pestañas (Tabs) Unificada */}
-            <div className="flex items-center border-b border-slate-200 bg-slate-50/80 px-4 sm:px-6 gap-2 flex-shrink-0 text-xs">
-              <button
-                type="button"
-                onClick={() => setCreateActiveTab("general")}
-                className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
-                  createActiveTab === "general"
-                    ? "border-brand text-brand font-black bg-white/70"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Package className="w-4 h-4" />
-                <span>1. Información General</span>
-              </button>
+              {/* Contenido con scroll único */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
 
-              <button
-                type="button"
-                onClick={() => setCreateActiveTab("variants")}
-                className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
-                  createActiveTab === "variants"
-                    ? "border-brand text-brand font-black bg-white/70"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Palette className="w-4 h-4" />
-                <span>2. Variantes & SKUs</span>
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
-                  {newProductVariants.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setCreateActiveTab("photos")}
-                className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
-                  createActiveTab === "photos"
-                    ? "border-brand text-brand font-black bg-white/70"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <ImageIcon className="w-4 h-4" />
-                <span>3. Galería de Fotos</span>
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
-                  {newProductPhotoItems.length}
-                </span>
-              </button>
-            </div>
-
-            {/* Contenedor con Scroll Único */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
-              {/* Desplegable para cargar desde la Matriz si hay productos pendientes */}
-              {products.some((p) => !p.activo) && (
-                <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                    <div>
-                      <span className="font-extrabold text-amber-950 block text-xs">
-                        ¿Cargar desde un producto de la Matriz?
-                      </span>
-                      <span className="text-[10px] text-amber-800">
-                        Selecciona un producto pendiente para autocompletar nombre, categoría y todos sus SKUs de color.
-                      </span>
-                    </div>
+                {/* Estado de procesamiento en vivo */}
+                {isProcessingMedia && (
+                  <div className="p-3.5 rounded-2xl bg-brand/10 border border-brand/20 flex items-center gap-3 text-brand">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand" />
+                    <span className="text-xs font-bold">{mediaStatusText || "Procesando multimedia..."}</span>
                   </div>
+                )}
 
-                  <select
-                    onChange={(e) => {
-                      const selected = products.find((p) => p.id === e.target.value);
-                      if (selected) {
-                        setNewProduct((prev) => ({
-                          ...prev,
-                          nombre: selected.nombre,
-                          categoria: selected.categoria,
-                          descripcion: selected.descripcionLarga || "",
-                          unidad_venta: selected.unidadVenta || "Unidad",
-                        }));
-                        if (selected.variantes && selected.variantes.length > 0) {
-                          setNewProductVariants(
-                            selected.variantes.map((v) => ({
-                              id: v.id || `var-${Math.random()}`,
-                              sku: v.sku,
-                              color: v.color || "Estándar",
-                              presentacion: v.presentacion || selected.unidadVenta || "Unidad",
-                              stock: String(v.stock || 100),
-                              precio_mayor_usd: String(v.precioMayorUsd || ""),
-                              min_mayor: String(v.minMayor || 50),
-                              precio_gran_mayor_usd: String(v.precioGranMayorUsd || ""),
-                              min_gran_mayor: String(v.minGranMayor || 200),
-                            }))
-                          );
-                        }
-                        setFeedbackMsg({
-                          text: `¡Datos de "${selected.nombre}" cargados desde la matriz!`,
-                          type: "success",
-                        });
-                      }
-                    }}
-                    defaultValue=""
-                    className="h-9 px-3 rounded-xl bg-white border border-amber-300 text-xs font-bold text-amber-950 focus:outline-none focus:ring-2 focus:ring-brand/20 shrink-0"
-                  >
-                    <option value="" disabled>
-                      Seleccionar de la Matriz ({products.filter((p) => !p.activo).length} pendientes) ▼
-                    </option>
-                    {products
-                      .filter((p) => !p.activo)
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.nombre} ({p.variantes?.length || 1} SKUs)
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-              {/* ─────────────────────────────────────────────────────────
-                  PESTAÑA 1: INFORMACIÓN GENERAL
-                  ───────────────────────────────────────────────────────── */}
-              {createActiveTab === "general" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">
-                      Nombre Completo del Producto *
-                    </label>
-                    <input
-                      type="text"
-                      value={newProduct.nombre}
-                      onChange={(e) => setNewProduct({ ...newProduct, nombre: e.target.value })}
-                      placeholder="Bolsa para Café 250Gr con Ziplock + Válvula"
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-sm"
-                      required
-                    />
-                  </div>
+                {/* SECCIÓN 1: FOTOS (Máx 10) */}
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <ImageIcon className="w-4 h-4 text-brand" />
+                        <span>Fotos ({mediaProduct.fotos?.filter(f => !f.url.includes("placehold.co")).length || 0} / 10)</span>
+                      </h4>
 
-                  {/* Selector múltiple de Categorías */}
-                  <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <label className="block font-bold text-slate-800 text-xs">
-                        Categorías del Producto * <span className="font-normal text-slate-500">(Puedes asignarle varias categorías)</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowCategoryManager(true)}
-                        className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                        <span>Gestionar / Eliminar Categorías</span>
-                      </button>
-                    </div>
-
-                    {/* Chips de categorías asignadas actualmente */}
-                    <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[42px] items-center">
-                      {newProductSelectedCategories.length > 0 ? (
-                        newProductSelectedCategories.map((cat) => (
-                          <span
-                            key={cat}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white font-bold text-xs shadow-2xs animate-fadeIn"
+                      {/* Switch vista cuadrícula vs carrusel */}
+                      {(mediaProduct.fotos?.filter(f => !f.url.includes("placehold.co")).length || 0) > 0 && (
+                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg ml-2">
+                          <button
+                            type="button"
+                            onClick={() => setMediaViewMode("grid")}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${mediaViewMode === "grid"
+                                ? "bg-white text-slate-900 shadow-2xs"
+                                : "text-slate-500 hover:text-slate-800"
+                              }`}
                           >
-                            <span>{cat}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveNewCategory(cat)}
-                              className="hover:bg-white/20 rounded p-0.5 transition-colors"
-                              title={`Quitar ${cat}`}
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs text-amber-600 font-semibold italic">
-                          ⚠️ Haz clic en una o más categorías abajo para asignarlas al producto
-                        </span>
+                            🗂️ Cuadrícula y Orden
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaViewMode("carousel");
+                              setMediaActiveCarouselIdx(0);
+                            }}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${mediaViewMode === "carousel"
+                                ? "bg-brand text-white shadow-2xs"
+                                : "text-slate-500 hover:text-slate-800"
+                              }`}
+                          >
+                            🖼️ Vista Carrusel
+                          </button>
+                        </div>
                       )}
                     </div>
 
-                    {/* Botones de selección rápida */}
-                    <div className="space-y-1">
-                      <span className="text-[11px] font-bold text-slate-500">
-                        Categorías disponibles (haz clic para activar o desactivar):
-                      </span>
-                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
-                        {availableCategories.map((cat) => {
-                          const isSelected = newProductSelectedCategories.includes(cat);
-                          return (
-                            <button
-                              key={cat}
-                              type="button"
-                              onClick={() => handleToggleNewCategory(cat)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                                isSelected
-                                  ? "bg-brand text-white shadow-2xs ring-2 ring-brand/40"
-                                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
-                              }`}
-                            >
-                              {isSelected ? (
-                                <Check className="w-3.5 h-3.5 text-white" />
-                              ) : (
-                                <Plus className="w-3.5 h-3.5 text-slate-400" />
-                              )}
-                              <span>{cat}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Crear nueva categoría en el momento */}
-                    <div className="flex items-center gap-2 pt-1">
-                      <input
-                        type="text"
-                        value={inlineNewCatInput}
-                        onChange={(e) => setInlineNewCatInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddInlineNewCategory(false);
-                          }
-                        }}
-                        placeholder="+ Escribir nueva categoría (ej. Vasos, Limpieza) y presionar Enter..."
-                        className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleAddInlineNewCategory(false)}
-                        className="h-9 px-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1 flex-shrink-0"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Crear y Asignar</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Descripción del Producto</label>
-                    <textarea
-                      rows={4}
-                      value={newProduct.descripcion}
-                      onChange={(e) => setNewProduct({ ...newProduct, descripcion: e.target.value })}
-                      placeholder="Especificaciones técnicas, materiales, usos recomendados..."
-                      className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
+                    {/* Input de subida de fotos múltiple */}
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      disabled={isProcessingMedia}
+                      onChange={(e) => {
+                        if (e.target.files && mediaProduct.id) {
+                          handleUploadPhotos(mediaProduct.id, e.target.files);
+                          e.target.value = "";
+                        }
+                      }}
+                      className="hidden"
+                      id="media-photos-input"
                     />
-                  </div>
-
-                  <div className="pt-4 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setCreateActiveTab("variants")}
-                      className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 transition-all shadow-xs"
+                    <label
+                      htmlFor="media-photos-input"
+                      className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all self-start sm:self-auto"
                     >
-                      <span>Continuar a Variantes & SKUs</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ─────────────────────────────────────────────────────────
-                  PESTAÑA 2: CARGA Y GESTIÓN DE TODOS LOS SKUS / VARIANTES
-                  ───────────────────────────────────────────────────────── */}
-              {createActiveTab === "variants" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Carga y Configuración de SKUs ({newProductVariants.length})
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        Puedes cargar todos los SKU que tenga este producto (colores, modelos o presentaciones).
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleAddNewProductVariant}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all self-start sm:self-auto"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>+ Agregar Otro SKU</span>
-                    </button>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Subir Fotos</span>
+                    </label>
                   </div>
 
-                  {/* Calculadora de Precios Integrada */}
-                  <div className="rounded-2xl border-2 border-emerald-500/20 bg-emerald-50/40 p-4 space-y-3.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                          <Calculator className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
-                            Calculadora de Precios: Costo ÷ Factor (ej. $10 ÷ 0.70 = $14.29)
-                          </h4>
-                          <p className="text-[11px] text-emerald-800">
-                            Fija los precios de tus SKUs con IVA Compra (16%) y/o IVA Venta (16%)
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddCalc(!showAddCalc)}
-                        className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
-                      >
-                        {showAddCalc ? "Ocultar" : "Mostrar"}
-                      </button>
-                    </div>
-
-                    {showAddCalc && (
-                      <div className="space-y-3.5 pt-1 text-xs">
-                        {/* Opciones globales de IVA */}
-                        <div className="flex flex-wrap items-center gap-3 bg-white p-2.5 rounded-xl border border-emerald-200">
-                          <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 text-[11px]">
-                            <input
-                              type="checkbox"
-                              checked={addApplyIvaCompra}
-                              onChange={(e) => setAddApplyIvaCompra(e.target.checked)}
-                              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                            />
-                            <span>¿Los costos de compra ya incluyen IVA? (Descontar Crédito Fiscal)</span>
-                          </label>
-
-                          <label className="flex items-center gap-2 cursor-pointer font-bold text-emerald-950 text-[11px] ml-auto">
-                            <input
-                              type="checkbox"
-                              checked={addApplyIvaVenta}
-                              onChange={(e) => setAddApplyIvaVenta(e.target.checked)}
-                              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                            />
-                            <span>+ IVA 16% a la Venta (Cobro al cliente en tienda)</span>
-                          </label>
-                        </div>
-
-                        {/* Dos Columnas Simétricas: Mayor y Gran Mayor */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                          {/* Columna Nivel 1: Venta al Mayor */}
-                          <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 space-y-3 shadow-2xs">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                              <span className="font-black text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                                <span className="w-2 h-2 rounded-full bg-slate-900" />
-                                Nivel 1: Venta al Mayor
-                              </span>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                                Regular
-                              </span>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div>
-                                <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                  Costo de Compra Mayor ($ USD) *
-                                </label>
-                                <div className="relative">
-                                  <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={addCostBase}
-                                    onChange={(e) => setAddCostBase(e.target.value)}
-                                    placeholder="ej. 10.00"
-                                    className="w-full h-8 pl-7 pr-3 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                    Cant. Mínima Mayor *
-                                  </label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={addMinMayor}
-                                    onChange={(e) => setAddMinMayor(e.target.value)}
-                                    placeholder="1"
-                                    className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
-                                  />
-                                </div>
-
-                                <div>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <label className="font-bold text-slate-700 text-[11px]">
-                                      Factor Divisor Mayor
-                                    </label>
-                                    <span className="text-[10px] font-black text-emerald-700">
-                                      ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase).factorMayorStr}
-                                    </span>
-                                  </div>
-                                  <input
-                                    type="text"
-                                    value={addMarginMayor}
-                                    onChange={(e) => setAddMarginMayor(e.target.value)}
-                                    placeholder="0.70"
-                                    className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Desglose Fiscal Mayor */}
-                            {parseFloat(addCostBase) > 0 && (() => {
-                              const p = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase);
-                              return (
-                                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] space-y-1">
-                                  <div className="grid grid-cols-2 gap-1 text-slate-600">
-                                    <span>Base Real: <strong>${p.costBaseMayor.toFixed(2)}</strong></span>
-                                    <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalMayor.toFixed(2)}</strong></span>
-                                    <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaMayor.toFixed(2)}</strong></span>
-                                    <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatMayor.toFixed(2)}</strong></span>
-                                  </div>
-                                  <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[11px] font-bold">
-                                    <span className="text-slate-600">Ganancia Neta: <strong className="text-emerald-700">${p.profitMayor.toFixed(2)}</strong></span>
-                                    <span className="text-slate-900">Precio Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pMayor.toFixed(2)}</strong></span>
-                                  </div>
-                                </div>
-                              );
-                            })()}
+                  {/* VISTA CARRUSEL INTERACTIVO */}
+                  {mediaViewMode === "carousel" && (
+                    (() => {
+                      const realPhotos = (mediaProduct.fotos || []).filter((f) => !f.url.includes("placehold.co"));
+                      if (realPhotos.length === 0) return null;
+                      const currentPhoto = realPhotos[mediaActiveCarouselIdx] || realPhotos[0];
+                      return (
+                        <div className="space-y-3 p-4 rounded-2xl bg-slate-900 text-white">
+                          <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
+                            <span className="font-bold flex items-center gap-1.5 text-slate-300">
+                              <Eye className="w-3.5 h-3.5 text-brand" />
+                              Previsualización del Carrusel (así lo ven los clientes en la tienda)
+                            </span>
+                            <span className="font-mono text-xs text-slate-400">
+                              {mediaActiveCarouselIdx + 1} / {realPhotos.length}
+                            </span>
                           </div>
 
-                          {/* Columna Nivel 2: Gran Mayor (Volumen) */}
-                          <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-300 space-y-3 shadow-2xs">
-                            <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
-                              <span className="font-black text-emerald-950 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                                <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                                Nivel 2: Gran Mayor (Volumen)
-                              </span>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
-                                Descuento Proveedor
-                              </span>
-                            </div>
+                          {/* Visor Principal con Flechas */}
+                          <div className="relative aspect-video max-h-72 rounded-xl overflow-hidden bg-black flex items-center justify-center">
+                            <img
+                              src={currentPhoto.url}
+                              alt={currentPhoto.alt}
+                              className="max-h-72 w-full object-contain"
+                            />
 
-                            <div className="space-y-2">
-                              <div>
-                                <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                  Costo Compra Gran Mayor ($ USD)
-                                </label>
-                                <div className="relative">
-                                  <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={addCostGranBase}
-                                    onChange={(e) => setAddCostGranBase(e.target.value)}
-                                    placeholder={addCostBase ? `Mismo costo ($${addCostBase})` : "ej. 8.50"}
-                                    className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                  />
-                                </div>
-                                <span className="text-[9px] text-emerald-700 font-medium block mt-0.5 pl-0.5">
-                                  {addCostGranBase ? `✓ Costo especial proveedor: $${addCostGranBase} por paquete` : `(Si está vacío, usa el costo de Mayor: $${addCostBase || "0.00"})`}
+                            {/* Botón Anterior */}
+                            <button
+                              type="button"
+                              onClick={() => setMediaActiveCarouselIdx((prev) => (prev > 0 ? prev - 1 : realPhotos.length - 1))}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors"
+                            >
+                              <ChevronLeft className="w-5 h-5" />
+                            </button>
+
+                            {/* Botón Siguiente */}
+                            <button
+                              type="button"
+                              onClick={() => setMediaActiveCarouselIdx((prev) => (prev < realPhotos.length - 1 ? prev + 1 : 0))}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors"
+                            >
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
+
+                            {/* Badge de Portada en el carrusel */}
+                            <div className="absolute top-2 left-2 flex items-center gap-2">
+                              {currentPhoto.isPrimary ? (
+                                <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[11px] font-black flex items-center gap-1 shadow-md">
+                                  <Star className="w-3.5 h-3.5 fill-white" /> Portada Principal de la Tienda
                                 </span>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                    Cant. Mínima Gran Mayor *
-                                  </label>
-                                  <input
-                                    type="number"
-                                    min="2"
-                                    value={addMinGranMayor}
-                                    onChange={(e) => setAddMinGranMayor(e.target.value)}
-                                    placeholder="5"
-                                    className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                  />
-                                </div>
-
-                                <div>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <label className="font-bold text-emerald-950 text-[11px]">
-                                      Factor Divisor Gran Mayor
-                                    </label>
-                                    <span className="text-[10px] font-black text-emerald-800">
-                                      ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase).factorGranStr}
-                                    </span>
-                                  </div>
-                                  <input
-                                    type="text"
-                                    value={addMarginGranMayor}
-                                    onChange={(e) => setAddMarginGranMayor(e.target.value)}
-                                    placeholder="0.80"
-                                    className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                  />
-                                </div>
-                              </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, currentPhoto.publicId!)}
+                                  className="px-2.5 py-1 rounded-md bg-black/80 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 transition-colors shadow-md"
+                                >
+                                  <Star className="w-3 h-3" /> Hacer Portada Principal
+                                </button>
+                              )}
                             </div>
+                          </div>
 
-                            {/* Desglose Fiscal Gran Mayor */}
-                            {parseFloat(addCostBase) > 0 && (() => {
-                              const p = computePricing(
-                                addCostBase,
-                                addApplyIvaCompra,
-                                addApplyIvaVenta,
-                                addMarginMayor,
-                                addMarginGranMayor,
-                                addMinMayor,
-                                addMinGranMayor,
-                                addCostGranBase
-                              );
-                              return (
-                                <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-300 text-[10px] space-y-1">
-                                  <div className="grid grid-cols-2 gap-1 text-slate-600">
-                                    <span>Base Real: <strong>${p.costBaseGran.toFixed(2)}</strong></span>
-                                    <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalGran.toFixed(2)}</strong></span>
-                                    <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaGran.toFixed(2)}</strong></span>
-                                    <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatGran.toFixed(2)}</strong></span>
-                                  </div>
-                                  <div className="flex items-center justify-between pt-1 border-t border-emerald-100 text-[11px] font-bold">
-                                    <span className="text-slate-700">Ganancia Neta: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
-                                    <span className="text-emerald-950">Precio Gran Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
-                                  </div>
-                                  {p.savingsGranMayor > 0 && (
-                                    <div className="text-center pt-0.5 text-[10px] font-black text-amber-700 bg-amber-50 rounded-md py-0.5">
-                                      ★ Ahorro para el cliente al comprar {p.minGM} u.: ${p.savingsGranMayor.toFixed(2)}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })()}
+                          {/* Tira de Miniaturas del Carrusel */}
+                          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+                            {realPhotos.map((f, i) => (
+                              <button
+                                key={f.publicId || f.url}
+                                type="button"
+                                onClick={() => setMediaActiveCarouselIdx(i)}
+                                className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === mediaActiveCarouselIdx
+                                    ? "border-brand ring-2 ring-brand/40 scale-105"
+                                    : "border-slate-700 opacity-60 hover:opacity-100"
+                                  }`}
+                              >
+                                <img src={f.url} alt="" className="w-full h-full object-cover" />
+                                {f.isPrimary && (
+                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400 absolute top-0.5 right-0.5" />
+                                )}
+                                <span className="absolute bottom-0.5 left-1 text-[8px] font-mono font-bold bg-black/70 px-1 rounded text-white">
+                                  #{i + 1}
+                                </span>
+                              </button>
+                            ))}
                           </div>
                         </div>
+                      );
+                    })()
+                  )}
 
-                        {/* Botón Aplicar Precios */}
-                        {parseFloat(addCostBase) > 0 && (
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-emerald-200">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-[11px] text-slate-600">Aplicar a:</span>
-                              <select
-                                value={activeNewVariantIdx}
-                                onChange={(e) => {
-                                  const idx = Number(e.target.value);
-                                  setActiveNewVariantIdx(idx);
-                                  const v = newProductVariants[idx];
-                                  if (v) {
-                                    if (v.min_mayor) setAddMinMayor(v.min_mayor);
-                                    if (v.min_gran_mayor) setAddMinGranMayor(v.min_gran_mayor);
-                                  }
-                                }}
-                                className="h-8 px-2 rounded-lg border border-slate-300 font-bold text-xs bg-white"
+                  {/* Grid de Fotos Actuales (Vista Cuadrícula y Orden) */}
+                  {mediaViewMode === "grid" && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                      {(mediaProduct.fotos || [])
+                        .filter((f) => !f.url.includes("placehold.co"))
+                        .map((foto, idx, arr) => (
+                          <div
+                            key={foto.publicId || foto.url}
+                            className={`bg-white rounded-2xl border p-2 shadow-2xs space-y-1.5 flex flex-col justify-between transition-all ${foto.isPrimary ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200"
+                              }`}
+                          >
+                            <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-50 border border-slate-100">
+                              <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
+
+                              {/* Badge de Portada Principal */}
+                              {foto.isPrimary ? (
+                                <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center gap-0.5 shadow-sm">
+                                  <Star className="w-2.5 h-2.5 fill-white" /> Portada
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetPrimaryPhoto(mediaProduct.id!, foto.publicId!)}
+                                  title="Hacer foto principal de portada"
+                                  className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 hover:bg-emerald-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  Hacer Portada
+                                </button>
+                              )}
+
+                              {/* Botón Eliminar Foto */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeletePhoto(mediaProduct.id!, foto.publicId!, foto.url)}
+                                title="Eliminar foto"
+                                className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
                               >
-                                {newProductVariants.map((v, i) => (
-                                  <option key={v.id} value={i}>
-                                    SKU #{i + 1}: {v.color || "Estándar"}
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+
+                              <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-white bg-black/50 px-1 rounded">
+                                #{idx + 1}
+                              </span>
+                            </div>
+
+                            {/* Botones de orden: Mover antes / después */}
+                            <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
+                              <button
+                                type="button"
+                                disabled={idx === 0 || isProcessingMedia}
+                                onClick={() => handleMoveExistingPhoto(mediaProduct.id!, idx, idx - 1)}
+                                title="Mover foto antes en el carrusel"
+                                className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                              >
+                                <ChevronLeft className="w-3 h-3" />
+                                <span>Antes</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === arr.length - 1 || isProcessingMedia}
+                                onClick={() => handleMoveExistingPhoto(mediaProduct.id!, idx, idx + 1)}
+                                title="Mover foto después en el carrusel"
+                                className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                              >
+                                <span>Después</span>
+                                <ChevronRight className="w-3 h-3" />
+                              </button>
+                            </div>
+
+                            {/* Selector de Variante / Color Asociado */}
+                            <div className="space-y-0.5 pt-1 border-t border-slate-100">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                                Variante:
+                              </span>
+                              <select
+                                value={foto.varianteColor || ""}
+                                disabled={isProcessingMedia}
+                                onChange={(e) => handleSetPhotoVariant(mediaProduct.id!, foto.publicId!, e.target.value)}
+                                className={`w-full text-[10px] font-bold py-1 px-1.5 rounded-lg border transition-colors ${foto.varianteColor
+                                    ? "bg-brand/10 text-brand border-brand/30"
+                                    : "bg-slate-50 text-slate-600 border-slate-200"
+                                  }`}
+                              >
+                                <option value="">🌐 General (Todas)</option>
+                                {(mediaProduct.variantes || []).map((v) => (
+                                  <option key={v.sku} value={v.color}>
+                                    🎨 {v.color}
                                   </option>
                                 ))}
                               </select>
                             </div>
-
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const targetVar = newProductVariants[activeNewVariantIdx] || newProductVariants[0];
-                                  const computed = computePricing(
-                                    addCostBase,
-                                    addApplyIvaCompra,
-                                    addApplyIvaVenta,
-                                    addMarginMayor,
-                                    addMarginGranMayor,
-                                    addMinMayor || "1",
-                                    addMinGranMayor || "5",
-                                    addCostGranBase
-                                  );
-                                  handleUpdateNewProductVariant(targetVar.id, "precio_mayor_usd", computed.pMayor.toFixed(2));
-                                  handleUpdateNewProductVariant(targetVar.id, "min_mayor", addMinMayor || "1");
-                                  handleUpdateNewProductVariant(targetVar.id, "precio_gran_mayor_usd", computed.pGran.toFixed(2));
-                                  handleUpdateNewProductVariant(targetVar.id, "min_gran_mayor", addMinGranMayor || "5");
-                                  showToast(`¡Precios y Cantidades aplicados a SKU #${activeNewVariantIdx + 1}!`);
-                                }}
-                                className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
-                              >
-                                <Sparkles className="w-3.5 h-3.5" />
-                                <span>Aplicar a este SKU</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setNewProductVariants((prev) =>
-                                    prev.map((v) => {
-                                      const computed = computePricing(
-                                        addCostBase,
-                                        addApplyIvaCompra,
-                                        addApplyIvaVenta,
-                                        addMarginMayor,
-                                        addMarginGranMayor,
-                                        addMinMayor || "1",
-                                        addMinGranMayor || "5",
-                                        addCostGranBase
-                                      );
-                                      return {
-                                        ...v,
-                                        precio_mayor_usd: computed.pMayor.toFixed(2),
-                                        min_mayor: addMinMayor || "1",
-                                        precio_gran_mayor_usd: computed.pGran.toFixed(2),
-                                        min_gran_mayor: addMinGranMayor || "5",
-                                      };
-                                    })
-                                  );
-                                  showToast("¡Precios y Cantidades Mínimas aplicados a TODOS los SKUs!");
-                                }}
-                                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs"
-                              >
-                                Aplicar a Todos
-                              </button>
-                            </div>
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                        ))}
 
-                  {/* Listado de Tarjetas de SKUs */}
-                  <div className="space-y-3">
-                    {newProductVariants.map((v, idx) => {
-                      const resPricing = computePricing(
-                        addCostBase || "10",
-                        addApplyIvaCompra,
-                        addApplyIvaVenta,
-                        addMarginMayor,
-                        addMarginGranMayor,
-                        v.min_mayor,
-                        v.min_gran_mayor,
-                        addCostGranBase
-                      );
-
-                      return (
-                        <div
-                          key={v.id}
-                          className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 shadow-2xs hover:border-slate-300 transition-colors"
-                        >
-                          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-lg bg-slate-900 text-white font-black text-[11px] flex items-center justify-center">
-                                #{idx + 1}
-                              </span>
-                              <span className="font-black text-slate-800 text-sm">
-                                {v.color || "Variante Estándar"}
-                              </span>
-                              {v.sku && (
-                                <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                                  {v.sku}
-                                </span>
-                              )}
-                            </div>
-
-                            {newProductVariants.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveNewProductVariant(v.id)}
-                                className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                title="Eliminar este SKU"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Fila 1: Código, Color, Presentación, Stock */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                                Código SKU *
-                              </label>
-                              <input
-                                type="text"
-                                value={v.sku}
-                                onChange={(e) => handleUpdateNewProductVariant(v.id, "sku", e.target.value)}
-                                placeholder="ej. BOL-CAF-ROJ"
-                                className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-mono text-xs font-bold"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                                Color / Variante *
-                              </label>
-                              <input
-                                type="text"
-                                value={v.color}
-                                onChange={(e) => handleUpdateNewProductVariant(v.id, "color", e.target.value)}
-                                placeholder="ej. Rojo, Negro, Dorado"
-                                className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs font-bold"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                                Presentación
-                              </label>
-                              <input
-                                type="text"
-                                value={v.presentacion}
-                                onChange={(e) => handleUpdateNewProductVariant(v.id, "presentacion", e.target.value)}
-                                placeholder="ej. 50 Und"
-                                className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                                Stock Inicial
-                              </label>
-                              <input
-                                type="number"
-                                value={v.stock}
-                                onChange={(e) => handleUpdateNewProductVariant(v.id, "stock", e.target.value)}
-                                placeholder="100"
-                                className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Fila 2: Precios Nivel 1 (Mayor) y Nivel 2 (Gran Mayor) */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                              <span className="text-[10px] font-black uppercase text-slate-700 block">
-                                Nivel 1: Venta al Mayor
-                              </span>
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="block text-[10px] text-slate-500 mb-0.5">Min. Cantidad</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={v.min_mayor}
-                                    onChange={(e) => handleUpdateNewProductVariant(v.id, "min_mayor", e.target.value)}
-                                    className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-bold text-xs"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] text-slate-500 mb-0.5">Precio ($ USD) *</label>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={v.precio_mayor_usd}
-                                    onChange={(e) => handleUpdateNewProductVariant(v.id, "precio_mayor_usd", e.target.value)}
-                                    placeholder="22.75"
-                                    className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-black text-xs text-slate-900"
-                                    required
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase text-emerald-950">
-                                  Nivel 2: Gran Mayor (Volumen)
-                                </span>
-                                {v.precio_mayor_usd && v.precio_gran_mayor_usd && (
-                                  <span className="text-[9px] font-black text-emerald-700 bg-emerald-100/90 px-1.5 py-0.2 rounded">
-                                    Ahorro por volumen
-                                  </span>
-                                )}
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="block text-[10px] text-emerald-800 mb-0.5">Min. Cantidad</label>
-                                  <input
-                                    type="number"
-                                    min="2"
-                                    value={v.min_gran_mayor}
-                                    onChange={(e) => handleUpdateNewProductVariant(v.id, "min_gran_mayor", e.target.value)}
-                                    className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] text-emerald-800 mb-0.5">Precio ($ USD) *</label>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={v.precio_gran_mayor_usd}
-                                    onChange={(e) => handleUpdateNewProductVariant(v.id, "precio_gran_mayor_usd", e.target.value)}
-                                    placeholder="19.50"
-                                    className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-900"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                      {(mediaProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length === 0 && (
+                        <div className="col-span-2 sm:col-span-4 p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs">
+                          No hay fotos subidas todavía. Toca &ldquo;Subir Fotos&rdquo; para agregar fotos directamente desde tu galería.
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="pt-2 flex justify-between items-center">
-                    <button
-                      type="button"
-                      onClick={handleAddNewProductVariant}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold border border-brand/30 text-brand hover:bg-brand/10 transition-colors flex items-center gap-1.5"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Agregar Otro SKU / Color</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setCreateActiveTab("photos")}
-                      className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 transition-all shadow-xs"
-                    >
-                      <span>Continuar a Fotos del Carrusel</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ─────────────────────────────────────────────────────────
-                  PESTAÑA 3: FOTOS DEL PRODUCTO Y VINCULACIÓN CON VARIANTES
-                  ───────────────────────────────────────────────────────── */}
-              {createActiveTab === "photos" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Fotos del Producto ({newProductPhotoItems.length} / 10)
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        Sube las fotos, selecciona la portada principal y vincula cada foto a su color/variante.
-                      </p>
-                    </div>
-
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all">
-                      <Plus className="w-4 h-4" />
-                      <span>Seleccionar Fotos</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleSelectNewPhotos}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  {newProductPhotoItems.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                      {newProductPhotoItems.map((item, idx) => (
-                        <div
-                          key={item.id}
-                          className={`relative rounded-2xl border p-2 bg-white transition-all shadow-2xs flex flex-col justify-between space-y-2 ${
-                            item.isPrimary
-                              ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-md"
-                              : "border-slate-200"
-                          }`}
-                        >
-                          <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-100 border border-slate-100">
-                            <img
-                              src={item.previewUrl}
-                              alt={`Foto ${idx + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-
-                            {item.isPrimary ? (
-                              <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black flex items-center gap-1 shadow-sm">
-                                <Star className="w-3 h-3 fill-white" /> Portada
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleSetPrimaryNewPhoto(item.id)}
-                                className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 hover:bg-emerald-600 text-white text-[10px] font-bold opacity-90 group-hover:opacity-100 transition-opacity"
-                              >
-                                Hacer Portada
-                              </button>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveNewPhoto(item.id)}
-                              className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-xs"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-
-                            <span className="absolute bottom-1.5 right-1.5 text-[9px] font-black text-white bg-black/60 px-1.5 py-0.5 rounded">
-                              #{idx + 1}
-                            </span>
-                          </div>
-
-                          {/* Botones de orden */}
-                          <div className="flex items-center justify-between gap-1">
-                            <button
-                              type="button"
-                              disabled={idx === 0}
-                              onClick={() => handleMoveNewPhoto(idx, -1)}
-                              className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
-                            >
-                              <ChevronLeft className="w-3 h-3" />
-                              <span>Antes</span>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={idx === newProductPhotoItems.length - 1}
-                              onClick={() => handleMoveNewPhoto(idx, 1)}
-                              className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
-                            >
-                              <span>Después</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </button>
-                          </div>
-
-                          {/* Vinculación con Variante / Color */}
-                          <div className="pt-1.5 border-t border-slate-100 space-y-1">
-                            <label className="text-[10px] font-bold text-slate-600 flex items-center gap-1">
-                              <Palette className="w-3 h-3 text-brand" />
-                              <span>Vincular a Color / SKU:</span>
-                            </label>
-                            <select
-                              value={item.varianteColor || ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setNewProductPhotoItems((prev) =>
-                                  prev.map((p) => (p.id === item.id ? { ...p, varianteColor: val } : p))
-                                );
-                              }}
-                              className={`w-full text-xs font-bold py-1.5 px-2 rounded-xl border transition-colors ${
-                                item.varianteColor
-                                  ? "bg-brand/10 text-brand border-brand/30 ring-1 ring-brand/20"
-                                  : "bg-slate-50 text-slate-600 border-slate-200"
-                              }`}
-                            >
-                              <option value="">🌐 General (Todas las variantes)</option>
-                              {newProductVariants.map((v, i) => (
-                                <option key={v.id} value={v.color}>
-                                  🎨 {v.color || `Variante ${i + 1}`} {v.sku ? `(SKU: ${v.sku})` : ""}
-                                </option>
-                              ))}
-                            </select>
-                            {item.varianteColor && (
-                              <span className="text-[9px] font-black text-brand block">
-                                ✓ Asociada a {item.varianteColor}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-8 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2 bg-slate-50/50">
-                      <ImageIcon className="w-8 h-8 text-slate-300" />
-                      <span className="font-medium">No has seleccionado fotos todavía.</span>
-                      <label className="cursor-pointer px-4 py-2 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-xs mt-1">
-                        <span>Seleccionar Fotos</span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleSelectNewPhotos}
-                          className="hidden"
-                        />
-                      </label>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Footer Fijo Siempre Visible Abajo */}
-            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/90 text-xs">
-              <span className="text-slate-500 font-bold">
-                {newProductVariants.length} SKU(s) · {newProductPhotoItems.length} foto(s)
-              </span>
+                {/* SECCIÓN 2: VIDEO DEL PRODUCTO (Máx 1) */}
+                <div className="space-y-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <Film className="w-4 h-4 text-purple-600" />
+                      <span>Video Demostrativo del Producto ({mediaProduct.videoUrl ? "1 / 1" : "0 / 1"})</span>
+                    </h4>
 
-              <div className="flex items-center gap-2">
+                    <input
+                      ref={videoInputRef}
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                      disabled={isProcessingMedia}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && mediaProduct.id) {
+                          handleUploadVideo(mediaProduct.id, file);
+                        }
+                      }}
+                      className="hidden"
+                      id="media-video-input"
+                    />
+                    <label
+                      htmlFor="media-video-input"
+                      className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-600 text-white hover:bg-purple-700 shadow-xs active:scale-95 transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{mediaProduct.videoUrl ? "Cambiar Video" : "Subir Video (máx 30 MB)"}</span>
+                    </label>
+                  </div>
+
+                  {mediaProduct.videoUrl ? (
+                    <div className="relative rounded-2xl overflow-hidden bg-black border border-slate-800 max-h-56 flex items-center justify-center">
+                      <video
+                        src={mediaProduct.videoUrl}
+                        controls
+                        preload="metadata"
+                        className="max-h-56 w-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteVideo(mediaProduct.id!, mediaProduct.videoUrl!)}
+                        className="absolute top-2.5 right-2.5 py-1 px-2.5 rounded-lg bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Eliminar Video</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 text-xs text-purple-800 flex items-center gap-3">
+                      <Play className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                      <span>
+                        Agrega un video de 10 a 30 segundos mostrando el producto en uso o sus acabados para aumentar las ventas.
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Footer Fijo */}
+              <div className="p-3.5 sm:px-6 border-t border-slate-100 flex justify-end flex-shrink-0 bg-slate-50/90">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200/70 transition-colors"
+                  onClick={() => setMediaProduct(null)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateProduct}
-                  disabled={creatingProduct}
-                  className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50 transition-all active:scale-95 flex items-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>{creatingProduct ? "Creando Producto..." : "Crear Producto Completo"}</span>
+                  Listo / Cerrar
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ─────────────────────────────────────────────────────────
-          MODAL: EDITAR INFORMACIÓN COMPLETA DEL PRODUCTO
+        {/* ─────────────────────────────────────────────────────────
+          MODAL: NUEVO PRODUCTO (COMPLETO: DATOS, SKUs Y FOTOS CON VARIANTE)
           ───────────────────────────────────────────────────────── */}
-      {editingProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
-            {/* Header Fijo */}
-            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
-                  <Edit3 className="w-5 h-5" />
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+              {/* Header Fijo Siempre Visible Arriba */}
+              <div className="flex items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                      Agregar Nuevo Producto
+                    </h3>
+                    <span className="text-[11px] text-slate-500">
+                      Información general, todos los SKUs y fotos del carrusel
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    Editar Información del Producto
-                  </h3>
-                  <span className="text-[11px] text-slate-500 truncate max-w-md block">
-                    {editingProduct.nombre} · SKU: {editingProduct.sku}
-                  </span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setEditingProduct(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Barra de Pestañas (Tabs) Unificada */}
-            <div className="flex items-center border-b border-slate-200 bg-slate-50/80 px-4 sm:px-6 gap-2 flex-shrink-0 text-xs">
-              <button
-                type="button"
-                onClick={() => setEditActiveTab("general")}
-                className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
-                  editActiveTab === "general"
-                    ? "border-brand text-brand font-black bg-white/70"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Package className="w-4 h-4" />
-                <span>1. Información General</span>
-              </button>
+              {/* Barra de Pestañas (Tabs) Unificada */}
+              <div className="flex items-center border-b border-slate-200 bg-slate-50/80 px-4 sm:px-6 gap-2 flex-shrink-0 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setCreateActiveTab("general")}
+                  className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${createActiveTab === "general"
+                      ? "border-brand text-brand font-black bg-white/70"
+                      : "border-transparent text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>1. Información General</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setEditActiveTab("variants")}
-                className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
-                  editActiveTab === "variants"
-                    ? "border-brand text-brand font-black bg-white/70"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Palette className="w-4 h-4" />
-                <span>2. Variantes & SKUs</span>
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
-                  {(editingProduct.variantes || []).length}
-                </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setCreateActiveTab("variants")}
+                  className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${createActiveTab === "variants"
+                      ? "border-brand text-brand font-black bg-white/70"
+                      : "border-transparent text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>2. Variantes & SKUs</span>
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
+                    {newProductVariants.length}
+                  </span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setEditActiveTab("photos")}
-                className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
-                  editActiveTab === "photos"
-                    ? "border-brand text-brand font-black bg-white/70"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <ImageIcon className="w-4 h-4" />
-                <span>3. Galería de Fotos</span>
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
-                  {(editingProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length}
-                </span>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setCreateActiveTab("photos")}
+                  className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${createActiveTab === "photos"
+                      ? "border-brand text-brand font-black bg-white/70"
+                      : "border-transparent text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>3. Galería de Fotos</span>
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
+                    {newProductPhotoItems.length}
+                  </span>
+                </button>
+              </div>
 
-            {/* Contenido desplazable con scroll único */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
-              {/* ─────────────────────────────────────────────────────────
+              {/* Contenedor con Scroll Único */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
+                {/* Desplegable para cargar desde la Matriz si hay productos pendientes */}
+                {products.some((p) => !p.activo) && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                      <div>
+                        <span className="font-extrabold text-amber-950 block text-xs">
+                          ¿Cargar desde un producto de la Matriz?
+                        </span>
+                        <span className="text-[10px] text-amber-800">
+                          Selecciona un producto pendiente para autocompletar nombre, categoría y todos sus SKUs de color.
+                        </span>
+                      </div>
+                    </div>
+
+                    <select
+                      onChange={(e) => {
+                        const selected = products.find((p) => p.id === e.target.value);
+                        if (selected) {
+                          setNewProduct((prev) => ({
+                            ...prev,
+                            nombre: selected.nombre,
+                            categoria: selected.categoria,
+                            descripcion: selected.descripcionLarga || "",
+                            unidad_venta: selected.unidadVenta || "Unidad",
+                          }));
+                          if (selected.variantes && selected.variantes.length > 0) {
+                            setNewProductVariants(
+                              selected.variantes.map((v) => ({
+                                id: v.id || `var-${Math.random()}`,
+                                sku: v.sku,
+                                color: v.color || "Estándar",
+                                presentacion: v.presentacion || selected.unidadVenta || "Unidad",
+                                stock: String(v.stock || 100),
+                                precio_mayor_usd: String(v.precioMayorUsd || ""),
+                                min_mayor: String(v.minMayor || 50),
+                                precio_gran_mayor_usd: String(v.precioGranMayorUsd || ""),
+                                min_gran_mayor: String(v.minGranMayor || 200),
+                              }))
+                            );
+                          }
+                          setFeedbackMsg({
+                            text: `¡Datos de "${selected.nombre}" cargados desde la matriz!`,
+                            type: "success",
+                          });
+                        }
+                      }}
+                      defaultValue=""
+                      className="h-9 px-3 rounded-xl bg-white border border-amber-300 text-xs font-bold text-amber-950 focus:outline-none focus:ring-2 focus:ring-brand/20 shrink-0"
+                    >
+                      <option value="" disabled>
+                        Seleccionar de la Matriz ({products.filter((p) => !p.activo).length} pendientes) ▼
+                      </option>
+                      {products
+                        .filter((p) => !p.activo)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.nombre} ({p.variantes?.length || 1} SKUs)
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+                {/* ─────────────────────────────────────────────────────────
                   PESTAÑA 1: INFORMACIÓN GENERAL
                   ───────────────────────────────────────────────────────── */}
-              {editActiveTab === "general" && (
-                <form id="form-edit-product" onSubmit={handleSaveEditProduct} className="space-y-4">
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Nombre Completo *</label>
-                    <input
-                      type="text"
-                      value={editingProduct.nombre}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, nombre: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-sm"
-                      required
-                    />
-                  </div>
-
-                  {/* Selector múltiple de Categorías */}
-                  <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <label className="block font-bold text-slate-800 text-xs">
-                        Categorías del Producto * <span className="font-normal text-slate-500">(Puedes asignarle varias categorías)</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowCategoryManager(true)}
-                        className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                        <span>Gestionar / Eliminar Categorías</span>
-                      </button>
-                    </div>
-
-                    {/* Chips de categorías asignadas actualmente */}
-                    <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[42px] items-center">
-                      {editProductSelectedCategories.length > 0 ? (
-                        editProductSelectedCategories.map((cat) => (
-                          <span
-                            key={cat}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white font-bold text-xs shadow-2xs animate-fadeIn"
-                          >
-                            <span>{cat}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveEditCategory(cat)}
-                              className="hover:bg-white/20 rounded p-0.5 transition-colors"
-                              title={`Quitar ${cat}`}
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs text-amber-600 font-semibold italic">
-                          ⚠️ Haz clic en una o más categorías abajo para asignarlas al producto
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Botones de selección rápida */}
-                    <div className="space-y-1">
-                      <span className="text-[11px] font-bold text-slate-500">
-                        Categorías disponibles (haz clic para activar o desactivar):
-                      </span>
-                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
-                        {Array.from(new Set([...availableCategories, ...editProductSelectedCategories])).map((cat) => {
-                          const isSelected = editProductSelectedCategories.includes(cat);
-                          return (
-                            <button
-                              key={cat}
-                              type="button"
-                              onClick={() => handleToggleEditCategory(cat)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                                isSelected
-                                  ? "bg-brand text-white shadow-2xs ring-2 ring-brand/40"
-                                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
-                              }`}
-                            >
-                              {isSelected ? (
-                                <Check className="w-3.5 h-3.5 text-white" />
-                              ) : (
-                                <Plus className="w-3.5 h-3.5 text-slate-400" />
-                              )}
-                              <span>{cat}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Crear nueva categoría en el momento */}
-                    <div className="flex items-center gap-2 pt-1">
-                      <input
-                        type="text"
-                        value={inlineEditCatInput}
-                        onChange={(e) => setInlineEditCatInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddInlineNewCategory(true);
-                          }
-                        }}
-                        placeholder="+ Escribir nueva categoría (ej. Vasos, Limpieza) y presionar Enter..."
-                        className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleAddInlineNewCategory(true)}
-                        className="h-9 px-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1 flex-shrink-0"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Crear y Asignar</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Descripción</label>
-                    <textarea
-                      rows={3}
-                      value={editingProduct.descripcionLarga || ""}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, descripcionLarga: e.target.value })}
-                      placeholder="Descripción detallada del producto..."
-                      className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
-                    />
-                  </div>
-
-                  {/* Unidad de Venta y Estado */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {createActiveTab === "general" && (
+                  <div className="space-y-4">
                     <div>
-                      <label className="block font-bold text-slate-700 text-xs mb-1">Unidad de Venta</label>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Nombre Completo del Producto *
+                      </label>
                       <input
                         type="text"
-                        value={editingProduct.unidadVenta || ""}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, unidadVenta: e.target.value })}
-                        placeholder="ej. 50 Unidades, Paquete, Bulto"
-                        className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                        value={newProduct.nombre}
+                        onChange={(e) => setNewProduct({ ...newProduct, nombre: e.target.value })}
+                        placeholder="Bolsa para Café 250Gr con Ziplock + Válvula"
+                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-sm"
+                        required
                       />
                     </div>
 
-                    <div className="flex items-center gap-4 pt-4 sm:pt-6">
-                      <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 text-xs select-none">
-                        <input
-                          type="checkbox"
-                          checked={editingProduct.activo}
-                          onChange={(e) => setEditingProduct({ ...editingProduct, activo: e.target.checked })}
-                          className="w-4 h-4 text-brand rounded focus:ring-brand"
-                        />
-                        <span>Producto Activo en tienda</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer font-bold text-amber-700 text-xs select-none">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(editingProduct.destacado)}
-                          onChange={(e) => setEditingProduct({ ...editingProduct, destacado: e.target.checked })}
-                          className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-                        />
-                        <span>Destacado</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* ─── COSTOS Y PRECIOS BASE (Modificables si hubo variación de costo de proveedor) ─── */}
-                  <div className="rounded-2xl border-2 border-amber-500/30 bg-amber-50/40 p-4 space-y-3.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/70 pb-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-xs">
-                          <DollarSign className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                            Costos de Compra y Precios de Venta (Base)
-                          </h4>
-                          <p className="text-[11px] text-slate-600">
-                            Modifica los costos si tu proveedor varió el precio para calcular tu margen exacto.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Botón sugerir precios automáticamente */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const cMayor = Number(editingProduct.costoMayorUsd) || 0;
-                          if (cMayor > 0) {
-                            const sugMayor = Number((cMayor / 0.70).toFixed(2));
-                            const cGran = Number(editingProduct.costoGranMayorUsd) || cMayor;
-                            const sugGran = Number((cGran / 0.80).toFixed(2));
-                            setEditingProduct({
-                              ...editingProduct,
-                              precioMayorUsd: sugMayor,
-                              precioGranMayorUsd: sugGran,
-                            });
-                            showToast(`Precios sugeridos calculados: Mayor $${sugMayor.toFixed(2)} / Gran Mayor $${sugGran.toFixed(2)}`);
-                          } else {
-                            showToast("Ingresa primero el Costo de Compra Mayor para sugerir precios", "error");
-                          }
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-2xs self-start sm:self-auto transition-all active:scale-95"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Sugerir Precios (÷ 0.70 / ÷ 0.80)</span>
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                      {/* Columna Nivel 1: Al Mayor */}
-                      <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-3 shadow-2xs">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                          <span className="font-black text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                            <span className="w-2 h-2 rounded-full bg-slate-900" />
-                            Nivel 1: Venta al Mayor
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                            Base Regular
-                          </span>
-                        </div>
-
-                        <div className="space-y-2.5">
-                          <div>
-                            <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                              Costo Compra Proveedor ($ USD)
-                            </label>
-                            <div className="relative">
-                              <DollarSign className="w-3.5 h-3.5 text-amber-600 absolute left-2.5 top-2.5" />
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={editingProduct.costoMayorUsd ?? ""}
-                                onChange={(e) => setEditingProduct({ ...editingProduct, costoMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                placeholder="0.00"
-                                className="w-full h-8 pl-7 pr-3 rounded-lg border border-amber-300 bg-amber-50/20 focus:bg-white font-bold text-xs text-slate-900"
-                              />
-                            </div>
-                            <span className="text-[9px] text-slate-400 block mt-0.5 pl-0.5">
-                              Costo que te cobra el proveedor por paquete/unidad.
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                Precio Venta ($ USD) *
-                              </label>
-                              <div className="relative">
-                                <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editingProduct.precioMayorUsd ?? ""}
-                                  onChange={(e) => setEditingProduct({ ...editingProduct, precioMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                  placeholder="0.00"
-                                  className="w-full h-8 pl-7 pr-3 rounded-lg border border-slate-300 bg-white font-black text-xs text-slate-900"
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                Cant. Mínima (u.) *
-                              </label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={editingProduct.minMayor || 1}
-                                onChange={(e) => setEditingProduct({ ...editingProduct, minMayor: Number(e.target.value) || 1 })}
-                                placeholder="1"
-                                className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-white font-bold text-xs text-slate-900"
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          {/* Margen Mayor calculado en vivo */}
-                          {Boolean(editingProduct.precioMayorUsd && editingProduct.costoMayorUsd) && (
-                            <div className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[10px] flex items-center justify-between">
-                              <span className="text-slate-600">
-                                Ganancia: <strong className="text-emerald-700">+${(Number(editingProduct.precioMayorUsd) - Number(editingProduct.costoMayorUsd)).toFixed(2)}</strong>
-                              </span>
-                              <span className="text-slate-700 font-bold">
-                                Margen: {Math.round(((Number(editingProduct.precioMayorUsd) - Number(editingProduct.costoMayorUsd)) / Number(editingProduct.precioMayorUsd)) * 100)}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Columna Nivel 2: Gran Mayor */}
-                      <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-300/80 space-y-3 shadow-2xs">
-                        <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
-                          <span className="font-black text-emerald-950 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                            <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                            Nivel 2: Gran Mayor (Volumen)
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
-                            Precio Volumen
-                          </span>
-                        </div>
-
-                        <div className="space-y-2.5">
-                          <div>
-                            <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                              Costo Compra Gran Mayor ($ USD)
-                            </label>
-                            <div className="relative">
-                              <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={editingProduct.costoGranMayorUsd ?? ""}
-                                onChange={(e) => setEditingProduct({ ...editingProduct, costoGranMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                placeholder={editingProduct.costoMayorUsd ? `Mismo ($${editingProduct.costoMayorUsd})` : "0.00"}
-                                className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                              />
-                            </div>
-                            <span className="text-[9px] text-emerald-700 block mt-0.5 pl-0.5">
-                              Costo con descuento que da el proveedor al comprar volumen.
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                Precio Gran Mayor ($ USD) *
-                              </label>
-                              <div className="relative">
-                                <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editingProduct.precioGranMayorUsd ?? ""}
-                                  onChange={(e) => setEditingProduct({ ...editingProduct, precioGranMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                  placeholder="0.00"
-                                  className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-950"
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                Mínimo Gran Mayor (u.) *
-                              </label>
-                              <input
-                                type="number"
-                                min="2"
-                                value={editingProduct.minGranMayor || 5}
-                                onChange={(e) => setEditingProduct({ ...editingProduct, minGranMayor: Number(e.target.value) || 5 })}
-                                placeholder="5"
-                                className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          {/* Margen Gran Mayor calculado en vivo */}
-                          {Boolean(editingProduct.precioGranMayorUsd && (editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)) && (
-                            <div className="p-2 rounded-lg bg-white/90 border border-emerald-200 text-[10px] flex items-center justify-between">
-                              <span className="text-emerald-900">
-                                Ganancia: <strong className="text-emerald-700">+${(Number(editingProduct.precioGranMayorUsd) - Number(editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)).toFixed(2)}</strong>
-                              </span>
-                              <span className="text-emerald-800 font-bold">
-                                Margen: {Math.round(((Number(editingProduct.precioGranMayorUsd) - Number(editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)) / Number(editingProduct.precioGranMayorUsd)) * 100)}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              )}
-
-              {/* ─────────────────────────────────────────────────────────
-                  PESTAÑA 2: GESTIÓN DE TODOS LOS SKUS / VARIANTES
-                  ───────────────────────────────────────────────────────── */}
-              {editActiveTab === "variants" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        SKUs y Variantes Registradas ({(editingProduct.variantes || []).length})
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        Administra todos los SKUs, stock disponible y precios Mayor y Gran Mayor.
-                      </p>
-                    </div>
-
-                    {!isAddingEditVariant && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAddingEditVariant(true);
-                          setEditingVariantId(null);
-                          setEditVariantForm({
-                            color: "",
-                            sku: `${editingProduct.sku}-${(editingProduct.variantes || []).length + 1}`,
-                            presentacion: editingProduct.unidadVenta || "Unidad",
-                            stock: "100",
-                            costo_mayor_usd: editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : "",
-                            costo_gran_mayor_usd: editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : "",
-                            precio_mayor_usd: editingProduct.precioMayorUsd ? String(editingProduct.precioMayorUsd) : "",
-                            min_mayor: String(editingProduct.minMayor || 1),
-                            precio_gran_mayor_usd: editingProduct.precioGranMayorUsd ? String(editingProduct.precioGranMayorUsd) : "",
-                            min_gran_mayor: String(editingProduct.minGranMayor || 5),
-                          });
-                          setEditVarCostBase(editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : "");
-                          setEditVarCostGranBase(editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : "");
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all self-start sm:self-auto"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>+ Cargar Nuevo SKU</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Formulario para Agregar o Editar SKU */}
-                  {isAddingEditVariant && (
-                    <form
-                      onSubmit={handleSaveEditVariant}
-                      className="p-4 rounded-2xl bg-white border-2 border-brand/30 space-y-4 shadow-sm"
-                    >
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span className="font-black text-slate-800 text-sm">
-                          {editingVariantId ? "Modificar SKU Existente" : "Cargar Nuevo SKU a este Producto"}
-                        </span>
+                    {/* Selector múltiple de Categorías */}
+                    <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block font-bold text-slate-800 text-xs">
+                          Categorías del Producto * <span className="font-normal text-slate-500">(Puedes asignarle varias categorías)</span>
+                        </label>
                         <button
                           type="button"
-                          onClick={() => {
-                            setIsAddingEditVariant(false);
-                            setEditingVariantId(null);
-                          }}
-                          className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                          onClick={() => setShowCategoryManager(true)}
+                          className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
                         >
-                          Cancelar
+                          <Settings className="w-3.5 h-3.5" />
+                          <span>Gestionar / Eliminar Categorías</span>
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                            Código SKU *
-                          </label>
-                          <input
-                            type="text"
-                            value={editVariantForm.sku}
-                            onChange={(e) => setEditVariantForm({ ...editVariantForm, sku: e.target.value })}
-                            placeholder="DOY-ROJ-250"
-                            className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-mono text-xs font-bold"
-                            required
-                          />
-                        </div>
+                      {/* Chips de categorías asignadas actualmente */}
+                      <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[42px] items-center">
+                        {newProductSelectedCategories.length > 0 ? (
+                          newProductSelectedCategories.map((cat) => (
+                            <span
+                              key={cat}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white font-bold text-xs shadow-2xs animate-fadeIn"
+                            >
+                              <span>{cat}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveNewCategory(cat)}
+                                className="hover:bg-white/20 rounded p-0.5 transition-colors"
+                                title={`Quitar ${cat}`}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-amber-600 font-semibold italic">
+                            ⚠️ Haz clic en una o más categorías abajo para asignarlas al producto
+                          </span>
+                        )}
+                      </div>
 
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                            Color / Variante *
-                          </label>
-                          <input
-                            type="text"
-                            value={editVariantForm.color}
-                            onChange={(e) => setEditVariantForm({ ...editVariantForm, color: e.target.value })}
-                            placeholder="ej. Rojo, Negro"
-                            className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs font-bold"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                            Presentación
-                          </label>
-                          <input
-                            type="text"
-                            value={editVariantForm.presentacion}
-                            onChange={(e) => setEditVariantForm({ ...editVariantForm, presentacion: e.target.value })}
-                            placeholder="ej. 50 Und"
-                            className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                            Stock Disponible
-                          </label>
-                          <input
-                            type="number"
-                            value={editVariantForm.stock}
-                            onChange={(e) => setEditVariantForm({ ...editVariantForm, stock: e.target.value })}
-                            placeholder="100"
-                            className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
-                          />
+                      {/* Botones de selección rápida */}
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-500">
+                          Categorías disponibles (haz clic para activar o desactivar):
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
+                          {availableCategories.map((cat) => {
+                            const isSelected = newProductSelectedCategories.includes(cat);
+                            return (
+                              <button
+                                key={cat}
+                                type="button"
+                                onClick={() => handleToggleNewCategory(cat)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${isSelected
+                                    ? "bg-brand text-white shadow-2xs ring-2 ring-brand/40"
+                                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                                  }`}
+                              >
+                                {isSelected ? (
+                                  <Check className="w-3.5 h-3.5 text-white" />
+                                ) : (
+                                  <Plus className="w-3.5 h-3.5 text-slate-400" />
+                                )}
+                                <span>{cat}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 
-                      {/* Calculadora en Formulario de SKU */}
-                      <div className="rounded-2xl border-2 border-emerald-500/20 bg-emerald-50/40 p-4 space-y-3.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                              <Calculator className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
-                                Calculadora de Precios: Costo ÷ Factor (ej. $10 ÷ 0.70 = $14.29)
-                              </h4>
-                              <p className="text-[11px] text-emerald-800">
-                                Fija los precios de este SKU con IVA Compra (16%) y/o IVA Venta (16%)
-                              </p>
-                            </div>
+                      {/* Crear nueva categoría en el momento */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          type="text"
+                          value={inlineNewCatInput}
+                          onChange={(e) => setInlineNewCatInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddInlineNewCategory(false);
+                            }
+                          }}
+                          placeholder="+ Escribir nueva categoría (ej. Vasos, Limpieza) y presionar Enter..."
+                          className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddInlineNewCategory(false)}
+                          className="h-9 px-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1 flex-shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Crear y Asignar</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Descripción del Producto</label>
+                      <textarea
+                        rows={4}
+                        value={newProduct.descripcion}
+                        onChange={(e) => setNewProduct({ ...newProduct, descripcion: e.target.value })}
+                        placeholder="Especificaciones técnicas, materiales, usos recomendados..."
+                        className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="pt-4 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setCreateActiveTab("variants")}
+                        className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 transition-all shadow-xs"
+                      >
+                        <span>Continuar a Variantes & SKUs</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ─────────────────────────────────────────────────────────
+                  PESTAÑA 2: CARGA Y GESTIÓN DE TODOS LOS SKUS / VARIANTES
+                  ───────────────────────────────────────────────────────── */}
+                {createActiveTab === "variants" && (
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                          Carga y Configuración de SKUs ({newProductVariants.length})
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Puedes cargar todos los SKU que tenga este producto (colores, modelos o presentaciones).
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAddNewProductVariant}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all self-start sm:self-auto"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>+ Agregar Otro SKU</span>
+                      </button>
+                    </div>
+
+                    {/* Calculadora de Precios Integrada */}
+                    <div className="rounded-2xl border-2 border-emerald-500/20 bg-emerald-50/40 p-4 space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                            <Calculator className="w-4 h-4" />
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setShowEditVarCalc(!showEditVarCalc)}
-                            className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
-                          >
-                            {showEditVarCalc ? "Ocultar" : "Mostrar"}
-                          </button>
+                          <div>
+                            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                              Calculadora de Precios: Costo ÷ Factor (ej. $10 ÷ 0.70 = $14.29)
+                            </h4>
+                            <p className="text-[11px] text-emerald-800">
+                              Fija los precios de tus SKUs con IVA Compra (16%) y/o IVA Venta (16%)
+                            </p>
+                          </div>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddCalc(!showAddCalc)}
+                          className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
+                        >
+                          {showAddCalc ? "Ocultar" : "Mostrar"}
+                        </button>
+                      </div>
 
-                        {showEditVarCalc && (
-                          <div className="space-y-3.5 pt-1 text-xs">
-                            {/* Opciones globales de IVA */}
-                            <div className="flex flex-wrap items-center gap-3 bg-white p-2.5 rounded-xl border border-emerald-200">
-                              <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 text-[11px]">
-                                <input
-                                  type="checkbox"
-                                  checked={editVarApplyIvaCompra}
-                                  onChange={(e) => setEditVarApplyIvaCompra(e.target.checked)}
-                                  className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                                />
-                                <span>¿Los costos de compra ya incluyen IVA? (Descontar Crédito Fiscal)</span>
-                              </label>
+                      {showAddCalc && (
+                        <div className="space-y-3.5 pt-1 text-xs">
+                          {/* Opciones globales de IVA */}
+                          <div className="flex flex-wrap items-center gap-3 bg-white p-2.5 rounded-xl border border-emerald-200">
+                            <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 text-[11px]">
+                              <input
+                                type="checkbox"
+                                checked={addApplyIvaCompra}
+                                onChange={(e) => setAddApplyIvaCompra(e.target.checked)}
+                                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                              />
+                              <span>¿Los costos de compra ya incluyen IVA? (Descontar Crédito Fiscal)</span>
+                            </label>
 
-                              <label className="flex items-center gap-2 cursor-pointer font-bold text-emerald-950 text-[11px] ml-auto">
-                                <input
-                                  type="checkbox"
-                                  checked={editVarApplyIvaVenta}
-                                  onChange={(e) => setEditVarApplyIvaVenta(e.target.checked)}
-                                  className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
-                                />
-                                <span>+ IVA 16% a la Venta (Cobro al cliente en tienda)</span>
-                              </label>
-                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer font-bold text-emerald-950 text-[11px] ml-auto">
+                              <input
+                                type="checkbox"
+                                checked={addApplyIvaVenta}
+                                onChange={(e) => setAddApplyIvaVenta(e.target.checked)}
+                                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                              />
+                              <span>+ IVA 16% a la Venta (Cobro al cliente en tienda)</span>
+                            </label>
+                          </div>
 
-                            {/* Dos Columnas Simétricas: Mayor y Gran Mayor */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                              {/* Columna Nivel 1: Venta al Mayor */}
-                              <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 space-y-3 shadow-2xs">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                                  <span className="font-black text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                                    <span className="w-2 h-2 rounded-full bg-slate-900" />
-                                    Nivel 1: Venta al Mayor
-                                  </span>
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                                    Regular
-                                  </span>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <div>
-                                    <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                      Costo de Compra Mayor ($ USD) *
-                                    </label>
-                                    <div className="relative">
-                                      <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                                      <input
-                                        type="number"
-                                        step="0.01"
-                                        value={editVarCostBase}
-                                        onChange={(e) => setEditVarCostBase(e.target.value)}
-                                        placeholder="ej. 10.00"
-                                        className="w-full h-8 pl-7 pr-3 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                      <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                        Cant. Mínima Mayor *
-                                      </label>
-                                      <input
-                                        type="number"
-                                        min="1"
-                                        value={editVariantForm.min_mayor}
-                                        onChange={(e) => setEditVariantForm({ ...editVariantForm, min_mayor: e.target.value })}
-                                        placeholder="1"
-                                        className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
-                                      />
-                                    </div>
-
-                                    <div>
-                                      <div className="flex items-center justify-between mb-1">
-                                        <label className="font-bold text-slate-700 text-[11px]">
-                                          Factor Divisor Mayor
-                                        </label>
-                                        <span className="text-[10px] font-black text-emerald-700">
-                                          ÷ {computePricing(editVarCostBase, editVarApplyIvaCompra, editVarApplyIvaVenta, editVarMarginMayor, editVarMarginGranMayor, editVariantForm.min_mayor, editVariantForm.min_gran_mayor, editVarCostGranBase).factorMayorStr}
-                                        </span>
-                                      </div>
-                                      <input
-                                        type="text"
-                                        value={editVarMarginMayor}
-                                        onChange={(e) => setEditVarMarginMayor(e.target.value)}
-                                        placeholder="0.70"
-                                        className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Desglose Fiscal Mayor */}
-                                {parseFloat(editVarCostBase) > 0 && (() => {
-                                  const p = computePricing(
-                                    editVarCostBase,
-                                    editVarApplyIvaCompra,
-                                    editVarApplyIvaVenta,
-                                    editVarMarginMayor,
-                                    editVarMarginGranMayor,
-                                    editVariantForm.min_mayor,
-                                    editVariantForm.min_gran_mayor,
-                                    editVarCostGranBase
-                                  );
-                                  return (
-                                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] space-y-1">
-                                      <div className="grid grid-cols-2 gap-1 text-slate-600">
-                                        <span>Base Real: <strong>${p.costBaseMayor.toFixed(2)}</strong></span>
-                                        <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalMayor.toFixed(2)}</strong></span>
-                                        <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaMayor.toFixed(2)}</strong></span>
-                                        <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatMayor.toFixed(2)}</strong></span>
-                                      </div>
-                                      <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[11px] font-bold">
-                                        <span className="text-slate-600">Ganancia Neta: <strong className="text-emerald-700">${p.profitMayor.toFixed(2)}</strong></span>
-                                        <span className="text-slate-900">Precio Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pMayor.toFixed(2)}</strong></span>
-                                      </div>
-                                    </div>
-                                  );
-                                })()}
+                          {/* Dos Columnas Simétricas: Mayor y Gran Mayor */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                            {/* Columna Nivel 1: Venta al Mayor */}
+                            <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 space-y-3 shadow-2xs">
+                              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                                <span className="font-black text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                                  <span className="w-2 h-2 rounded-full bg-slate-900" />
+                                  Nivel 1: Venta al Mayor
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                                  Regular
+                                </span>
                               </div>
 
-                              {/* Columna Nivel 2: Gran Mayor (Volumen) */}
-                              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-300 space-y-3 shadow-2xs">
-                                <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
-                                  <span className="font-black text-emerald-950 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                                    Nivel 2: Gran Mayor (Volumen)
-                                  </span>
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
-                                    Descuento Proveedor
-                                  </span>
+                              <div className="space-y-2">
+                                <div>
+                                  <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                    Costo de Compra Mayor ($ USD) *
+                                  </label>
+                                  <div className="relative">
+                                    <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={addCostBase}
+                                      onChange={(e) => setAddCostBase(e.target.value)}
+                                      placeholder="ej. 10.00"
+                                      className="w-full h-8 pl-7 pr-3 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
+                                    />
+                                  </div>
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                      Cant. Mínima Mayor *
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={addMinMayor}
+                                      onChange={(e) => setAddMinMayor(e.target.value)}
+                                      placeholder="1"
+                                      className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <label className="font-bold text-slate-700 text-[11px]">
+                                        Factor Divisor Mayor
+                                      </label>
+                                      <span className="text-[10px] font-black text-emerald-700">
+                                        ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase).factorMayorStr}
+                                      </span>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={addMarginMayor}
+                                      onChange={(e) => setAddMarginMayor(e.target.value)}
+                                      placeholder="0.70"
+                                      className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Desglose Fiscal Mayor */}
+                              {parseFloat(addCostBase) > 0 && (() => {
+                                const p = computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase);
+                                return (
+                                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] space-y-1">
+                                    <div className="grid grid-cols-2 gap-1 text-slate-600">
+                                      <span>Base Real: <strong>${p.costBaseMayor.toFixed(2)}</strong></span>
+                                      <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalMayor.toFixed(2)}</strong></span>
+                                      <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaMayor.toFixed(2)}</strong></span>
+                                      <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatMayor.toFixed(2)}</strong></span>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[11px] font-bold">
+                                      <span className="text-slate-600">Ganancia Neta: <strong className="text-emerald-700">${p.profitMayor.toFixed(2)}</strong></span>
+                                      <span className="text-slate-900">Precio Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pMayor.toFixed(2)}</strong></span>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+
+                            {/* Columna Nivel 2: Gran Mayor (Volumen) */}
+                            <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-300 space-y-3 shadow-2xs">
+                              <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
+                                <span className="font-black text-emerald-950 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                  Nivel 2: Gran Mayor (Volumen)
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
+                                  Descuento Proveedor
+                                </span>
+                              </div>
 
                               <div className="space-y-2">
                                 <div>
@@ -3941,14 +2634,14 @@ export default function AdminProductosPage() {
                                     <input
                                       type="number"
                                       step="0.01"
-                                      value={editVarCostGranBase}
-                                      onChange={(e) => setEditVarCostGranBase(e.target.value)}
-                                      placeholder={editVarCostBase ? `Mismo costo ($${editVarCostBase})` : "ej. 8.50"}
+                                      value={addCostGranBase}
+                                      onChange={(e) => setAddCostGranBase(e.target.value)}
+                                      placeholder={addCostBase ? `Mismo costo ($${addCostBase})` : "ej. 8.50"}
                                       className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
                                     />
                                   </div>
                                   <span className="text-[9px] text-emerald-700 font-medium block mt-0.5 pl-0.5">
-                                    {editVarCostGranBase ? `✓ Costo especial proveedor: $${editVarCostGranBase} por paquete` : `(Si está vacío, usa el costo de Mayor: $${editVarCostBase || "0.00"})`}
+                                    {addCostGranBase ? `✓ Costo especial proveedor: $${addCostGranBase} por paquete` : `(Si está vacío, usa el costo de Mayor: $${addCostBase || "0.00"})`}
                                   </span>
                                 </div>
 
@@ -3960,8 +2653,8 @@ export default function AdminProductosPage() {
                                     <input
                                       type="number"
                                       min="2"
-                                      value={editVariantForm.min_gran_mayor}
-                                      onChange={(e) => setEditVariantForm({ ...editVariantForm, min_gran_mayor: e.target.value })}
+                                      value={addMinGranMayor}
+                                      onChange={(e) => setAddMinGranMayor(e.target.value)}
                                       placeholder="5"
                                       className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
                                     />
@@ -3973,13 +2666,13 @@ export default function AdminProductosPage() {
                                         Factor Divisor Gran Mayor
                                       </label>
                                       <span className="text-[10px] font-black text-emerald-800">
-                                        ÷ {computePricing(editVarCostBase, editVarApplyIvaCompra, editVarApplyIvaVenta, editVarMarginMayor, editVarMarginGranMayor, editVariantForm.min_mayor, editVariantForm.min_gran_mayor, editVarCostGranBase).factorGranStr}
+                                        ÷ {computePricing(addCostBase, addApplyIvaCompra, addApplyIvaVenta, addMarginMayor, addMarginGranMayor, addMinMayor, addMinGranMayor, addCostGranBase).factorGranStr}
                                       </span>
                                     </div>
                                     <input
                                       type="text"
-                                      value={editVarMarginGranMayor}
-                                      onChange={(e) => setEditVarMarginGranMayor(e.target.value)}
+                                      value={addMarginGranMayor}
+                                      onChange={(e) => setAddMarginGranMayor(e.target.value)}
                                       placeholder="0.80"
                                       className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
                                     />
@@ -3987,325 +2680,380 @@ export default function AdminProductosPage() {
                                 </div>
                               </div>
 
-                                {/* Desglose Fiscal Gran Mayor */}
-                                {parseFloat(editVarCostBase) > 0 && (() => {
-                                  const p = computePricing(
-                                    editVarCostBase,
-                                    editVarApplyIvaCompra,
-                                    editVarApplyIvaVenta,
-                                    editVarMarginMayor,
-                                    editVarMarginGranMayor,
-                                    editVariantForm.min_mayor,
-                                    editVariantForm.min_gran_mayor,
-                                    editVarCostGranBase
-                                  );
-                                  return (
-                                    <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-300 text-[10px] space-y-1">
-                                      <div className="grid grid-cols-2 gap-1 text-slate-600">
-                                        <span>Base Real: <strong>${p.costBaseGran.toFixed(2)}</strong></span>
-                                        <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalGran.toFixed(2)}</strong></span>
-                                        <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaGran.toFixed(2)}</strong></span>
-                                        <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatGran.toFixed(2)}</strong></span>
-                                      </div>
-                                      <div className="flex items-center justify-between pt-1 border-t border-emerald-100 text-[11px] font-bold">
-                                        <span className="text-slate-700">Ganancia Neta: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
-                                        <span className="text-emerald-950">Precio Gran Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
-                                      </div>
-                                      {p.savingsGranMayor > 0 && (
-                                        <div className="text-center pt-0.5 text-[10px] font-black text-amber-700 bg-amber-50 rounded-md py-0.5">
-                                          ★ Ahorro para el cliente al comprar {p.minGM} u.: ${p.savingsGranMayor.toFixed(2)}
-                                        </div>
-                                      )}
+                              {/* Desglose Fiscal Gran Mayor */}
+                              {parseFloat(addCostBase) > 0 && (() => {
+                                const p = computePricing(
+                                  addCostBase,
+                                  addApplyIvaCompra,
+                                  addApplyIvaVenta,
+                                  addMarginMayor,
+                                  addMarginGranMayor,
+                                  addMinMayor,
+                                  addMinGranMayor,
+                                  addCostGranBase
+                                );
+                                return (
+                                  <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-300 text-[10px] space-y-1">
+                                    <div className="grid grid-cols-2 gap-1 text-slate-600">
+                                      <span>Base Real: <strong>${p.costBaseGran.toFixed(2)}</strong></span>
+                                      <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalGran.toFixed(2)}</strong></span>
+                                      <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaGran.toFixed(2)}</strong></span>
+                                      <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatGran.toFixed(2)}</strong></span>
                                     </div>
-                                  );
-                                })()}
-                              </div>
+                                    <div className="flex items-center justify-between pt-1 border-t border-emerald-100 text-[11px] font-bold">
+                                      <span className="text-slate-700">Ganancia Neta: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
+                                      <span className="text-emerald-950">Precio Gran Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
+                                    </div>
+                                    {p.savingsGranMayor > 0 && (
+                                      <div className="text-center pt-0.5 text-[10px] font-black text-amber-700 bg-amber-50 rounded-md py-0.5">
+                                        ★ Ahorro para el cliente al comprar {p.minGM} u.: ${p.savingsGranMayor.toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </div>
+                          </div>
 
-                            {/* Botón Aplicar Precios al SKU */}
-                            {parseFloat(editVarCostBase) > 0 && (
-                              <div className="flex items-center justify-end gap-2 pt-1 border-t border-emerald-200">
+                          {/* Botón Aplicar Precios */}
+                          {parseFloat(addCostBase) > 0 && (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-emerald-200">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-[11px] text-slate-600">Aplicar a:</span>
+                                <select
+                                  value={activeNewVariantIdx}
+                                  onChange={(e) => {
+                                    const idx = Number(e.target.value);
+                                    setActiveNewVariantIdx(idx);
+                                    const v = newProductVariants[idx];
+                                    if (v) {
+                                      if (v.min_mayor) setAddMinMayor(v.min_mayor);
+                                      if (v.min_gran_mayor) setAddMinGranMayor(v.min_gran_mayor);
+                                    }
+                                  }}
+                                  className="h-8 px-2 rounded-lg border border-slate-300 font-bold text-xs bg-white"
+                                >
+                                  {newProductVariants.map((v, i) => (
+                                    <option key={v.id} value={i}>
+                                      SKU #{i + 1}: {v.color || "Estándar"}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div className="flex items-center gap-2">
                                 <button
                                   type="button"
                                   onClick={() => {
+                                    const targetVar = newProductVariants[activeNewVariantIdx] || newProductVariants[0];
                                     const computed = computePricing(
-                                      editVarCostBase,
-                                      editVarApplyIvaCompra,
-                                      editVarApplyIvaVenta,
-                                      editVarMarginMayor,
-                                      editVarMarginGranMayor,
-                                      editVariantForm.min_mayor,
-                                      editVariantForm.min_gran_mayor,
-                                      editVarCostGranBase
+                                      addCostBase,
+                                      addApplyIvaCompra,
+                                      addApplyIvaVenta,
+                                      addMarginMayor,
+                                      addMarginGranMayor,
+                                      addMinMayor || "1",
+                                      addMinGranMayor || "5",
+                                      addCostGranBase
                                     );
-                                    if (computed.pMayor > 0) {
-                                      setEditVariantForm((prev) => ({
-                                        ...prev,
-                                        precio_mayor_usd: computed.pMayor.toFixed(2),
-                                        precio_gran_mayor_usd: computed.pGran.toFixed(2),
-                                      }));
-                                      showToast("¡Precios calculados aplicados a los campos del SKU!");
-                                    }
+                                    handleUpdateNewProductVariant(targetVar.id, "precio_mayor_usd", computed.pMayor.toFixed(2));
+                                    handleUpdateNewProductVariant(targetVar.id, "min_mayor", addMinMayor || "1");
+                                    handleUpdateNewProductVariant(targetVar.id, "precio_gran_mayor_usd", computed.pGran.toFixed(2));
+                                    handleUpdateNewProductVariant(targetVar.id, "min_gran_mayor", addMinGranMayor || "5");
+                                    showToast(`¡Precios y Cantidades aplicados a SKU #${activeNewVariantIdx + 1}!`);
                                   }}
-                                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
                                 >
                                   <Sparkles className="w-3.5 h-3.5" />
-                                  <span>Aplicar Precios a este SKU</span>
+                                  <span>Aplicar a este SKU</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setNewProductVariants((prev) =>
+                                      prev.map((v) => {
+                                        const computed = computePricing(
+                                          addCostBase,
+                                          addApplyIvaCompra,
+                                          addApplyIvaVenta,
+                                          addMarginMayor,
+                                          addMarginGranMayor,
+                                          addMinMayor || "1",
+                                          addMinGranMayor || "5",
+                                          addCostGranBase
+                                        );
+                                        return {
+                                          ...v,
+                                          precio_mayor_usd: computed.pMayor.toFixed(2),
+                                          min_mayor: addMinMayor || "1",
+                                          precio_gran_mayor_usd: computed.pGran.toFixed(2),
+                                          min_gran_mayor: addMinGranMayor || "5",
+                                        };
+                                      })
+                                    );
+                                    showToast("¡Precios y Cantidades Mínimas aplicados a TODOS los SKUs!");
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs"
+                                >
+                                  Aplicar a Todos
                                 </button>
                               </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Precios Mayor y Gran Mayor */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                          <span className="text-[10px] font-black uppercase text-slate-700 block">
-                            Nivel 1: Venta al Mayor
-                          </span>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <label className="block text-[10px] text-slate-500 mb-0.5">Costo ($ USD)</label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={editVariantForm.costo_mayor_usd}
-                                onChange={(e) => {
-                                  setEditVariantForm({ ...editVariantForm, costo_mayor_usd: e.target.value });
-                                  setEditVarCostBase(e.target.value);
-                                }}
-                                placeholder="0.00"
-                                className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-amber-50/40 font-bold text-xs text-slate-900"
-                              />
                             </div>
-                            <div>
-                              <label className="block text-[10px] text-slate-500 mb-0.5">Mínimo (u.)</label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={editVariantForm.min_mayor}
-                                onChange={(e) => setEditVariantForm({ ...editVariantForm, min_mayor: e.target.value })}
-                                className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-bold text-xs"
-                                required
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] text-slate-500 mb-0.5">Precio ($) *</label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={editVariantForm.precio_mayor_usd}
-                                onChange={(e) => setEditVariantForm({ ...editVariantForm, precio_mayor_usd: e.target.value })}
-                                placeholder="22.75"
-                                className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-black text-xs text-slate-900"
-                                required
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-2">
-                          <span className="text-[10px] font-black uppercase text-emerald-950 block">
-                            Nivel 2: Gran Mayor (Volumen)
-                          </span>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <label className="block text-[10px] text-emerald-800 mb-0.5">Costo GM ($)</label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={editVariantForm.costo_gran_mayor_usd}
-                                onChange={(e) => {
-                                  setEditVariantForm({ ...editVariantForm, costo_gran_mayor_usd: e.target.value });
-                                  setEditVarCostGranBase(e.target.value);
-                                }}
-                                placeholder="0.00"
-                                className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] text-emerald-800 mb-0.5">Mínimo GM</label>
-                              <input
-                                type="number"
-                                min="2"
-                                value={editVariantForm.min_gran_mayor}
-                                onChange={(e) => setEditVariantForm({ ...editVariantForm, min_gran_mayor: e.target.value })}
-                                className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                required
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] text-emerald-800 mb-0.5">Precio GM ($) *</label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={editVariantForm.precio_gran_mayor_usd}
-                                onChange={(e) => setEditVariantForm({ ...editVariantForm, precio_gran_mayor_usd: e.target.value })}
-                                placeholder="19.50"
-                                className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-900"
-                                required
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsAddingEditVariant(false);
-                            setEditingVariantId(null);
-                          }}
-                          className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={savingVariant}
-                          className="px-4 py-2 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-xs disabled:opacity-50"
-                        >
-                          {savingVariant ? "Guardando..." : "Guardar SKU"}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-
-                  {/* Listado de SKUs Existentes */}
-                  <div className="space-y-2.5">
-                    {(editingProduct.variantes || []).map((v) => (
-                      <div
-                        key={v.sku}
-                        className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-slate-800 text-sm">
-                              {v.color || "Estándar"}
-                            </span>
-                            <span className="font-mono text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                              {v.sku}
-                            </span>
-                            {v.presentacion && (
-                              <span className="text-[10px] text-slate-400">
-                                · {v.presentacion}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="text-[11px] text-slate-600 flex items-center gap-2.5 flex-wrap">
-                            <span>Stock: <strong className="text-slate-800">{v.stock}</strong> u.</span>
-                            {(v.costoMayorUsd !== undefined && v.costoMayorUsd !== null) || (editingProduct.costoMayorUsd !== undefined && editingProduct.costoMayorUsd !== null) ? (
-                              <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200/80 font-bold">
-                                Costo: {formatUsd(v.costoMayorUsd ?? editingProduct.costoMayorUsd ?? 0)}
-                              </span>
-                            ) : null}
-                            <span>Mayor: <strong className="text-slate-800">{formatUsd(v.precioMayorUsd || 0)}</strong> (min {v.minMayor})</span>
-                            {v.precioGranMayorUsd ? (
-                              <span>Gran Mayor: <strong className="text-emerald-700">{formatUsd(v.precioGranMayorUsd)}</strong> (min {v.minGranMayor})</span>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 self-end sm:self-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsAddingEditVariant(true);
-                              setEditingVariantId(v.id || null);
-                              setEditVariantForm({
-                                color: v.color || "",
-                                sku: v.sku,
-                                presentacion: v.presentacion || editingProduct.unidadVenta || "Unidad",
-                                stock: String(v.stock),
-                                costo_mayor_usd: v.costoMayorUsd !== undefined && v.costoMayorUsd !== null ? String(v.costoMayorUsd) : (editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : ""),
-                                costo_gran_mayor_usd: v.costoGranMayorUsd !== undefined && v.costoGranMayorUsd !== null ? String(v.costoGranMayorUsd) : (editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : ""),
-                                precio_mayor_usd: v.precioMayorUsd ? String(v.precioMayorUsd) : "",
-                                min_mayor: String(v.minMayor || 1),
-                                precio_gran_mayor_usd: v.precioGranMayorUsd ? String(v.precioGranMayorUsd) : "",
-                                min_gran_mayor: String(v.minGranMayor || 5),
-                              });
-                              setEditVarCostBase(v.costoMayorUsd !== undefined && v.costoMayorUsd !== null ? String(v.costoMayorUsd) : (editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : ""));
-                              setEditVarCostGranBase(v.costoGranMayorUsd !== undefined && v.costoGranMayorUsd !== null ? String(v.costoGranMayorUsd) : (editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : ""));
-                            }}
-                            className="py-1 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold"
-                          >
-                            Editar
-                          </button>
-
-                          {(editingProduct.variantes || []).length > 1 && v.id && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteVariant(v.id!, v.color || v.sku)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                              title="Eliminar este SKU"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
                           )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ─────────────────────────────────────────────────────────
-                  PESTAÑA 3: GALERÍA DE FOTOS Y VINCULACIÓN CON VARIANTES
-                  ───────────────────────────────────────────────────────── */}
-              {editActiveTab === "photos" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Fotos del Carrusel ({(editingProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length} / 10)
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        Elige la foto de portada ⭐ y vincula cada foto a su variante de color para la tienda.
-                      </p>
+                      )}
                     </div>
 
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all">
-                      <Plus className="w-4 h-4" />
-                      <span>Subir Fotos</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                          if (e.target.files) handleUploadPhotos(editingProduct.id!, e.target.files);
-                        }}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
+                    {/* Listado de Tarjetas de SKUs */}
+                    <div className="space-y-3">
+                      {newProductVariants.map((v, idx) => {
+                        const resPricing = computePricing(
+                          addCostBase || "10",
+                          addApplyIvaCompra,
+                          addApplyIvaVenta,
+                          addMarginMayor,
+                          addMarginGranMayor,
+                          v.min_mayor,
+                          v.min_gran_mayor,
+                          addCostGranBase
+                        );
 
-                  {(editingProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                      {(editingProduct.fotos || [])
-                        .filter((f) => !f.url.includes("placehold.co"))
-                        .map((foto, idx, arr) => (
+                        return (
                           <div
-                            key={foto.publicId || foto.url}
-                            className={`relative rounded-2xl border p-2 bg-white transition-all shadow-2xs flex flex-col justify-between space-y-2 ${
-                              foto.isPrimary
+                            key={v.id}
+                            className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 shadow-2xs hover:border-slate-300 transition-colors"
+                          >
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-lg bg-slate-900 text-white font-black text-[11px] flex items-center justify-center">
+                                  #{idx + 1}
+                                </span>
+                                <span className="font-black text-slate-800 text-sm">
+                                  {v.color || "Variante Estándar"}
+                                </span>
+                                {v.sku && (
+                                  <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                    {v.sku}
+                                  </span>
+                                )}
+                              </div>
+
+                              {newProductVariants.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveNewProductVariant(v.id)}
+                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                  title="Eliminar este SKU"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Fila 1: Código, Color, Presentación, Stock */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                                  Código SKU *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={v.sku}
+                                  onChange={(e) => handleUpdateNewProductVariant(v.id, "sku", e.target.value)}
+                                  placeholder="ej. BOL-CAF-ROJ"
+                                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-mono text-xs font-bold"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                                  Color / Variante *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={v.color}
+                                  onChange={(e) => handleUpdateNewProductVariant(v.id, "color", e.target.value)}
+                                  placeholder="ej. Rojo, Negro, Dorado"
+                                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs font-bold"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                                  Presentación
+                                </label>
+                                <input
+                                  type="text"
+                                  value={v.presentacion}
+                                  onChange={(e) => handleUpdateNewProductVariant(v.id, "presentacion", e.target.value)}
+                                  placeholder="ej. 50 Und"
+                                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                                  Stock Inicial
+                                </label>
+                                <input
+                                  type="number"
+                                  value={v.stock}
+                                  onChange={(e) => handleUpdateNewProductVariant(v.id, "stock", e.target.value)}
+                                  placeholder="100"
+                                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Fila 2: Precios Nivel 1 (Mayor) y Nivel 2 (Gran Mayor) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                                <span className="text-[10px] font-black uppercase text-slate-700 block">
+                                  Nivel 1: Venta al Mayor
+                                </span>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block text-[10px] text-slate-500 mb-0.5">Min. Cantidad</label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={v.min_mayor}
+                                      onChange={(e) => handleUpdateNewProductVariant(v.id, "min_mayor", e.target.value)}
+                                      className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-bold text-xs"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] text-slate-500 mb-0.5">Precio ($ USD) *</label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={v.precio_mayor_usd}
+                                      onChange={(e) => handleUpdateNewProductVariant(v.id, "precio_mayor_usd", e.target.value)}
+                                      placeholder="22.75"
+                                      className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-black text-xs text-slate-900"
+                                      required
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black uppercase text-emerald-950">
+                                    Nivel 2: Gran Mayor (Volumen)
+                                  </span>
+                                  {v.precio_mayor_usd && v.precio_gran_mayor_usd && (
+                                    <span className="text-[9px] font-black text-emerald-700 bg-emerald-100/90 px-1.5 py-0.2 rounded">
+                                      Ahorro por volumen
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block text-[10px] text-emerald-800 mb-0.5">Min. Cantidad</label>
+                                    <input
+                                      type="number"
+                                      min="2"
+                                      value={v.min_gran_mayor}
+                                      onChange={(e) => handleUpdateNewProductVariant(v.id, "min_gran_mayor", e.target.value)}
+                                      className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] text-emerald-800 mb-0.5">Precio ($ USD) *</label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={v.precio_gran_mayor_usd}
+                                      onChange={(e) => handleUpdateNewProductVariant(v.id, "precio_gran_mayor_usd", e.target.value)}
+                                      placeholder="19.50"
+                                      className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-900"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="pt-2 flex justify-between items-center">
+                      <button
+                        type="button"
+                        onClick={handleAddNewProductVariant}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold border border-brand/30 text-brand hover:bg-brand/10 transition-colors flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Agregar Otro SKU / Color</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setCreateActiveTab("photos")}
+                        className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 transition-all shadow-xs"
+                      >
+                        <span>Continuar a Fotos del Carrusel</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ─────────────────────────────────────────────────────────
+                  PESTAÑA 3: FOTOS DEL PRODUCTO Y VINCULACIÓN CON VARIANTES
+                  ───────────────────────────────────────────────────────── */}
+                {createActiveTab === "photos" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                          Fotos del Producto ({newProductPhotoItems.length} / 10)
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Sube las fotos, selecciona la portada principal y vincula cada foto a su color/variante.
+                        </p>
+                      </div>
+
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all">
+                        <Plus className="w-4 h-4" />
+                        <span>Seleccionar Fotos</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleSelectNewPhotos}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {newProductPhotoItems.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                        {newProductPhotoItems.map((item, idx) => (
+                          <div
+                            key={item.id}
+                            className={`relative rounded-2xl border p-2 bg-white transition-all shadow-2xs flex flex-col justify-between space-y-2 ${item.isPrimary
                                 ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-md"
                                 : "border-slate-200"
-                            }`}
+                              }`}
                           >
                             <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-100 border border-slate-100">
-                              <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
+                              <img
+                                src={item.previewUrl}
+                                alt={`Foto ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
 
-                              {foto.isPrimary ? (
+                              {item.isPrimary ? (
                                 <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black flex items-center gap-1 shadow-sm">
                                   <Star className="w-3 h-3 fill-white" /> Portada
                                 </span>
                               ) : (
                                 <button
                                   type="button"
-                                  onClick={() => handleSetPrimaryPhoto(editingProduct.id!, foto.publicId!)}
+                                  onClick={() => handleSetPrimaryNewPhoto(item.id)}
                                   className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 hover:bg-emerald-600 text-white text-[10px] font-bold opacity-90 group-hover:opacity-100 transition-opacity"
                                 >
                                   Hacer Portada
@@ -4314,7 +3062,7 @@ export default function AdminProductosPage() {
 
                               <button
                                 type="button"
-                                onClick={() => handleDeletePhoto(editingProduct.id!, foto.publicId!, foto.url)}
+                                onClick={() => handleRemoveNewPhoto(item.id)}
                                 className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-xs"
                               >
                                 <Trash2 className="w-3 h-3" />
@@ -4329,8 +3077,8 @@ export default function AdminProductosPage() {
                             <div className="flex items-center justify-between gap-1">
                               <button
                                 type="button"
-                                disabled={idx === 0 || isProcessingMedia}
-                                onClick={() => handleMoveExistingPhoto(editingProduct.id!, idx, idx - 1, editingProduct.fotos)}
+                                disabled={idx === 0}
+                                onClick={() => handleMoveNewPhoto(idx, -1)}
                                 className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
                               >
                                 <ChevronLeft className="w-3 h-3" />
@@ -4338,8 +3086,8 @@ export default function AdminProductosPage() {
                               </button>
                               <button
                                 type="button"
-                                disabled={idx === arr.length - 1 || isProcessingMedia}
-                                onClick={() => handleMoveExistingPhoto(editingProduct.id!, idx, idx + 1, editingProduct.fotos)}
+                                disabled={idx === newProductPhotoItems.length - 1}
+                                onClick={() => handleMoveNewPhoto(idx, 1)}
                                 className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
                               >
                                 <span>Después</span>
@@ -4347,43 +3095,1157 @@ export default function AdminProductosPage() {
                               </button>
                             </div>
 
-                            {/* Selector de Variante / Color Asociado */}
+                            {/* Vinculación con Variante / Color */}
                             <div className="pt-1.5 border-t border-slate-100 space-y-1">
                               <label className="text-[10px] font-bold text-slate-600 flex items-center gap-1">
                                 <Palette className="w-3 h-3 text-brand" />
                                 <span>Vincular a Color / SKU:</span>
                               </label>
                               <select
-                                value={foto.varianteColor || ""}
-                                disabled={isProcessingMedia}
-                                onChange={(e) => handleSetPhotoVariant(editingProduct.id!, foto.publicId!, e.target.value)}
-                                className={`w-full text-xs font-bold py-1.5 px-2 rounded-xl border transition-colors ${
-                                  foto.varianteColor
+                                value={item.varianteColor || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setNewProductPhotoItems((prev) =>
+                                    prev.map((p) => (p.id === item.id ? { ...p, varianteColor: val } : p))
+                                  );
+                                }}
+                                className={`w-full text-xs font-bold py-1.5 px-2 rounded-xl border transition-colors ${item.varianteColor
                                     ? "bg-brand/10 text-brand border-brand/30 ring-1 ring-brand/20"
                                     : "bg-slate-50 text-slate-600 border-slate-200"
-                                }`}
+                                  }`}
                               >
                                 <option value="">🌐 General (Todas las variantes)</option>
-                                {(editingProduct.variantes || []).map((v) => (
-                                  <option key={v.sku} value={v.color}>
-                                    🎨 {v.color || "Estándar"} (SKU: {v.sku})
+                                {newProductVariants.map((v, i) => (
+                                  <option key={v.id} value={v.color}>
+                                    🎨 {v.color || `Variante ${i + 1}`} {v.sku ? `(SKU: ${v.sku})` : ""}
                                   </option>
                                 ))}
                               </select>
-                              {foto.varianteColor && (
+                              {item.varianteColor && (
                                 <span className="text-[9px] font-black text-brand block">
-                                  ✓ Vinculada a {foto.varianteColor}
+                                  ✓ Asociada a {item.varianteColor}
                                 </span>
                               )}
                             </div>
                           </div>
                         ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2 bg-slate-50/50">
+                        <ImageIcon className="w-8 h-8 text-slate-300" />
+                        <span className="font-medium">No has seleccionado fotos todavía.</span>
+                        <label className="cursor-pointer px-4 py-2 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-xs mt-1">
+                          <span>Seleccionar Fotos</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleSelectNewPhotos}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Fijo Siempre Visible Abajo */}
+              <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/90 text-xs">
+                <span className="text-slate-500 font-bold">
+                  {newProductVariants.length} SKU(s) · {newProductPhotoItems.length} foto(s)
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200/70 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateProduct}
+                    disabled={creatingProduct}
+                    className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50 transition-all active:scale-95 flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{creatingProduct ? "Creando Producto..." : "Crear Producto Completo"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────
+          MODAL: EDITAR INFORMACIÓN COMPLETA DEL PRODUCTO
+          ───────────────────────────────────────────────────────── */}
+        {editingProduct && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+              {/* Header Fijo */}
+              <div className="flex items-center justify-between p-4 sm:p-6 pb-3 border-b border-slate-100 flex-shrink-0 bg-white">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                      Editar Información del Producto
+                    </h3>
+                    <span className="text-[11px] text-slate-500 truncate max-w-md block">
+                      {editingProduct.nombre} · SKU: {editingProduct.sku}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Barra de Pestañas (Tabs) Unificada */}
+              <div className="flex items-center border-b border-slate-200 bg-slate-50/80 px-4 sm:px-6 gap-2 flex-shrink-0 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setEditActiveTab("general")}
+                  className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${editActiveTab === "general"
+                      ? "border-brand text-brand font-black bg-white/70"
+                      : "border-transparent text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>1. Información General</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditActiveTab("variants")}
+                  className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${editActiveTab === "variants"
+                      ? "border-brand text-brand font-black bg-white/70"
+                      : "border-transparent text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>2. Variantes & SKUs</span>
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
+                    {(editingProduct.variantes || []).length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditActiveTab("photos")}
+                  className={`py-3 px-3.5 font-bold border-b-2 flex items-center gap-1.5 transition-colors ${editActiveTab === "photos"
+                      ? "border-brand text-brand font-black bg-white/70"
+                      : "border-transparent text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>3. Galería de Fotos</span>
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-brand/10 text-brand font-black">
+                    {(editingProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length}
+                  </span>
+                </button>
+              </div>
+
+              {/* Contenido desplazable con scroll único */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
+                {/* ─────────────────────────────────────────────────────────
+                  PESTAÑA 1: INFORMACIÓN GENERAL
+                  ───────────────────────────────────────────────────────── */}
+                {editActiveTab === "general" && (
+                  <form id="form-edit-product" onSubmit={handleSaveEditProduct} className="space-y-4">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Nombre Completo *</label>
+                      <input
+                        type="text"
+                        value={editingProduct.nombre}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, nombre: e.target.value })}
+                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-sm"
+                        required
+                      />
                     </div>
-                  ) : (
-                    <div className="p-8 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2 bg-slate-50/50">
-                      <ImageIcon className="w-8 h-8 text-slate-300" />
-                      <span className="font-medium">No hay fotos subidas todavía para este producto.</span>
-                      <label className="cursor-pointer px-4 py-2 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-xs mt-1">
+
+                    {/* Selector múltiple de Categorías */}
+                    <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block font-bold text-slate-800 text-xs">
+                          Categorías del Producto * <span className="font-normal text-slate-500">(Puedes asignarle varias categorías)</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowCategoryManager(true)}
+                          className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                          <span>Gestionar / Eliminar Categorías</span>
+                        </button>
+                      </div>
+
+                      {/* Chips de categorías asignadas actualmente */}
+                      <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[42px] items-center">
+                        {editProductSelectedCategories.length > 0 ? (
+                          editProductSelectedCategories.map((cat) => (
+                            <span
+                              key={cat}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white font-bold text-xs shadow-2xs animate-fadeIn"
+                            >
+                              <span>{cat}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveEditCategory(cat)}
+                                className="hover:bg-white/20 rounded p-0.5 transition-colors"
+                                title={`Quitar ${cat}`}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-amber-600 font-semibold italic">
+                            ⚠️ Haz clic en una o más categorías abajo para asignarlas al producto
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Botones de selección rápida */}
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-500">
+                          Categorías disponibles (haz clic para activar o desactivar):
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
+                          {Array.from(new Set([...availableCategories, ...editProductSelectedCategories])).map((cat) => {
+                            const isSelected = editProductSelectedCategories.includes(cat);
+                            return (
+                              <button
+                                key={cat}
+                                type="button"
+                                onClick={() => handleToggleEditCategory(cat)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${isSelected
+                                    ? "bg-brand text-white shadow-2xs ring-2 ring-brand/40"
+                                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                                  }`}
+                              >
+                                {isSelected ? (
+                                  <Check className="w-3.5 h-3.5 text-white" />
+                                ) : (
+                                  <Plus className="w-3.5 h-3.5 text-slate-400" />
+                                )}
+                                <span>{cat}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Crear nueva categoría en el momento */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          type="text"
+                          value={inlineEditCatInput}
+                          onChange={(e) => setInlineEditCatInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddInlineNewCategory(true);
+                            }
+                          }}
+                          placeholder="+ Escribir nueva categoría (ej. Vasos, Limpieza) y presionar Enter..."
+                          className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddInlineNewCategory(true)}
+                          className="h-9 px-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1 flex-shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Crear y Asignar</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Descripción</label>
+                      <textarea
+                        rows={3}
+                        value={editingProduct.descripcionLarga || ""}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, descripcionLarga: e.target.value })}
+                        placeholder="Descripción detallada del producto..."
+                        className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
+                      />
+                    </div>
+
+                    {/* Unidad de Venta y Estado */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block font-bold text-slate-700 text-xs mb-1">Unidad de Venta</label>
+                        <input
+                          type="text"
+                          value={editingProduct.unidadVenta || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, unidadVenta: e.target.value })}
+                          placeholder="ej. 50 Unidades, Paquete, Bulto"
+                          className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-4 pt-4 sm:pt-6">
+                        <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 text-xs select-none">
+                          <input
+                            type="checkbox"
+                            checked={editingProduct.activo}
+                            onChange={(e) => setEditingProduct({ ...editingProduct, activo: e.target.checked })}
+                            className="w-4 h-4 text-brand rounded focus:ring-brand"
+                          />
+                          <span>Producto Activo en tienda</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer font-bold text-amber-700 text-xs select-none">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(editingProduct.destacado)}
+                            onChange={(e) => setEditingProduct({ ...editingProduct, destacado: e.target.checked })}
+                            className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                          />
+                          <span>Destacado</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* ─── COSTOS Y PRECIOS BASE (Modificables si hubo variación de costo de proveedor) ─── */}
+                    <div className="rounded-2xl border-2 border-amber-500/30 bg-amber-50/40 p-4 space-y-3.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/70 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                            <DollarSign className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                              Costos de Compra y Precios de Venta (Base)
+                            </h4>
+                            <p className="text-[11px] text-slate-600">
+                              Modifica los costos si tu proveedor varió el precio para calcular tu margen exacto.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Botón sugerir precios automáticamente */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cMayor = Number(editingProduct.costoMayorUsd) || 0;
+                            if (cMayor > 0) {
+                              const sugMayor = Number((cMayor / 0.70).toFixed(2));
+                              const cGran = Number(editingProduct.costoGranMayorUsd) || cMayor;
+                              const sugGran = Number((cGran / 0.80).toFixed(2));
+                              setEditingProduct({
+                                ...editingProduct,
+                                precioMayorUsd: sugMayor,
+                                precioGranMayorUsd: sugGran,
+                              });
+                              showToast(`Precios sugeridos calculados: Mayor $${sugMayor.toFixed(2)} / Gran Mayor $${sugGran.toFixed(2)}`);
+                            } else {
+                              showToast("Ingresa primero el Costo de Compra Mayor para sugerir precios", "error");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-2xs self-start sm:self-auto transition-all active:scale-95"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Sugerir Precios (÷ 0.70 / ÷ 0.80)</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        {/* Columna Nivel 1: Al Mayor */}
+                        <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-3 shadow-2xs">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                            <span className="font-black text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                              <span className="w-2 h-2 rounded-full bg-slate-900" />
+                              Nivel 1: Venta al Mayor
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                              Base Regular
+                            </span>
+                          </div>
+
+                          <div className="space-y-2.5">
+                            <div>
+                              <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                Costo Compra Proveedor ($ USD)
+                              </label>
+                              <div className="relative">
+                                <DollarSign className="w-3.5 h-3.5 text-amber-600 absolute left-2.5 top-2.5" />
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editingProduct.costoMayorUsd ?? ""}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, costoMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
+                                  placeholder="0.00"
+                                  className="w-full h-8 pl-7 pr-3 rounded-lg border border-amber-300 bg-amber-50/20 focus:bg-white font-bold text-xs text-slate-900"
+                                />
+                              </div>
+                              <span className="text-[9px] text-slate-400 block mt-0.5 pl-0.5">
+                                Costo que te cobra el proveedor por paquete/unidad.
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                  Precio Venta ($ USD) *
+                                </label>
+                                <div className="relative">
+                                  <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingProduct.precioMayorUsd ?? ""}
+                                    onChange={(e) => setEditingProduct({ ...editingProduct, precioMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
+                                    placeholder="0.00"
+                                    className="w-full h-8 pl-7 pr-3 rounded-lg border border-slate-300 bg-white font-black text-xs text-slate-900"
+                                    required
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                  Cant. Mínima (u.) *
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={editingProduct.minMayor || 1}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, minMayor: Number(e.target.value) || 1 })}
+                                  placeholder="1"
+                                  className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-white font-bold text-xs text-slate-900"
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            {/* Margen Mayor calculado en vivo */}
+                            {Boolean(editingProduct.precioMayorUsd && editingProduct.costoMayorUsd) && (
+                              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[10px] flex items-center justify-between">
+                                <span className="text-slate-600">
+                                  Ganancia: <strong className="text-emerald-700">+${(Number(editingProduct.precioMayorUsd) - Number(editingProduct.costoMayorUsd)).toFixed(2)}</strong>
+                                </span>
+                                <span className="text-slate-700 font-bold">
+                                  Margen: {Math.round(((Number(editingProduct.precioMayorUsd) - Number(editingProduct.costoMayorUsd)) / Number(editingProduct.precioMayorUsd)) * 100)}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Columna Nivel 2: Gran Mayor */}
+                        <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-300/80 space-y-3 shadow-2xs">
+                          <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
+                            <span className="font-black text-emerald-950 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                              <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                              Nivel 2: Gran Mayor (Volumen)
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
+                              Precio Volumen
+                            </span>
+                          </div>
+
+                          <div className="space-y-2.5">
+                            <div>
+                              <label className="block font-bold text-emerald-950 text-[11px] mb-1">
+                                Costo Compra Gran Mayor ($ USD)
+                              </label>
+                              <div className="relative">
+                                <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editingProduct.costoGranMayorUsd ?? ""}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, costoGranMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
+                                  placeholder={editingProduct.costoMayorUsd ? `Mismo ($${editingProduct.costoMayorUsd})` : "0.00"}
+                                  className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                />
+                              </div>
+                              <span className="text-[9px] text-emerald-700 block mt-0.5 pl-0.5">
+                                Costo con descuento que da el proveedor al comprar volumen.
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block font-bold text-emerald-950 text-[11px] mb-1">
+                                  Precio Gran Mayor ($ USD) *
+                                </label>
+                                <div className="relative">
+                                  <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingProduct.precioGranMayorUsd ?? ""}
+                                    onChange={(e) => setEditingProduct({ ...editingProduct, precioGranMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
+                                    placeholder="0.00"
+                                    className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-950"
+                                    required
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block font-bold text-emerald-950 text-[11px] mb-1">
+                                  Mínimo Gran Mayor (u.) *
+                                </label>
+                                <input
+                                  type="number"
+                                  min="2"
+                                  value={editingProduct.minGranMayor || 5}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, minGranMayor: Number(e.target.value) || 5 })}
+                                  placeholder="5"
+                                  className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            {/* Margen Gran Mayor calculado en vivo */}
+                            {Boolean(editingProduct.precioGranMayorUsd && (editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)) && (
+                              <div className="p-2 rounded-lg bg-white/90 border border-emerald-200 text-[10px] flex items-center justify-between">
+                                <span className="text-emerald-900">
+                                  Ganancia: <strong className="text-emerald-700">+${(Number(editingProduct.precioGranMayorUsd) - Number(editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)).toFixed(2)}</strong>
+                                </span>
+                                <span className="text-emerald-800 font-bold">
+                                  Margen: {Math.round(((Number(editingProduct.precioGranMayorUsd) - Number(editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)) / Number(editingProduct.precioGranMayorUsd)) * 100)}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                )}
+
+                {/* ─────────────────────────────────────────────────────────
+                  PESTAÑA 2: GESTIÓN DE TODOS LOS SKUS / VARIANTES
+                  ───────────────────────────────────────────────────────── */}
+                {editActiveTab === "variants" && (
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                          SKUs y Variantes Registradas ({(editingProduct.variantes || []).length})
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Administra todos los SKUs, stock disponible y precios Mayor y Gran Mayor.
+                        </p>
+                      </div>
+
+                      {!isAddingEditVariant && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAddingEditVariant(true);
+                            setEditingVariantId(null);
+                            setEditVariantForm({
+                              color: "",
+                              sku: `${editingProduct.sku}-${(editingProduct.variantes || []).length + 1}`,
+                              presentacion: editingProduct.unidadVenta || "Unidad",
+                              stock: "100",
+                              costo_mayor_usd: editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : "",
+                              costo_gran_mayor_usd: editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : "",
+                              precio_mayor_usd: editingProduct.precioMayorUsd ? String(editingProduct.precioMayorUsd) : "",
+                              min_mayor: String(editingProduct.minMayor || 1),
+                              precio_gran_mayor_usd: editingProduct.precioGranMayorUsd ? String(editingProduct.precioGranMayorUsd) : "",
+                              min_gran_mayor: String(editingProduct.minGranMayor || 5),
+                            });
+                            setEditVarCostBase(editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : "");
+                            setEditVarCostGranBase(editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : "");
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all self-start sm:self-auto"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>+ Cargar Nuevo SKU</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Formulario para Agregar o Editar SKU */}
+                    {isAddingEditVariant && (
+                      <form
+                        onSubmit={handleSaveEditVariant}
+                        className="p-4 rounded-2xl bg-white border-2 border-brand/30 space-y-4 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                          <span className="font-black text-slate-800 text-sm">
+                            {editingVariantId ? "Modificar SKU Existente" : "Cargar Nuevo SKU a este Producto"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAddingEditVariant(false);
+                              setEditingVariantId(null);
+                            }}
+                            className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              Código SKU *
+                            </label>
+                            <input
+                              type="text"
+                              value={editVariantForm.sku}
+                              onChange={(e) => setEditVariantForm({ ...editVariantForm, sku: e.target.value })}
+                              placeholder="DOY-ROJ-250"
+                              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-mono text-xs font-bold"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              Color / Variante *
+                            </label>
+                            <input
+                              type="text"
+                              value={editVariantForm.color}
+                              onChange={(e) => setEditVariantForm({ ...editVariantForm, color: e.target.value })}
+                              placeholder="ej. Rojo, Negro"
+                              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs font-bold"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              Presentación
+                            </label>
+                            <input
+                              type="text"
+                              value={editVariantForm.presentacion}
+                              onChange={(e) => setEditVariantForm({ ...editVariantForm, presentacion: e.target.value })}
+                              placeholder="ej. 50 Und"
+                              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white text-xs"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              Stock Disponible
+                            </label>
+                            <input
+                              type="number"
+                              value={editVariantForm.stock}
+                              onChange={(e) => setEditVariantForm({ ...editVariantForm, stock: e.target.value })}
+                              placeholder="100"
+                              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white font-bold text-xs"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Calculadora en Formulario de SKU */}
+                        <div className="rounded-2xl border-2 border-emerald-500/20 bg-emerald-50/40 p-4 space-y-3.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                                <Calculator className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                                  Calculadora de Precios: Costo ÷ Factor (ej. $10 ÷ 0.70 = $14.29)
+                                </h4>
+                                <p className="text-[11px] text-emerald-800">
+                                  Fija los precios de este SKU con IVA Compra (16%) y/o IVA Venta (16%)
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowEditVarCalc(!showEditVarCalc)}
+                              className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
+                            >
+                              {showEditVarCalc ? "Ocultar" : "Mostrar"}
+                            </button>
+                          </div>
+
+                          {showEditVarCalc && (
+                            <div className="space-y-3.5 pt-1 text-xs">
+                              {/* Opciones globales de IVA */}
+                              <div className="flex flex-wrap items-center gap-3 bg-white p-2.5 rounded-xl border border-emerald-200">
+                                <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 text-[11px]">
+                                  <input
+                                    type="checkbox"
+                                    checked={editVarApplyIvaCompra}
+                                    onChange={(e) => setEditVarApplyIvaCompra(e.target.checked)}
+                                    className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                                  />
+                                  <span>¿Los costos de compra ya incluyen IVA? (Descontar Crédito Fiscal)</span>
+                                </label>
+
+                                <label className="flex items-center gap-2 cursor-pointer font-bold text-emerald-950 text-[11px] ml-auto">
+                                  <input
+                                    type="checkbox"
+                                    checked={editVarApplyIvaVenta}
+                                    onChange={(e) => setEditVarApplyIvaVenta(e.target.checked)}
+                                    className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                                  />
+                                  <span>+ IVA 16% a la Venta (Cobro al cliente en tienda)</span>
+                                </label>
+                              </div>
+
+                              {/* Dos Columnas Simétricas: Mayor y Gran Mayor */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                {/* Columna Nivel 1: Venta al Mayor */}
+                                <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 space-y-3 shadow-2xs">
+                                  <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                                    <span className="font-black text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                                      <span className="w-2 h-2 rounded-full bg-slate-900" />
+                                      Nivel 1: Venta al Mayor
+                                    </span>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                                      Regular
+                                    </span>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <div>
+                                      <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                        Costo de Compra Mayor ($ USD) *
+                                      </label>
+                                      <div className="relative">
+                                        <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          value={editVarCostBase}
+                                          onChange={(e) => setEditVarCostBase(e.target.value)}
+                                          placeholder="ej. 10.00"
+                                          className="w-full h-8 pl-7 pr-3 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                                          Cant. Mínima Mayor *
+                                        </label>
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          value={editVariantForm.min_mayor}
+                                          onChange={(e) => setEditVariantForm({ ...editVariantForm, min_mayor: e.target.value })}
+                                          placeholder="1"
+                                          className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs text-slate-900"
+                                        />
+                                      </div>
+
+                                      <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                          <label className="font-bold text-slate-700 text-[11px]">
+                                            Factor Divisor Mayor
+                                          </label>
+                                          <span className="text-[10px] font-black text-emerald-700">
+                                            ÷ {computePricing(editVarCostBase, editVarApplyIvaCompra, editVarApplyIvaVenta, editVarMarginMayor, editVarMarginGranMayor, editVariantForm.min_mayor, editVariantForm.min_gran_mayor, editVarCostGranBase).factorMayorStr}
+                                          </span>
+                                        </div>
+                                        <input
+                                          type="text"
+                                          value={editVarMarginMayor}
+                                          onChange={(e) => setEditVarMarginMayor(e.target.value)}
+                                          placeholder="0.70"
+                                          className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white font-bold text-xs"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Desglose Fiscal Mayor */}
+                                  {parseFloat(editVarCostBase) > 0 && (() => {
+                                    const p = computePricing(
+                                      editVarCostBase,
+                                      editVarApplyIvaCompra,
+                                      editVarApplyIvaVenta,
+                                      editVarMarginMayor,
+                                      editVarMarginGranMayor,
+                                      editVariantForm.min_mayor,
+                                      editVariantForm.min_gran_mayor,
+                                      editVarCostGranBase
+                                    );
+                                    return (
+                                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] space-y-1">
+                                        <div className="grid grid-cols-2 gap-1 text-slate-600">
+                                          <span>Base Real: <strong>${p.costBaseMayor.toFixed(2)}</strong></span>
+                                          <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalMayor.toFixed(2)}</strong></span>
+                                          <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaMayor.toFixed(2)}</strong></span>
+                                          <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatMayor.toFixed(2)}</strong></span>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[11px] font-bold">
+                                          <span className="text-slate-600">Ganancia Neta: <strong className="text-emerald-700">${p.profitMayor.toFixed(2)}</strong></span>
+                                          <span className="text-slate-900">Precio Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pMayor.toFixed(2)}</strong></span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+
+                                {/* Columna Nivel 2: Gran Mayor (Volumen) */}
+                                <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-300 space-y-3 shadow-2xs">
+                                  <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
+                                    <span className="font-black text-emerald-950 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                      Nivel 2: Gran Mayor (Volumen)
+                                    </span>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
+                                      Descuento Proveedor
+                                    </span>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <div>
+                                      <label className="block font-bold text-emerald-950 text-[11px] mb-1">
+                                        Costo Compra Gran Mayor ($ USD)
+                                      </label>
+                                      <div className="relative">
+                                        <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          value={editVarCostGranBase}
+                                          onChange={(e) => setEditVarCostGranBase(e.target.value)}
+                                          placeholder={editVarCostBase ? `Mismo costo ($${editVarCostBase})` : "ej. 8.50"}
+                                          className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                        />
+                                      </div>
+                                      <span className="text-[9px] text-emerald-700 font-medium block mt-0.5 pl-0.5">
+                                        {editVarCostGranBase ? `✓ Costo especial proveedor: $${editVarCostGranBase} por paquete` : `(Si está vacío, usa el costo de Mayor: $${editVarCostBase || "0.00"})`}
+                                      </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="block font-bold text-emerald-950 text-[11px] mb-1">
+                                          Cant. Mínima Gran Mayor *
+                                        </label>
+                                        <input
+                                          type="number"
+                                          min="2"
+                                          value={editVariantForm.min_gran_mayor}
+                                          onChange={(e) => setEditVariantForm({ ...editVariantForm, min_gran_mayor: e.target.value })}
+                                          placeholder="5"
+                                          className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                        />
+                                      </div>
+
+                                      <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                          <label className="font-bold text-emerald-950 text-[11px]">
+                                            Factor Divisor Gran Mayor
+                                          </label>
+                                          <span className="text-[10px] font-black text-emerald-800">
+                                            ÷ {computePricing(editVarCostBase, editVarApplyIvaCompra, editVarApplyIvaVenta, editVarMarginMayor, editVarMarginGranMayor, editVariantForm.min_mayor, editVariantForm.min_gran_mayor, editVarCostGranBase).factorGranStr}
+                                          </span>
+                                        </div>
+                                        <input
+                                          type="text"
+                                          value={editVarMarginGranMayor}
+                                          onChange={(e) => setEditVarMarginGranMayor(e.target.value)}
+                                          placeholder="0.80"
+                                          className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Desglose Fiscal Gran Mayor */}
+                                  {parseFloat(editVarCostBase) > 0 && (() => {
+                                    const p = computePricing(
+                                      editVarCostBase,
+                                      editVarApplyIvaCompra,
+                                      editVarApplyIvaVenta,
+                                      editVarMarginMayor,
+                                      editVarMarginGranMayor,
+                                      editVariantForm.min_mayor,
+                                      editVariantForm.min_gran_mayor,
+                                      editVarCostGranBase
+                                    );
+                                    return (
+                                      <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-300 text-[10px] space-y-1">
+                                        <div className="grid grid-cols-2 gap-1 text-slate-600">
+                                          <span>Base Real: <strong>${p.costBaseGran.toFixed(2)}</strong></span>
+                                          <span>Crédito Fiscal: <strong className="text-emerald-700">+${p.creditoFiscalGran.toFixed(2)}</strong></span>
+                                          <span>Débito Fiscal: <strong className="text-blue-700">+${p.ivaGran.toFixed(2)}</strong></span>
+                                          <span>A pagar SENIAT: <strong className="text-purple-700">${p.ivaSeniatGran.toFixed(2)}</strong></span>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-1 border-t border-emerald-100 text-[11px] font-bold">
+                                          <span className="text-slate-700">Ganancia Neta: <strong className="text-emerald-700">${p.profitGran.toFixed(2)}</strong></span>
+                                          <span className="text-emerald-950">Precio Gran Mayor: <strong className="text-emerald-800 text-xs font-black">${p.pGran.toFixed(2)}</strong></span>
+                                        </div>
+                                        {p.savingsGranMayor > 0 && (
+                                          <div className="text-center pt-0.5 text-[10px] font-black text-amber-700 bg-amber-50 rounded-md py-0.5">
+                                            ★ Ahorro para el cliente al comprar {p.minGM} u.: ${p.savingsGranMayor.toFixed(2)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+
+                              {/* Botón Aplicar Precios al SKU */}
+                              {parseFloat(editVarCostBase) > 0 && (
+                                <div className="flex items-center justify-end gap-2 pt-1 border-t border-emerald-200">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const computed = computePricing(
+                                        editVarCostBase,
+                                        editVarApplyIvaCompra,
+                                        editVarApplyIvaVenta,
+                                        editVarMarginMayor,
+                                        editVarMarginGranMayor,
+                                        editVariantForm.min_mayor,
+                                        editVariantForm.min_gran_mayor,
+                                        editVarCostGranBase
+                                      );
+                                      if (computed.pMayor > 0) {
+                                        setEditVariantForm((prev) => ({
+                                          ...prev,
+                                          precio_mayor_usd: computed.pMayor.toFixed(2),
+                                          precio_gran_mayor_usd: computed.pGran.toFixed(2),
+                                        }));
+                                        showToast("¡Precios calculados aplicados a los campos del SKU!");
+                                      }
+                                    }}
+                                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+                                  >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <span>Aplicar Precios a este SKU</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Precios Mayor y Gran Mayor */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <span className="text-[10px] font-black uppercase text-slate-700 block">
+                              Nivel 1: Venta al Mayor
+                            </span>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <label className="block text-[10px] text-slate-500 mb-0.5">Costo ($ USD)</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editVariantForm.costo_mayor_usd}
+                                  onChange={(e) => {
+                                    setEditVariantForm({ ...editVariantForm, costo_mayor_usd: e.target.value });
+                                    setEditVarCostBase(e.target.value);
+                                  }}
+                                  placeholder="0.00"
+                                  className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-amber-50/40 font-bold text-xs text-slate-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] text-slate-500 mb-0.5">Mínimo (u.)</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={editVariantForm.min_mayor}
+                                  onChange={(e) => setEditVariantForm({ ...editVariantForm, min_mayor: e.target.value })}
+                                  className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-bold text-xs"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] text-slate-500 mb-0.5">Precio ($) *</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editVariantForm.precio_mayor_usd}
+                                  onChange={(e) => setEditVariantForm({ ...editVariantForm, precio_mayor_usd: e.target.value })}
+                                  placeholder="22.75"
+                                  className="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-black text-xs text-slate-900"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-2">
+                            <span className="text-[10px] font-black uppercase text-emerald-950 block">
+                              Nivel 2: Gran Mayor (Volumen)
+                            </span>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <label className="block text-[10px] text-emerald-800 mb-0.5">Costo GM ($)</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editVariantForm.costo_gran_mayor_usd}
+                                  onChange={(e) => {
+                                    setEditVariantForm({ ...editVariantForm, costo_gran_mayor_usd: e.target.value });
+                                    setEditVarCostGranBase(e.target.value);
+                                  }}
+                                  placeholder="0.00"
+                                  className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] text-emerald-800 mb-0.5">Mínimo GM</label>
+                                <input
+                                  type="number"
+                                  min="2"
+                                  value={editVariantForm.min_gran_mayor}
+                                  onChange={(e) => setEditVariantForm({ ...editVariantForm, min_gran_mayor: e.target.value })}
+                                  className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] text-emerald-800 mb-0.5">Precio GM ($) *</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editVariantForm.precio_gran_mayor_usd}
+                                  onChange={(e) => setEditVariantForm({ ...editVariantForm, precio_gran_mayor_usd: e.target.value })}
+                                  placeholder="19.50"
+                                  className="w-full h-8 px-2 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-900"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAddingEditVariant(false);
+                              setEditingVariantId(null);
+                            }}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={savingVariant}
+                            className="px-4 py-2 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-xs disabled:opacity-50"
+                          >
+                            {savingVariant ? "Guardando..." : "Guardar SKU"}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {/* Listado de SKUs Existentes */}
+                    <div className="space-y-2.5">
+                      {(editingProduct.variantes || []).map((v) => (
+                        <div
+                          key={v.sku}
+                          className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-slate-800 text-sm">
+                                {v.color || "Estándar"}
+                              </span>
+                              <span className="font-mono text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                {v.sku}
+                              </span>
+                              {v.presentacion && (
+                                <span className="text-[10px] text-slate-400">
+                                  · {v.presentacion}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="text-[11px] text-slate-600 flex items-center gap-2.5 flex-wrap">
+                              <span>Stock: <strong className="text-slate-800">{v.stock}</strong> u.</span>
+                              {(v.costoMayorUsd !== undefined && v.costoMayorUsd !== null) || (editingProduct.costoMayorUsd !== undefined && editingProduct.costoMayorUsd !== null) ? (
+                                <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200/80 font-bold">
+                                  Costo: {formatUsd(v.costoMayorUsd ?? editingProduct.costoMayorUsd ?? 0)}
+                                </span>
+                              ) : null}
+                              <span>Mayor: <strong className="text-slate-800">{formatUsd(v.precioMayorUsd || 0)}</strong> (min {v.minMayor})</span>
+                              {v.precioGranMayorUsd ? (
+                                <span>Gran Mayor: <strong className="text-emerald-700">{formatUsd(v.precioGranMayorUsd)}</strong> (min {v.minGranMayor})</span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end sm:self-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsAddingEditVariant(true);
+                                setEditingVariantId(v.id || null);
+                                setEditVariantForm({
+                                  color: v.color || "",
+                                  sku: v.sku,
+                                  presentacion: v.presentacion || editingProduct.unidadVenta || "Unidad",
+                                  stock: String(v.stock),
+                                  costo_mayor_usd: v.costoMayorUsd !== undefined && v.costoMayorUsd !== null ? String(v.costoMayorUsd) : (editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : ""),
+                                  costo_gran_mayor_usd: v.costoGranMayorUsd !== undefined && v.costoGranMayorUsd !== null ? String(v.costoGranMayorUsd) : (editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : ""),
+                                  precio_mayor_usd: v.precioMayorUsd ? String(v.precioMayorUsd) : "",
+                                  min_mayor: String(v.minMayor || 1),
+                                  precio_gran_mayor_usd: v.precioGranMayorUsd ? String(v.precioGranMayorUsd) : "",
+                                  min_gran_mayor: String(v.minGranMayor || 5),
+                                });
+                                setEditVarCostBase(v.costoMayorUsd !== undefined && v.costoMayorUsd !== null ? String(v.costoMayorUsd) : (editingProduct.costoMayorUsd ? String(editingProduct.costoMayorUsd) : ""));
+                                setEditVarCostGranBase(v.costoGranMayorUsd !== undefined && v.costoGranMayorUsd !== null ? String(v.costoGranMayorUsd) : (editingProduct.costoGranMayorUsd ? String(editingProduct.costoGranMayorUsd) : ""));
+                              }}
+                              className="py-1 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold"
+                            >
+                              Editar
+                            </button>
+
+                            {(editingProduct.variantes || []).length > 1 && v.id && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteVariant(v.id!, v.color || v.sku)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                title="Eliminar este SKU"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ─────────────────────────────────────────────────────────
+                  PESTAÑA 3: GALERÍA DE FOTOS Y VINCULACIÓN CON VARIANTES
+                  ───────────────────────────────────────────────────────── */}
+                {editActiveTab === "photos" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                          Fotos del Carrusel ({(editingProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length} / 10)
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Elige la foto de portada ⭐ y vincula cada foto a su variante de color para la tienda.
+                        </p>
+                      </div>
+
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand text-white hover:bg-brand-hover shadow-xs active:scale-95 transition-all">
+                        <Plus className="w-4 h-4" />
                         <span>Subir Fotos</span>
                         <input
                           type="file"
@@ -4396,89 +4258,224 @@ export default function AdminProductosPage() {
                         />
                       </label>
                     </div>
-                  )}
+
+                    {(editingProduct.fotos || []).filter((f) => !f.url.includes("placehold.co")).length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                        {(editingProduct.fotos || [])
+                          .filter((f) => !f.url.includes("placehold.co"))
+                          .map((foto, idx, arr) => (
+                            <div
+                              key={foto.publicId || foto.url}
+                              className={`relative rounded-2xl border p-2 bg-white transition-all shadow-2xs flex flex-col justify-between space-y-2 ${foto.isPrimary
+                                  ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-md"
+                                  : "border-slate-200"
+                                }`}
+                            >
+                              <div className="relative group rounded-xl overflow-hidden aspect-square bg-slate-100 border border-slate-100">
+                                <img src={foto.url} alt={foto.alt} className="w-full h-full object-cover" />
+
+                                {foto.isPrimary ? (
+                                  <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black flex items-center gap-1 shadow-sm">
+                                    <Star className="w-3 h-3 fill-white" /> Portada
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetPrimaryPhoto(editingProduct.id!, foto.publicId!)}
+                                    className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 hover:bg-emerald-600 text-white text-[10px] font-bold opacity-90 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    Hacer Portada
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePhoto(editingProduct.id!, foto.publicId!, foto.url)}
+                                  className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-xs"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+
+                                <span className="absolute bottom-1.5 right-1.5 text-[9px] font-black text-white bg-black/60 px-1.5 py-0.5 rounded">
+                                  #{idx + 1}
+                                </span>
+                              </div>
+
+                              {/* Botones de orden */}
+                              <div className="flex items-center justify-between gap-1">
+                                <button
+                                  type="button"
+                                  disabled={idx === 0 || isProcessingMedia}
+                                  onClick={() => handleMoveExistingPhoto(editingProduct.id!, idx, idx - 1, editingProduct.fotos)}
+                                  className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                                >
+                                  <ChevronLeft className="w-3 h-3" />
+                                  <span>Antes</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === arr.length - 1 || isProcessingMedia}
+                                  onClick={() => handleMoveExistingPhoto(editingProduct.id!, idx, idx + 1, editingProduct.fotos)}
+                                  className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] font-bold text-slate-700 flex items-center justify-center gap-0.5 transition-colors"
+                                >
+                                  <span>Después</span>
+                                  <ChevronRight className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              {/* Selector de Variante / Color Asociado */}
+                              <div className="pt-1.5 border-t border-slate-100 space-y-1">
+                                <label className="text-[10px] font-bold text-slate-600 flex items-center gap-1">
+                                  <Palette className="w-3 h-3 text-brand" />
+                                  <span>Vincular a Color / SKU:</span>
+                                </label>
+                                <select
+                                  value={foto.varianteColor || ""}
+                                  disabled={isProcessingMedia}
+                                  onChange={(e) => handleSetPhotoVariant(editingProduct.id!, foto.publicId!, e.target.value)}
+                                  className={`w-full text-xs font-bold py-1.5 px-2 rounded-xl border transition-colors ${foto.varianteColor
+                                      ? "bg-brand/10 text-brand border-brand/30 ring-1 ring-brand/20"
+                                      : "bg-slate-50 text-slate-600 border-slate-200"
+                                    }`}
+                                >
+                                  <option value="">🌐 General (Todas las variantes)</option>
+                                  {(editingProduct.variantes || []).map((v) => (
+                                    <option key={v.sku} value={v.color}>
+                                      🎨 {v.color || "Estándar"} (SKU: {v.sku})
+                                    </option>
+                                  ))}
+                                </select>
+                                {foto.varianteColor && (
+                                  <span className="text-[9px] font-black text-brand block">
+                                    ✓ Vinculada a {foto.varianteColor}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2 bg-slate-50/50">
+                        <ImageIcon className="w-8 h-8 text-slate-300" />
+                        <span className="font-medium">No hay fotos subidas todavía para este producto.</span>
+                        <label className="cursor-pointer px-4 py-2 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover shadow-xs mt-1">
+                          <span>Subir Fotos</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files) handleUploadPhotos(editingProduct.id!, e.target.files);
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Fijo */}
+              <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/90 text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteProduct(editingProduct)}
+                  className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-1.5 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Eliminar Producto</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingProduct(null)}
+                    className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveEditProduct}
+                    disabled={savingEdit}
+                    className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50"
+                  >
+                    {savingEdit ? "Guardando..." : "Guardar Cambios"}
+                  </button>
                 </div>
-              )}
-            </div>
-
-            {/* Footer Fijo */}
-            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/90 text-xs">
-              <button
-                type="button"
-                onClick={() => handleDeleteProduct(editingProduct)}
-                className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-1.5 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Eliminar Producto</span>
-              </button>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingProduct(null)}
-                  className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveEditProduct}
-                  disabled={savingEdit}
-                  className="px-5 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover shadow-sm disabled:opacity-50"
-                >
-                  {savingEdit ? "Guardando..." : "Guardar Cambios"}
-                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ─────────────────────────────────────────────────────────────
+        {/* ─────────────────────────────────────────────────────────────
           MODAL: GESTIÓN Y ELIMINACIÓN DE CATEGORÍAS
           ───────────────────────────────────────────────────────────── */}
-      {showCategoryManager && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
-            {/* Header del Modal */}
-            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-brand/10 text-brand flex items-center justify-center font-black">
-                  <Layers className="w-5 h-5" />
+        {showCategoryManager && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+              {/* Header del Modal */}
+              <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-brand/10 text-brand flex items-center justify-center font-black">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                      Gestión de Categorías
+                    </h3>
+                    <span className="text-[11px] text-slate-500">
+                      Crea, administra y elimina categorías del catálogo
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    Gestión de Categorías
-                  </h3>
-                  <span className="text-[11px] text-slate-500">
-                    Crea, administra y elimina categorías del catálogo
-                  </span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryManager(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowCategoryManager(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Contenido */}
-            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
-              {/* Formulario para agregar nueva categoría */}
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
-                <label className="block font-bold text-slate-700 text-xs">
-                  Crear Nueva Categoría
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newCategoryManagerInput}
-                    onChange={(e) => setNewCategoryManagerInput(e.target.value)}
-                    onKeyDown={async (e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
+              {/* Contenido */}
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+                {/* Formulario para agregar nueva categoría */}
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+                  <label className="block font-bold text-slate-700 text-xs">
+                    Crear Nueva Categoría
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryManagerInput}
+                      onChange={(e) => setNewCategoryManagerInput(e.target.value)}
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const clean = newCategoryManagerInput.trim();
+                          if (!clean) return;
+                          const updatedDeleted = (theme?.deletedCategories || []).filter(
+                            (c) => c.toLowerCase() !== clean.toLowerCase()
+                          );
+                          const updatedCustom = Array.from(
+                            new Set([...(theme?.customCategories || []), clean])
+                          );
+                          await updateTheme({
+                            deletedCategories: updatedDeleted,
+                            customCategories: updatedCustom,
+                          });
+                          setNewCategoryManagerInput("");
+                          showToast(`Categoría "${clean}" agregada con éxito`);
+                        }
+                      }}
+                      placeholder="Nombre de la nueva categoría (ej. Vasos, Limpieza, Cajas)..."
+                      className="flex-1 h-10 px-3.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
                         const clean = newCategoryManagerInput.trim();
                         if (!clean) return;
                         const updatedDeleted = (theme?.deletedCategories || []).filter(
@@ -4493,107 +4490,85 @@ export default function AdminProductosPage() {
                         });
                         setNewCategoryManagerInput("");
                         showToast(`Categoría "${clean}" agregada con éxito`);
-                      }
-                    }}
-                    placeholder="Nombre de la nueva categoría (ej. Vasos, Limpieza, Cajas)..."
-                    className="flex-1 h-10 px-3.5 rounded-xl border border-slate-200 bg-white font-bold text-xs focus:border-brand focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const clean = newCategoryManagerInput.trim();
-                      if (!clean) return;
-                      const updatedDeleted = (theme?.deletedCategories || []).filter(
-                        (c) => c.toLowerCase() !== clean.toLowerCase()
-                      );
-                      const updatedCustom = Array.from(
-                        new Set([...(theme?.customCategories || []), clean])
-                      );
-                      await updateTheme({
-                        deletedCategories: updatedDeleted,
-                        customCategories: updatedCustom,
-                      });
-                      setNewCategoryManagerInput("");
-                      showToast(`Categoría "${clean}" agregada con éxito`);
-                    }}
-                    className="h-10 px-4 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 flex-shrink-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Agregar</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Lista de categorías activas */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-slate-500">
-                  <span className="font-bold text-xs">
-                    Categorías Activas ({availableCategories.length})
-                  </span>
-                  <span className="text-[11px]">Productos asociados</span>
-                </div>
-
-                {availableCategories.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    No hay categorías activas. Crea una arriba.
+                      }}
+                      className="h-10 px-4 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 flex-shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Agregar</span>
+                    </button>
                   </div>
-                ) : (
-                  <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 overflow-hidden bg-white">
-                    {availableCategories.map((cat) => {
-                      const count = products.filter((p) =>
-                        (p.categoria || "")
-                          .split(",")
-                          .map((c) => c.trim().toLowerCase())
-                          .includes(cat.toLowerCase())
-                      ).length;
+                </div>
 
-                      return (
-                        <div
-                          key={cat}
-                          className="flex items-center justify-between p-3 sm:px-4 hover:bg-slate-50 transition-colors"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-2 h-2 rounded-full bg-brand" />
-                            <div>
-                              <span className="font-black text-slate-800 text-xs block">
-                                {cat}
-                              </span>
-                              <span className="text-[10px] text-slate-400">
-                                {count === 0 ? "Sin productos asignados" : `${count} producto${count > 1 ? "s" : ""}`}
-                              </span>
-                            </div>
-                          </div>
+                {/* Lista de categorías activas */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="font-bold text-xs">
+                      Categorías Activas ({availableCategories.length})
+                    </span>
+                    <span className="text-[11px]">Productos asociados</span>
+                  </div>
 
-                          <button
-                            type="button"
-                            disabled={isProcessingCategoryDelete}
-                            onClick={() => handleDeleteCategory(cat)}
-                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-50"
-                            title={`Eliminar categoría ${cat}`}
+                  {availableCategories.length === 0 ? (
+                    <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      No hay categorías activas. Crea una arriba.
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 overflow-hidden bg-white">
+                      {availableCategories.map((cat) => {
+                        const count = products.filter((p) =>
+                          (p.categoria || "")
+                            .split(",")
+                            .map((c) => c.trim().toLowerCase())
+                            .includes(cat.toLowerCase())
+                        ).length;
+
+                        return (
+                          <div
+                            key={cat}
+                            className="flex items-center justify-between p-3 sm:px-4 hover:bg-slate-50 transition-colors"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-2 h-2 rounded-full bg-brand" />
+                              <div>
+                                <span className="font-black text-slate-800 text-xs block">
+                                  {cat}
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  {count === 0 ? "Sin productos asignados" : `${count} producto${count > 1 ? "s" : ""}`}
+                                </span>
+                              </div>
+                            </div>
 
-            {/* Footer del Modal */}
-            <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-end bg-slate-50/80 text-xs">
-              <button
-                type="button"
-                onClick={() => setShowCategoryManager(false)}
-                className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold transition-all shadow-xs"
-              >
-                Cerrar
-              </button>
+                            <button
+                              type="button"
+                              disabled={isProcessingCategoryDelete}
+                              onClick={() => handleDeleteCategory(cat)}
+                              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-50"
+                              title={`Eliminar categoría ${cat}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer del Modal */}
+              <div className="p-3.5 sm:px-6 border-t border-slate-100 flex items-center justify-end bg-slate-50/80 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryManager(false)}
+                  className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold transition-all shadow-xs"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

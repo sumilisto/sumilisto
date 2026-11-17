@@ -13,6 +13,7 @@ import { getStoreSettings } from "@/lib/actions/settings";
 import { Suspense } from "react";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import { SplashScreen } from "@/components/common/SplashScreen";
+import { MediaProtection } from "@/components/common/MediaProtection";
 
 const roboto = Roboto({
   weight: ["300", "400", "500", "700", "900"],
@@ -134,6 +135,9 @@ export default async function RootLayout({
       <body className="font-sans antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col selection:bg-brand selection:text-white">
         <Suspense fallback={null}>
           <AnalyticsTracker />
+        </Suspense>
+        <Suspense fallback={null}>
+          <MediaProtection />
         </Suspense>
         <SplashScreen />
         <ThemeProvider initialSettings={settings}>
