@@ -46,8 +46,8 @@ export const FloatingCartBar: React.FC = () => {
     return items.reduce((sum, item) => sum + (item.cantidad || 0), 0);
   }, [items]);
 
-  // No mostrar en la propia página de carrito ni si está vacío
-  if (pathname === "/carrito" || itemCount === 0) {
+  // No mostrar en la propia página de carrito, si está vacío ni en el panel admin
+  if (pathname === "/carrito" || itemCount === 0 || pathname?.startsWith("/admin")) {
     return null;
   }
 

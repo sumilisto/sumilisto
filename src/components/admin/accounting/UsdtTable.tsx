@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Plus, Settings2, Trash2, ArrowDownLeft, ArrowUpRight, Handshake, Coins, TrendingUp, ShieldCheck } from "lucide-react";
+import { Plus, Settings2, Trash2, ArrowDownLeft, ArrowUpRight, Handshake, Coins, TrendingUp, ShieldCheck, Zap } from "lucide-react";
 import { UsdtTransaction, UsdtRates, UsdtTxType } from "@/types/accounting";
 import { formatUsd } from "@/lib/currency/format";
 
@@ -129,13 +129,22 @@ export const UsdtTable: React.FC<UsdtTableProps> = ({
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-1">
               <span className="text-[10px] font-black uppercase tracking-wider">Tasas Activas P2P</span>
-              <button
-                onClick={onOpenRatesModal}
-                className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
-              >
-                <Settings2 className="w-3.5 h-3.5" />
-                <span>Editar</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={onOpenRatesModal}
+                  className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200 transition-colors"
+                >
+                  <Zap className="w-3 h-3 text-emerald-600 fill-emerald-600" />
+                  <span>En vivo</span>
+                </button>
+                <button
+                  onClick={onOpenRatesModal}
+                  className="text-[11px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-0.5 cursor-pointer p-0.5"
+                  title="Ajustar tasas"
+                >
+                  <Settings2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-xs text-slate-400 font-bold">Compra:</span>

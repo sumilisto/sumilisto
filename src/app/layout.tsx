@@ -140,7 +140,7 @@ export default async function RootLayout({
           <CartProvider>
             <ProductsProvider products={products} bcvRate={bcvRate}>
               <Header bcvRate={bcvRate} />
-              <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+              <main className="flex-1 min-w-0 w-full overflow-x-clip pb-16 sm:pb-0">{children}</main>
               <FloatingCartBar />
               <MobileBottomNav bcvRate={bcvRate} />
               <Footer />

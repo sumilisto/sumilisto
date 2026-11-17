@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, RefreshCcw, Coins, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
+import { X, RefreshCcw, Coins, TrendingUp, AlertCircle, CheckCircle2, Zap } from "lucide-react";
 import { UsdtRates } from "@/types/accounting";
 
 interface UsdtRatesModalProps {
@@ -22,6 +22,13 @@ export const UsdtRatesModal: React.FC<UsdtRatesModalProps> = ({
   const [tasaCompra, setTasaCompra] = useState<string>(String(currentRates.tasaCompraUsdt || ""));
   const [tasaVenta, setTasaVenta] = useState<string>(String(currentRates.tasaVentaUsdt || ""));
   const [saving, setSaving] = useState(false);
+  const [fetchingLive, setFetchingLive] = useState(false);
+  const [liveInfo, setLiveInfo] = useState<{
+    rate: number;
+    fuente: string;
+    tasaCompra: number;
+    tasaVenta: number;
+  } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -29,6 +36,28 @@ export const UsdtRatesModal: React.FC<UsdtRatesModalProps> = ({
 
   const numCompra = Number(tasaCompra) || 0;
   const numVenta = Number(tasaVenta) || 0;
+
+  const handleFetchLiveRate = async () => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    setFetchingLive(true);
+    try {
+      const res = await fetch("/api/accounting/usdt/live");
+      const json = await res.json();
+      if (res.ok && json.ok && json.data) {
+        setTasaCompra(String(json.data.tasaCompra));
+        setTasaVenta(String(json.data.tasaVenta));
+        setLiveInfo(json.data);
+        setSuccessMsg(`¡Tasa de ${json.data.fuente} cargada: Bs. ${json.data.rate.toLocaleString("es-VE", { minimumFractionDigits: 2 })}!`);
+      } else {
+        setErrorMsg("No se pudo obtener la tasa en vivo en este momento.");
+      }
+    } catch {
+      setErrorMsg("Error al consultar el mercado P2P.");
+    } finally {
+      setFetchingLive(false);
+    }
+  };
 
   // Brecha cambiaria con respecto al BCV oficial
   const brechaCompra = bcvRate > 0 && numCompra > 0 ? (((numCompra - bcvRate) / bcvRate) * 100).toFixed(2) : "0.00";
@@ -119,6 +148,35 @@ export const UsdtRatesModal: React.FC<UsdtRatesModalProps> = ({
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">
               Oficial bcv.org.ve
             </span>
+          </div>
+
+          {/* Sincronización en Tiempo Real desde Binance P2P */}
+          <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
+                <Zap className="w-4 h-4 text-emerald-600 fill-emerald-600" />
+                <span>Mercado Binance P2P en Vivo</span>
+                {liveInfo && (
+                  <span className="px-1.5 py-0.2 rounded bg-emerald-200/60 text-emerald-900 text-[10px] font-bold">
+                    {liveInfo.fuente}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-emerald-800/80 mt-0.5">
+                {liveInfo
+                  ? `Última cotización: Bs. ${liveInfo.rate.toLocaleString("es-VE", { minimumFractionDigits: 2 })} por USDT`
+                  : "Consulta la tasa real que se está cotizando en Venezuela en este momento"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleFetchLiveRate}
+              disabled={fetchingLive}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50 shrink-0"
+            >
+              <RefreshCcw className={`w-3.5 h-3.5 ${fetchingLive ? "animate-spin" : ""}`} />
+              <span>{fetchingLive ? "Consultando P2P..." : "⚡ Sincronizar en Vivo"}</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

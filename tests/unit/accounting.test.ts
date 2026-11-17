@@ -60,4 +60,16 @@ describe("Accounting & USDT Calculations", () => {
     const brechaPorcentaje = Math.round((((usdtBuyRate - bcvRate) / bcvRate) * 100) * 100) / 100;
     expect(brechaPorcentaje).toBe(5.0); // +5% sobre BCV
   });
+
+  it("resolves live USDT rate structure with valid fields", async () => {
+    const { getLiveUsdtRate } = await import("@/lib/currency/usdt");
+    const liveRate = await getLiveUsdtRate();
+
+    expect(liveRate).toBeDefined();
+    expect(liveRate.rate).toBeGreaterThan(0);
+    expect(liveRate.tasaCompra).toBeGreaterThan(0);
+    expect(liveRate.tasaVenta).toBeGreaterThan(0);
+    expect(liveRate.fuente).toBeDefined();
+    expect(liveRate.timestamp).toBeDefined();
+  });
 });

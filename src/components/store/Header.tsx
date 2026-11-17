@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { formatVes, normalizeWhatsAppPhone } from "@/lib/currency/format";
@@ -16,11 +17,17 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ bcvRate = 880.12 }) => {
+  const pathname = usePathname();
   const { itemCount } = useCart();
   const { theme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const instagramUrl = theme.instagramUrl || "https://www.instagram.com/sumilisto_/";
   const instagramHandle = theme.instagramHandle || "sumilisto_";
+
+  // En el panel administrativo de Sumilisto NO se debe mostrar la cabecera de la tienda
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>

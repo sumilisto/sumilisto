@@ -17,6 +17,12 @@ interface MobileBottomNavProps {
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = () => {
   const pathname = usePathname();
+
+  // En el panel administrativo de Sumilisto NO se debe mostrar la barra de navegación de la tienda
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   const { theme } = useTheme();
   const whatsappNum = normalizeWhatsAppPhone(theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber);
 

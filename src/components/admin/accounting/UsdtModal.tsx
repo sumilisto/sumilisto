@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, RefreshCcw, AlertCircle, ArrowDownLeft, ArrowUpRight, Handshake, CheckCircle2 } from "lucide-react";
+import { X, RefreshCcw, AlertCircle, ArrowDownLeft, ArrowUpRight, Handshake, CheckCircle2, Zap } from "lucide-react";
 import { UsdtTransaction, UsdtTxType, UsdtRates } from "@/types/accounting";
 
 interface UsdtModalProps {
@@ -34,7 +34,24 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
   const [descuentoPorcentaje, setDescuentoPorcentaje] = useState("5");
 
   const [saving, setSaving] = useState(false);
+  const [fetchingLive, setFetchingLive] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const fetchLiveRateForModal = async () => {
+    setFetchingLive(true);
+    try {
+      const res = await fetch("/api/accounting/usdt/live");
+      const json = await res.json();
+      if (res.ok && json.ok && json.data) {
+        const rateToUse = tipo === "venta" ? json.data.tasaVenta : json.data.tasaCompra;
+        handleTasaChange(String(rateToUse));
+      }
+    } catch (e) {
+      console.warn("Error fetching live rate:", e);
+    } finally {
+      setFetchingLive(false);
+    }
+  };
 
   // Auto-llenar tasa según el tipo
   useEffect(() => {
@@ -258,9 +275,21 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1 uppercase tracking-wider">
-                    Tasa Pactada (Bs. / USDT) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Tasa Pactada (Bs. / USDT) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={fetchLiveRateForModal}
+                      disabled={fetchingLive}
+                      className="text-[10px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer bg-emerald-100/70 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300 transition-colors"
+                      title="Obtener tasa P2P en vivo"
+                    >
+                      <Zap className={`w-3 h-3 text-emerald-600 ${fetchingLive ? "animate-spin" : "fill-emerald-600"}`} />
+                      <span>{fetchingLive ? "..." : "P2P en vivo"}</span>
+                    </button>
+                  </div>
                   <input
                     type="number"
                     step="0.01"
@@ -320,9 +349,21 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1 uppercase tracking-wider">
-                    Tasa Pactada (Bs. / USDT) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Tasa Pactada (Bs. / USDT) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={fetchLiveRateForModal}
+                      disabled={fetchingLive}
+                      className="text-[10px] font-bold text-rose-800 hover:text-rose-950 flex items-center gap-1 cursor-pointer bg-rose-100/70 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-300 transition-colors"
+                      title="Obtener tasa P2P en vivo"
+                    >
+                      <Zap className={`w-3 h-3 text-rose-600 ${fetchingLive ? "animate-spin" : "fill-rose-600"}`} />
+                      <span>{fetchingLive ? "..." : "P2P en vivo"}</span>
+                    </button>
+                  </div>
                   <input
                     type="number"
                     step="0.01"

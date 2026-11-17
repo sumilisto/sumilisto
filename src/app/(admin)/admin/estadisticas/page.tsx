@@ -300,11 +300,11 @@ export default function AdminEstadisticasPage() {
   const maxProductViews = data?.topProductos?.length ? Math.max(...data.topProductos.map((p) => p.views), 1) : 1;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <div className="min-h-screen bg-slate-50 text-slate-800 w-full max-w-full overflow-x-hidden">
       <div className="print:hidden">
         <AdminNav onLogout={() => setIsAuthenticated(false)} />
       </div>
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 print:p-0 print:m-0 print:max-w-none">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 print:p-0 print:m-0 print:max-w-none w-full max-w-full">
         
         {/* ── BARRA SUPERIOR: ENCABEZADO Y ACCIONES ── */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200 print:hidden">
@@ -527,7 +527,7 @@ export default function AdminEstadisticasPage() {
 
           {/* Leyenda Flotante Explicativa */}
           <div
-            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 max-w-[calc(100vw-32px)] p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
               activeTooltip === "visitas"
                 ? "opacity-100 visible translate-y-0"
                 : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
@@ -598,7 +598,7 @@ export default function AdminEstadisticasPage() {
 
           {/* Leyenda Flotante Explicativa */}
           <div
-            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 max-w-[calc(100vw-32px)] p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
               activeTooltip === "visitantes"
                 ? "opacity-100 visible translate-y-0"
                 : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
@@ -667,7 +667,7 @@ export default function AdminEstadisticasPage() {
 
           {/* Leyenda Flotante Explicativa */}
           <div
-            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 max-w-[calc(100vw-32px)] p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
               activeTooltip === "activos"
                 ? "opacity-100 visible translate-y-0"
                 : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
@@ -737,7 +737,7 @@ export default function AdminEstadisticasPage() {
 
           {/* Leyenda Flotante Explicativa */}
           <div
-            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
+            className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+12px)] w-72 sm:w-80 max-w-[calc(100vw-32px)] p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-slate-700/80 z-50 transition-all duration-200 ${
               activeTooltip === "productos"
                 ? "opacity-100 visible translate-y-0"
                 : "opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
@@ -1301,7 +1301,7 @@ export default function AdminEstadisticasPage() {
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                         {/* Datos del visitante */}
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
                           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 relative ${
                             v.isOnline ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
                           }`}>
@@ -1315,11 +1315,11 @@ export default function AdminEstadisticasPage() {
                             )}
                           </div>
 
-                          <div className="space-y-1">
+                          <div className="space-y-1 min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="font-black text-slate-900 text-sm flex items-center gap-1.5">
-                                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
-                                {v.ciudad}, {v.estado}
+                                <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                <span>{v.ciudad}, {v.estado}</span>
                               </span>
 
                               {v.isOnline ? (
@@ -1349,16 +1349,16 @@ export default function AdminEstadisticasPage() {
                             </div>
 
                             {/* Actividad actual */}
-                            <div className="text-slate-600 text-xs flex items-center gap-2">
+                            <div className="text-slate-600 text-xs break-words">
                               {v.ultimoProductoNombre ? (
-                                <span className="text-purple-800 font-semibold flex items-center gap-1.5">
+                                <span className="text-purple-800 font-semibold flex items-center gap-1.5 flex-wrap">
                                   <Package className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                                   <span>Ficha de producto: <strong className="text-slate-900">{v.ultimoProductoNombre}</strong> ({v.ultimoProductoSku})</span>
                                 </span>
                               ) : (
-                                <span className="flex items-center gap-1.5">
+                                <span className="flex items-center gap-1.5 flex-wrap">
                                   <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                  <span>Página actual: <strong className="font-mono text-slate-800">{v.ultimaRuta}</strong></span>
+                                  <span>Página actual: <strong className="font-mono text-slate-800 break-all">{v.ultimaRuta}</strong></span>
                                 </span>
                               )}
                             </div>
@@ -1403,20 +1403,20 @@ export default function AdminEstadisticasPage() {
                           </p>
                           <div className="space-y-1.5 pl-2 border-l-2 border-emerald-400">
                             {v.historial.map((h, i) => (
-                              <div key={i} className="flex items-center justify-between text-xs gap-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                              <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1 sm:gap-2 py-0.5">
+                                <div className="flex items-start gap-2 min-w-0 flex-1 break-words">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 mt-1.5" />
                                   {h.productoNombre ? (
                                     <span className="text-purple-900 font-medium">
                                       Vio producto: <strong className="font-bold">{h.productoNombre}</strong> ({h.productoSku})
                                     </span>
                                   ) : (
-                                    <span className="text-slate-700">
+                                    <span className="text-slate-700 break-all">
                                       Visitó: <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">{h.ruta}</code>
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-mono">
+                                <span className="text-[10px] text-slate-400 font-mono self-end sm:self-center shrink-0">
                                   {new Date(h.hora).toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                                 </span>
                               </div>
@@ -1441,7 +1441,7 @@ export default function AdminEstadisticasPage() {
               <div className="divide-y divide-slate-100">
                 {data.ultimasVisitas.map((v) => (
                   <div key={v.id} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs hover:bg-slate-50/60 px-2 rounded-xl transition-colors">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
                         {v.dispositivo === "Móvil" ? (
                           <Smartphone className="w-4 h-4 text-emerald-700" />
@@ -1449,8 +1449,8 @@ export default function AdminEstadisticasPage() {
                           <Monitor className="w-4 h-4 text-blue-700" />
                         )}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1 break-words">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-slate-900">
                             {v.ciudad}, {v.estado}
                           </span>
@@ -1458,13 +1458,13 @@ export default function AdminEstadisticasPage() {
                             · {v.dispositivo} ({v.navegador})
                           </span>
                         </div>
-                        <div className="text-slate-500 text-[11px]">
+                        <div className="text-slate-500 text-[11px] break-words">
                           {v.productoNombre ? (
-                            <span className="text-purple-700 font-semibold flex items-center gap-1">
-                              <Package className="w-3 h-3" /> Ficha: {v.productoNombre} ({v.productoSku})
+                            <span className="text-purple-700 font-semibold flex items-center gap-1 flex-wrap">
+                              <Package className="w-3 h-3 shrink-0" /> <span>Ficha: {v.productoNombre} ({v.productoSku})</span>
                             </span>
                           ) : (
-                            <span>Ruta: {v.ruta}</span>
+                            <span className="break-all">Ruta: {v.ruta}</span>
                           )}
                         </div>
                       </div>

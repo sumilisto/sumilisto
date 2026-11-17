@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { DEFAULT_STORE_CONFIG, STORE_CATEGORIES } from "@/lib/constants/brand";
 import { DEFAULT_SETTINGS } from "@/lib/constants/settings";
@@ -10,6 +11,13 @@ import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import { normalizeWhatsAppPhone } from "@/lib/currency/format";
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+
+  // En el panel administrativo de Sumilisto NO se debe mostrar el pie de página de la tienda
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   const { theme } = useTheme();
   const whatsappNum = normalizeWhatsAppPhone(theme.whatsappNumber || DEFAULT_STORE_CONFIG.whatsappNumber);
   const instagramUrl = theme.instagramUrl || "https://www.instagram.com/sumilisto_/";
