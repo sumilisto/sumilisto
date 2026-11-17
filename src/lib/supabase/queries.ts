@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Product, ProductVariant, ProductPhoto } from "@/types/product";
 import { Order, OrderStatus } from "@/types/order";
+import { Expense, UsdtTransaction, UsdtRates, DEFAULT_USDT_RATES } from "@/types/accounting";
 
 // ─────────────────────────────────────────────────────────
 // OBTENER TODOS LOS PRODUCTOS (con variantes y fotos)
@@ -70,10 +71,13 @@ export async function getSettings(): Promise<Record<string, any>> {
 
   if (error || !data) return {};
   const settingsData = { ...(data.data || {}) };
-  // SEGURIDAD: Nunca exponer carritos abandonados ni pedidos ni datos personales de clientes en configuraciones públicas
+  // SEGURIDAD: Nunca exponer carritos abandonados ni pedidos ni datos personales ni finanzas internas en configuraciones públicas
   delete settingsData.carritos_abandonados;
   delete settingsData.pedidos;
   delete settingsData.accounting_settings;
+  delete settingsData.gastos;
+  delete settingsData.operaciones_usdt;
+  delete settingsData.tasas_usdt;
   return { ...settingsData, tasaBcv: Number(data.tasa_bcv) || 880.12 };
 }
 
@@ -100,6 +104,15 @@ export async function updateSettings(settings: Record<string, any>): Promise<boo
   }
   if (existingData.accounting_settings) {
     mergedData.accounting_settings = existingData.accounting_settings;
+  }
+  if (existingData.gastos) {
+    mergedData.gastos = existingData.gastos;
+  }
+  if (existingData.operaciones_usdt) {
+    mergedData.operaciones_usdt = existingData.operaciones_usdt;
+  }
+  if (existingData.tasas_usdt) {
+    mergedData.tasas_usdt = existingData.tasas_usdt;
   }
 
   const updatePayload: Record<string, any> = { data: mergedData };
@@ -761,6 +774,235 @@ export async function deleteOrder(orderId: string): Promise<boolean> {
     return !updateError;
   } catch (err) {
     console.error("Error eliminando pedido:", err);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// GESTIÓN DE GASTOS Y TESORERÍA USDT
+// ─────────────────────────────────────────────────────────
+
+export interface AccountingData {
+  gastos: Expense[];
+  operacionesUsdt: UsdtTransaction[];
+  tasasUsdt: UsdtRates;
+}
+
+export async function getAccountingData(): Promise<AccountingData> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error || !data) {
+      return {
+        gastos: [],
+        operacionesUsdt: [],
+        tasasUsdt: DEFAULT_USDT_RATES,
+      };
+    }
+
+    const currentData = data.data || {};
+    return {
+      gastos: Array.isArray(currentData.gastos) ? currentData.gastos : [],
+      operacionesUsdt: Array.isArray(currentData.operaciones_usdt) ? currentData.operaciones_usdt : [],
+      tasasUsdt: currentData.tasas_usdt && typeof currentData.tasas_usdt === "object"
+        ? {
+            tasaCompraUsdt: Number(currentData.tasas_usdt.tasaCompraUsdt) || DEFAULT_USDT_RATES.tasaCompraUsdt,
+            tasaVentaUsdt: Number(currentData.tasas_usdt.tasaVentaUsdt) || DEFAULT_USDT_RATES.tasaVentaUsdt,
+            ultimaActualizacion: currentData.tasas_usdt.ultimaActualizacion,
+          }
+        : DEFAULT_USDT_RATES,
+    };
+  } catch (err) {
+    console.error("Error obteniendo datos contables:", err);
+    return {
+      gastos: [],
+      operacionesUsdt: [],
+      tasasUsdt: DEFAULT_USDT_RATES,
+    };
+  }
+}
+
+export async function saveExpense(expense: Expense): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const gastos: Expense[] = Array.isArray(currentData.gastos) ? currentData.gastos : [];
+
+    const existingIdx = gastos.findIndex((g) => g.id === expense.id);
+    let updatedGastos: Expense[];
+    if (existingIdx >= 0) {
+      updatedGastos = [...gastos];
+      updatedGastos[existingIdx] = { ...gastos[existingIdx], ...expense };
+    } else {
+      updatedGastos = [expense, ...gastos];
+    }
+
+    // Conservar historial seguro de hasta 1,000 gastos
+    if (updatedGastos.length > 1000) {
+      updatedGastos = updatedGastos.slice(0, 1000);
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          gastos: updatedGastos,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error guardando gasto:", err);
+    return false;
+  }
+}
+
+export async function deleteExpense(expenseId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const gastos: Expense[] = (Array.isArray(currentData.gastos) ? currentData.gastos : []).filter(
+      (g: Expense) => g.id !== expenseId
+    );
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          gastos,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error eliminando gasto:", err);
+    return false;
+  }
+}
+
+export async function saveUsdtTransaction(tx: UsdtTransaction): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const operaciones: UsdtTransaction[] = Array.isArray(currentData.operaciones_usdt) ? currentData.operaciones_usdt : [];
+
+    const existingIdx = operaciones.findIndex((o) => o.id === tx.id);
+    let updatedOperaciones: UsdtTransaction[];
+    if (existingIdx >= 0) {
+      updatedOperaciones = [...operaciones];
+      updatedOperaciones[existingIdx] = { ...operaciones[existingIdx], ...tx };
+    } else {
+      updatedOperaciones = [tx, ...operaciones];
+    }
+
+    if (updatedOperaciones.length > 1000) {
+      updatedOperaciones = updatedOperaciones.slice(0, 1000);
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          operaciones_usdt: updatedOperaciones,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error guardando operación USDT:", err);
+    return false;
+  }
+}
+
+export async function deleteUsdtTransaction(txId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+    const operaciones: UsdtTransaction[] = (Array.isArray(currentData.operaciones_usdt) ? currentData.operaciones_usdt : []).filter(
+      (o: UsdtTransaction) => o.id !== txId
+    );
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          operaciones_usdt: operaciones,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error eliminando operación USDT:", err);
+    return false;
+  }
+}
+
+export async function updateUsdtRates(rates: UsdtRates): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("configuracion")
+      .select("data")
+      .eq("id", 1)
+      .single();
+
+    if (error) return false;
+    const currentData = data?.data || {};
+
+    const updatedRates: UsdtRates = {
+      tasaCompraUsdt: Number(rates.tasaCompraUsdt) || DEFAULT_USDT_RATES.tasaCompraUsdt,
+      tasaVentaUsdt: Number(rates.tasaVentaUsdt) || DEFAULT_USDT_RATES.tasaVentaUsdt,
+      ultimaActualizacion: new Date().toISOString(),
+    };
+
+    const { error: updateError } = await supabaseAdmin
+      .from("configuracion")
+      .update({
+        data: {
+          ...currentData,
+          tasas_usdt: updatedRates,
+        },
+      })
+      .eq("id", 1);
+
+    return !updateError;
+  } catch (err) {
+    console.error("Error actualizando tasas USDT:", err);
     return false;
   }
 }

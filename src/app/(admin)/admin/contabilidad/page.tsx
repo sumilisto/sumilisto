@@ -6,9 +6,15 @@ import { isAdminAuthenticated, loginAdmin, logoutAdmin } from "@/lib/actions/aut
 import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from "@/lib/currency/format";
 import { Order, OrderItem, OrderStatus, DEFAULT_ACCOUNTING_SETTINGS } from "@/types/order";
 import { Product } from "@/types/product";
+import { Expense, UsdtTransaction, UsdtRates, DEFAULT_USDT_RATES } from "@/types/accounting";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
+import { ExpenseModal } from "@/components/admin/accounting/ExpenseModal";
+import { ExpensesTable } from "@/components/admin/accounting/ExpensesTable";
+import { UsdtModal } from "@/components/admin/accounting/UsdtModal";
+import { UsdtRatesModal } from "@/components/admin/accounting/UsdtRatesModal";
+import { UsdtTable } from "@/components/admin/accounting/UsdtTable";
 import {
   Calculator,
   Plus,
@@ -34,6 +40,12 @@ import {
   FileText,
   Percent,
   ClipboardList,
+  Coins,
+  Megaphone,
+  LayoutDashboard,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Handshake,
 } from "lucide-react";
 
 export default function AdminContabilidadPage() {
@@ -49,11 +61,22 @@ export default function AdminContabilidadPage() {
   const [loading, setLoading] = useState(true);
   const [bcvRate, setBcvRate] = useState<number>(880.12);
 
-  // Filtros
+  // Filtros y Navegación
+  const [activeTab, setActiveTab] = useState<"resumen" | "gastos" | "usdt" | "pedidos">("resumen");
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRange, setSelectedRange] = useState<"mes" | "todo">("mes");
   const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
+  // Estado de Gastos y Tesorería USDT
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [usdtTransactions, setUsdtTransactions] = useState<UsdtTransaction[]>([]);
+  const [usdtRates, setUsdtRates] = useState<UsdtRates>(DEFAULT_USDT_RATES);
+
+  // Modales
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showUsdtModal, setShowUsdtModal] = useState(false);
+  const [showRatesModal, setShowRatesModal] = useState(false);
 
   useEffect(() => {
     isAdminAuthenticated().then((auth) => {
@@ -68,10 +91,11 @@ export default function AdminContabilidadPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ordersRes, prodsRes, bcvRes] = await Promise.all([
+      const [ordersRes, prodsRes, bcvRes, acctRes] = await Promise.all([
         fetch("/api/orders").then((r) => r.json()),
         fetch("/api/products").then((r) => r.json()),
         fetch("/api/bcv").then((r) => r.json()),
+        fetch("/api/accounting").then((r) => r.json()),
       ]);
 
       if (ordersRes?.ok && Array.isArray(ordersRes.orders)) {
@@ -82,6 +106,11 @@ export default function AdminContabilidadPage() {
       }
       if (bcvRes?.rate) {
         setBcvRate(Number(bcvRes.rate));
+      }
+      if (acctRes?.ok) {
+        if (Array.isArray(acctRes.gastos)) setExpenses(acctRes.gastos);
+        if (Array.isArray(acctRes.operacionesUsdt)) setUsdtTransactions(acctRes.operacionesUsdt);
+        if (acctRes.tasasUsdt) setUsdtRates(acctRes.tasasUsdt);
       }
     } catch (err) {
       console.error("Error cargando datos contables:", err);
@@ -212,6 +241,32 @@ export default function AdminContabilidadPage() {
     return Math.max(0, Math.round((margenBruto - ivaMonto - flete - embalaje) * 100) / 100);
   };
 
+  // Filtrado de gastos según el rango seleccionado
+  const filteredExpenses = useMemo(() => {
+    if (selectedRange === "todo") return expenses;
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    return expenses.filter((e) => {
+      if (!e.fecha) return true;
+      const d = new Date(e.fecha + "T00:00:00");
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+  }, [expenses, selectedRange]);
+
+  // Filtrado de transacciones USDT según el rango seleccionado
+  const filteredUsdtTransactions = useMemo(() => {
+    if (selectedRange === "todo") return usdtTransactions;
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    return usdtTransactions.filter((t) => {
+      if (!t.fecha) return true;
+      const d = new Date(t.fecha + "T00:00:00");
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+  }, [usdtTransactions, selectedRange]);
+
   // Cálculos Contables y P&L
   const metrics = useMemo(() => {
     let facturacionTotal = 0;
@@ -287,18 +342,31 @@ export default function AdminContabilidadPage() {
       ? Math.round((faltaParaEquilibrio / Math.max(1, diasLaborablesRestantes)) * 100) / 100
       : 0;
 
-    // Ganancia Neta Real (Utilidad Distribuible después de fletes, embalajes y cuota SENIAT si aplica)
+    // Ganancia Neta Operativa preliminar (después de fletes, embalajes y cuota SENIAT)
     const gananciaNetaOperativa = Math.max(
       0,
       gananciaBruta - ivaSeniatTotal - fletesRetiroTotal - embalajeTotal
     );
 
-    // Reparto de la ganancia con tu regla:
+    // Gastos Operativos Variables Registrados (Meta Ads, compras, servicios)
+    const totalGastosVariables = filteredExpenses.reduce((acc, e) => acc + (e.montoUsd || 0), 0);
+    const gastoMetaAds = filteredExpenses
+      .filter((e) => e.categoria === "meta_ads")
+      .reduce((acc, e) => acc + (e.montoUsd || 0), 0);
+    const roasMetaAds =
+      gastoMetaAds > 0 && facturacionTotal > 0
+        ? Math.round((facturacionTotal / gastoMetaAds) * 100) / 100
+        : null;
+
+    // Ganancia Neta Real Efectiva (Utilidad limpia restando los gastos variables registrados)
+    const gananciaNetaReal = Math.max(0, gananciaNetaOperativa - totalGastosVariables);
+
+    // Reparto de la ganancia real (Las 4 cuentas / baldes):
     const reparto = {
-      reinversion: Math.round(gananciaNetaOperativa * 0.5 * 100) / 100, // 50%
-      reserva: Math.round(gananciaNetaOperativa * 0.2 * 100) / 100, // 20%
-      sueldo: Math.round(gananciaNetaOperativa * 0.2 * 100) / 100, // 20%
-      ahorro: Math.round(gananciaNetaOperativa * 0.1 * 100) / 100, // 10%
+      reinversion: Math.round(gananciaNetaReal * 0.5 * 100) / 100, // 50%
+      reserva: Math.round(gananciaNetaReal * 0.2 * 100) / 100, // 20%
+      sueldo: Math.round(gananciaNetaReal * 0.2 * 100) / 100, // 20%
+      ahorro: Math.round(gananciaNetaReal * 0.1 * 100) / 100, // 10%
     };
 
     return {
@@ -319,9 +387,13 @@ export default function AdminContabilidadPage() {
       metaDiariaBase,
       metaDiariaRestante,
       gananciaNetaOperativa: Math.round(gananciaNetaOperativa * 100) / 100,
+      totalGastosVariables: Math.round(totalGastosVariables * 100) / 100,
+      gastoMetaAds: Math.round(gastoMetaAds * 100) / 100,
+      roasMetaAds,
+      gananciaNetaReal: Math.round(gananciaNetaReal * 100) / 100,
       reparto,
     };
-  }, [filteredOrders, ordersCountByDate]);
+  }, [filteredOrders, ordersCountByDate, filteredExpenses]);
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
     const nowIso = new Date().toISOString();
@@ -401,6 +473,26 @@ export default function AdminContabilidadPage() {
     }
   };
 
+  const handleExpenseCreated = (newExpense: Expense) => {
+    setExpenses((prev) => [newExpense, ...prev]);
+  };
+
+  const handleExpenseDeleted = (deletedId: string) => {
+    setExpenses((prev) => prev.filter((e) => e.id !== deletedId));
+  };
+
+  const handleUsdtCreated = (newTx: UsdtTransaction) => {
+    setUsdtTransactions((prev) => [newTx, ...prev]);
+  };
+
+  const handleUsdtDeleted = (deletedId: string) => {
+    setUsdtTransactions((prev) => prev.filter((t) => t.id !== deletedId));
+  };
+
+  const handleRatesUpdated = (newRates: UsdtRates) => {
+    setUsdtRates(newRates);
+  };
+
   // Pantalla de login
   if (!authChecked) {
     return (
@@ -423,13 +515,13 @@ export default function AdminContabilidadPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Contabilidad y Pedidos</h1>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Contabilidad y Finanzas</h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                 P&L en Vivo
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Control de ingresos, costos de mercancía, retiros, embalaje y reparto automático de utilidades.
+              Control de ingresos, costos de mercancía, gastos operativos, Meta Ads y tesorería en USDT.
             </p>
           </div>
 
@@ -437,16 +529,18 @@ export default function AdminContabilidadPage() {
             {/* Selector de Rango */}
             <div className="bg-white border border-slate-200 rounded-xl p-1 flex items-center text-xs font-bold shadow-2xs">
               <button
+                type="button"
                 onClick={() => setSelectedRange("mes")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   selectedRange === "mes" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 Este Mes
               </button>
               <button
+                type="button"
                 onClick={() => setSelectedRange("todo")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   selectedRange === "todo" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -454,129 +548,235 @@ export default function AdminContabilidadPage() {
               </button>
             </div>
 
+            {/* Botón Registrar Gasto */}
+            <button
+              type="button"
+              onClick={() => setShowExpenseModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Registrar Gasto</span>
+            </button>
+
+            {/* Botón Operación USDT */}
+            <button
+              type="button"
+              onClick={() => setShowUsdtModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <Coins className="w-4 h-4" />
+              <span>+ Operación USDT</span>
+            </button>
+
             {/* Acceso a Pedidos para Cargar Nuevo */}
             <Link
               href="/admin/pedidos?nuevo=1"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.02] cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Nuevo Pedido (Despacho)</span>
+              <span>+ Nuevo Pedido</span>
             </Link>
           </div>
         </div>
 
-        {/* 1. SECCIÓN DE PUNTO DE EQUILIBRIO CON SUELDO FIJO DE $800 */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-700/50">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
-            <div>
-              <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
-                <TargetIcon className="w-4 h-4" />
-                <span>Punto de Equilibrio Mensual (Break-Even)</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-                Meta de Facturación: {formatUsd(metrics.ventasEquilibrioMeta)} / mes
-              </h2>
-              <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                Calculado para cubrir al 100% tu <strong>sueldo fijo de $800.00</strong> + Internet ($25) + Luz ($10) + Dominio ($1) = <strong>$836.00 de gastos fijos</strong>, con tu margen neto objetivo del 20%.
-              </p>
-            </div>
+        {/* PESTAÑAS PRINCIPALES DE CONTABILIDAD */}
+        <div className="flex items-center justify-between gap-2 border-b border-slate-200 overflow-x-auto pb-1 [scrollbar-width:none]">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("resumen")}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === "resumen"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 text-emerald-400" />
+              <span>Resumen Financiero (P&L)</span>
+            </button>
 
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-wrap items-center gap-4 shrink-0">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Gastos Fijos Asignados</p>
-                <p className="text-xl font-black text-emerald-300">{formatUsd(metrics.totalGastosFijos)}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">$800 sueldo + $36 servicios</p>
-              </div>
-              <div className="hidden sm:block h-10 w-px bg-white/20" />
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Meta Diaria Base</p>
-                <p className="text-xl font-black text-white">{formatUsd(metrics.metaDiariaBase)}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">{metrics.diasLaborablesMes} días laborables (Lun a Sáb)</p>
-              </div>
-              <div className="h-10 w-px bg-white/20" />
-              <div>
-                <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">Ritmo Diario Restante</p>
-                <p className="text-xl font-black text-amber-300">
-                  {formatUsd(metrics.faltaParaEquilibrio === 0 ? 0 : metrics.metaDiariaRestante)}
-                </p>
-                <p className="text-[10px] text-slate-300 mt-0.5">
-                  {metrics.faltaParaEquilibrio === 0
-                    ? "🎉 ¡Meta mensual alcanzada!"
-                    : `${metrics.diasLaborablesRestantes} días restantes para cerrar`}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Barra de Progreso */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span>Progreso hacia la meta: {formatUsd(metrics.facturacionTotal)} ({metrics.progresoEquilibrio}%)</span>
-              <span className={metrics.faltaParaEquilibrio === 0 ? "text-emerald-400 font-extrabold" : "text-amber-300 font-semibold"}>
-                {metrics.faltaParaEquilibrio === 0
-                  ? "🎉 ¡Punto de equilibrio superado! A partir de aquí todo es utilidad extra"
-                  : `Faltan ${formatUsd(metrics.faltaParaEquilibrio)} para cubrir sueldo y gastos fijos (${formatUsd(metrics.metaDiariaRestante)}/día en ${metrics.diasLaborablesRestantes} días restantes)`}
-              </span>
-            </div>
-            <div className="w-full h-3.5 bg-slate-700/80 rounded-full overflow-hidden p-0.5">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 rounded-full transition-all duration-500 shadow-sm"
-                style={{ width: `${metrics.progresoEquilibrio}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 2. TARJETAS FINANCIERAS RESUMEN (P&L) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Ventas Totales</span>
-              <DollarSign className="w-4 h-4 text-emerald-600" />
-            </div>
-            <p className="text-2xl font-black text-slate-900">{formatUsd(metrics.facturacionTotal)}</p>
-            <p className="text-xs text-slate-500 mt-1">
-              ≈ {formatVes(calculateVesTotal(metrics.facturacionTotal, bcvRate))}
-            </p>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Costo Mercancía (CMV)</span>
-              <Package className="w-4 h-4 text-slate-600" />
-            </div>
-            <p className="text-2xl font-black text-slate-800">{formatUsd(metrics.costoMercanciaTotal)}</p>
-            <p className="text-xs text-slate-500 mt-1">Lo que pagaste a proveedores</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Flete y Embalaje</span>
-              <Truck className="w-4 h-4 text-amber-600" />
-            </div>
-            <p className="text-2xl font-black text-amber-900">
-              {formatUsd(metrics.fletesRetiroTotal + metrics.embalajeTotal)}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">
-              Fletes: {formatUsd(metrics.fletesRetiroTotal)} ({metrics.totalViajes} {metrics.totalViajes === 1 ? "viaje" : "viajes"}) · Embalaje: {formatUsd(metrics.embalajeTotal)}
-            </p>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-2xs">
-            <div className="flex items-center justify-between text-emerald-800 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Ganancia Neta</span>
-              <TrendingUp className="w-4 h-4 text-emerald-700" />
-            </div>
-            <p className="text-2xl font-black text-emerald-800">{formatUsd(metrics.gananciaNetaOperativa)}</p>
-            <p className="text-xs text-emerald-700 mt-1">
-              {metrics.ivaSeniatTotal > 0 ? (
-                <span>SENIAT apartado: <strong>{formatUsd(metrics.ivaSeniatTotal)}</strong></span>
-              ) : (
-                <span>100% Ventas Sin IVA (Utilidad Completa)</span>
+            <button
+              type="button"
+              onClick={() => setActiveTab("gastos")}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === "gastos"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
+              }`}
+            >
+              <Megaphone className="w-4 h-4 text-blue-400" />
+              <span>Gastos & Meta Ads</span>
+              {filteredExpenses.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-800 font-bold">
+                  {filteredExpenses.length}
+                </span>
               )}
-            </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("usdt")}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === "usdt"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
+              }`}
+            >
+              <Coins className="w-4 h-4 text-amber-400" />
+              <span>Mesa USDT & Proveedores</span>
+              {filteredUsdtTransactions.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">
+                  {filteredUsdtTransactions.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("pedidos")}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === "pedidos"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
+              }`}
+            >
+              <ClipboardList className="w-4 h-4 text-teal-400" />
+              <span>Libro de Pedidos</span>
+              {filteredOrders.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-800 font-bold">
+                  {filteredOrders.length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* CONTENIDO SEGÚN PESTAÑA ACTIVA */}
+        {activeTab === "resumen" && (
+          <div className="space-y-8">
+            {/* 1. SECCIÓN DE PUNTO DE EQUILIBRIO CON SUELDO FIJO DE $800 */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-700/50">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
+                <div>
+                  <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
+                    <TargetIcon className="w-4 h-4" />
+                    <span>Punto de Equilibrio Mensual (Break-Even)</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+                    Meta de Facturación: {formatUsd(metrics.ventasEquilibrioMeta)} / mes
+                  </h2>
+                  <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                    Calculado para cubrir al 100% tu <strong>sueldo fijo de $800.00</strong> + Internet ($25) + Luz ($10) + Dominio ($1) = <strong>$836.00 de gastos fijos</strong>, con tu margen neto objetivo del 20%.
+                  </p>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-wrap items-center gap-4 shrink-0">
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Gastos Fijos Asignados</p>
+                    <p className="text-xl font-black text-emerald-300">{formatUsd(metrics.totalGastosFijos)}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">$800 sueldo + $36 servicios</p>
+                  </div>
+                  <div className="hidden sm:block h-10 w-px bg-white/20" />
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">Meta Diaria Base</p>
+                    <p className="text-xl font-black text-white">{formatUsd(metrics.metaDiariaBase)}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{metrics.diasLaborablesMes} días laborables (Lun a Sáb)</p>
+                  </div>
+                  <div className="h-10 w-px bg-white/20" />
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">Ritmo Diario Restante</p>
+                    <p className="text-xl font-black text-amber-300">
+                      {formatUsd(metrics.faltaParaEquilibrio === 0 ? 0 : metrics.metaDiariaRestante)}
+                    </p>
+                    <p className="text-[10px] text-slate-300 mt-0.5">
+                      {metrics.faltaParaEquilibrio === 0
+                        ? "🎉 ¡Meta mensual alcanzada!"
+                        : `${metrics.diasLaborablesRestantes} días restantes para cerrar`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Barra de Progreso */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold">
+                  <span>Progreso hacia la meta: {formatUsd(metrics.facturacionTotal)} ({metrics.progresoEquilibrio}%)</span>
+                  <span className={metrics.faltaParaEquilibrio === 0 ? "text-emerald-400 font-extrabold" : "text-amber-300 font-semibold"}>
+                    {metrics.faltaParaEquilibrio === 0
+                      ? "🎉 ¡Punto de equilibrio superado! A partir de aquí todo es utilidad extra"
+                      : `Faltan ${formatUsd(metrics.faltaParaEquilibrio)} para cubrir sueldo y gastos fijos (${formatUsd(metrics.metaDiariaRestante)}/día en ${metrics.diasLaborablesRestantes} días restantes)`}
+                  </span>
+                </div>
+                <div className="w-full h-3.5 bg-slate-700/80 rounded-full overflow-hidden p-0.5">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 rounded-full transition-all duration-500 shadow-sm"
+                    style={{ width: `${metrics.progresoEquilibrio}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 2. TARJETAS FINANCIERAS RESUMEN (P&L) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                <div className="flex items-center justify-between text-slate-500 mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider">Ventas Totales</span>
+                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-2xl font-black text-slate-900">{formatUsd(metrics.facturacionTotal)}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  ≈ {formatVes(calculateVesTotal(metrics.facturacionTotal, bcvRate))}
+                </p>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                <div className="flex items-center justify-between text-slate-500 mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider">Costo Mercancía (CMV)</span>
+                  <Package className="w-4 h-4 text-slate-600" />
+                </div>
+                <p className="text-2xl font-black text-slate-800">{formatUsd(metrics.costoMercanciaTotal)}</p>
+                <p className="text-xs text-slate-500 mt-1">Lo que pagaste a proveedores</p>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                <div className="flex items-center justify-between text-slate-500 mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider">Flete y Embalaje</span>
+                  <Truck className="w-4 h-4 text-amber-600" />
+                </div>
+                <p className="text-2xl font-black text-amber-900">
+                  {formatUsd(metrics.fletesRetiroTotal + metrics.embalajeTotal)}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Fletes: {formatUsd(metrics.fletesRetiroTotal)} · Embalaje: {formatUsd(metrics.embalajeTotal)}
+                </p>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-blue-200 bg-blue-50/20 shadow-2xs">
+                <div className="flex items-center justify-between text-blue-900 mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider">Gastos & Meta Ads</span>
+                  <Megaphone className="w-4 h-4 text-blue-700" />
+                </div>
+                <p className="text-2xl font-black text-blue-900">{formatUsd(metrics.totalGastosVariables)}</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  Ads: <strong>{formatUsd(metrics.gastoMetaAds)}</strong> {metrics.roasMetaAds ? `· ROAS: ${metrics.roasMetaAds}x` : ""}
+                </p>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-2xs">
+                <div className="flex items-center justify-between text-emerald-800 mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider">Ganancia Neta Real</span>
+                  <TrendingUp className="w-4 h-4 text-emerald-700" />
+                </div>
+                <p className="text-2xl font-black text-emerald-800">{formatUsd(metrics.gananciaNetaReal)}</p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  {metrics.totalGastosVariables > 0 ? (
+                    <span>Descontando {formatUsd(metrics.totalGastosVariables)} de gastos</span>
+                  ) : (
+                    <span>Utilidad 100% limpia</span>
+                  )}
+                </p>
+              </div>
+            </div>
 
         {/* 3. REPARTO DE LA GANANCIA NETA (LAS 4 CUENTAS / BALDES) */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
@@ -586,7 +786,7 @@ export default function AdminContabilidadPage() {
               <span>Distribución Automática de Ganancia (Las 4 Cuentas)</span>
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Así se dividen tus {formatUsd(metrics.gananciaNetaOperativa)} de ganancia neta acumulada en este período:
+              Así se dividen tus {formatUsd(metrics.gananciaNetaReal)} de ganancia neta acumulada en este período:
             </p>
           </div>
 
@@ -653,7 +853,107 @@ export default function AdminContabilidadPage() {
           </div>
         </div>
 
-        {/* 4. LIBRO DE PEDIDOS (WEB Y MANUALES) */}
+          {/* Accesos rápidos a Gastos y Tesorería USDT */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-black uppercase text-blue-900 flex items-center gap-1.5">
+                    <Megaphone className="w-4 h-4 text-blue-700" />
+                    <span>Gastos & Meta Ads</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("gastos")}
+                    className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Ver libro completo</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-2xl font-black text-slate-900 mt-1">{formatUsd(metrics.totalGastosVariables)}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Invertido en Ads: <strong>{formatUsd(metrics.gastoMetaAds)}</strong> {metrics.roasMetaAds ? `· ROAS: ${metrics.roasMetaAds}x` : ""}
+                </p>
+              </div>
+              <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400 font-medium">{filteredExpenses.length} gastos registrados</span>
+                <button
+                  type="button"
+                  onClick={() => setShowExpenseModal(true)}
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold transition-all cursor-pointer"
+                >
+                  + Registrar Gasto
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-black uppercase text-amber-900 flex items-center gap-1.5">
+                    <Coins className="w-4 h-4 text-amber-700" />
+                    <span>Tesorería & Saldo USDT</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("usdt")}
+                    className="text-xs font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Ver mesa USDT</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-2xl font-black text-emerald-700 mt-1">
+                  ₮ {(
+                    filteredUsdtTransactions.filter(t => t.tipo === "compra").reduce((acc, t) => acc + t.montoUsdt, 0) -
+                    filteredUsdtTransactions.filter(t => t.tipo === "venta").reduce((acc, t) => acc + t.montoUsdt, 0) -
+                    filteredUsdtTransactions.filter(t => t.tipo === "pago_proveedor").reduce((acc, t) => acc + t.montoUsdt, 0)
+                  ).toFixed(2)} USDT
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Compra: <strong>Bs. {usdtRates.tasaCompraUsdt}</strong> · Venta: <strong>Bs. {usdtRates.tasaVentaUsdt}</strong>
+                </p>
+              </div>
+              <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400 font-medium">{filteredUsdtTransactions.length} operaciones registradas</span>
+                <button
+                  type="button"
+                  onClick={() => setShowUsdtModal(true)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition-all cursor-pointer"
+                >
+                  + Operación USDT
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PESTAÑA 2: GASTOS OPERATIVOS & META ADS */}
+      {activeTab === "gastos" && (
+        <ExpensesTable
+          expenses={filteredExpenses}
+          facturacionTotal={metrics.facturacionTotal}
+          onOpenCreateModal={() => setShowExpenseModal(true)}
+          onExpenseDeleted={handleExpenseDeleted}
+        />
+      )}
+
+      {/* PESTAÑA 3: MESA DE CAMBIO Y TESORERÍA USDT */}
+      {activeTab === "usdt" && (
+        <UsdtTable
+          transactions={filteredUsdtTransactions}
+          rates={usdtRates}
+          bcvRate={bcvRate}
+          onOpenCreateModal={() => setShowUsdtModal(true)}
+          onOpenRatesModal={() => setShowRatesModal(true)}
+          onTransactionDeleted={handleUsdtDeleted}
+        />
+      )}
+
+      {/* PESTAÑA 4: LIBRO DE PEDIDOS (WEB Y MANUALES) */}
+      {activeTab === "pedidos" && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -902,7 +1202,32 @@ export default function AdminContabilidadPage() {
             )}
           </div>
         </div>
-      </main>
+      )}
+
+      {/* MODALES DE GESTIÓN */}
+      <ExpenseModal
+        isOpen={showExpenseModal}
+        onClose={() => setShowExpenseModal(false)}
+        bcvRate={bcvRate}
+        usdtRate={usdtRates.tasaCompraUsdt}
+        onExpenseCreated={handleExpenseCreated}
+      />
+
+      <UsdtModal
+        isOpen={showUsdtModal}
+        onClose={() => setShowUsdtModal(false)}
+        rates={usdtRates}
+        onTransactionCreated={handleUsdtCreated}
+      />
+
+      <UsdtRatesModal
+        isOpen={showRatesModal}
+        onClose={() => setShowRatesModal(false)}
+        currentRates={usdtRates}
+        bcvRate={bcvRate}
+        onRatesUpdated={handleRatesUpdated}
+      />
+    </main>
 
     </div>
   );
