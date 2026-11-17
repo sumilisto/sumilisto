@@ -79,10 +79,25 @@ export async function PUT(
     if (productData.activo !== undefined) cleanProductData.activo = productData.activo;
     if (productData.destacado !== undefined) cleanProductData.destacado = productData.destacado;
 
+    // Normalizar costos y precios mayoristas
+    const rawCostoMayor = productData.costo_mayor_usd !== undefined ? productData.costo_mayor_usd : productData.costoMayorUsd;
+    if (rawCostoMayor !== undefined) {
+      cleanProductData.costo_mayor_usd = rawCostoMayor !== null && rawCostoMayor !== "" ? Number(rawCostoMayor) : null;
+    }
+    const rawCostoGranMayor = productData.costo_gran_mayor_usd !== undefined ? productData.costo_gran_mayor_usd : productData.costoGranMayorUsd;
+    if (rawCostoGranMayor !== undefined) {
+      cleanProductData.costo_gran_mayor_usd = rawCostoGranMayor !== null && rawCostoGranMayor !== "" ? Number(rawCostoGranMayor) : null;
+    }
+
+    const rawPrecioMayor = productData.precio_mayor_usd !== undefined ? productData.precio_mayor_usd : productData.precioMayorUsd;
+    const rawPrecioGranMayor = productData.precio_gran_mayor_usd !== undefined ? productData.precio_gran_mayor_usd : productData.precioGranMayorUsd;
+    const rawMinMayor = productData.min_mayor !== undefined ? productData.min_mayor : productData.minMayor;
+    const rawMinGranMayor = productData.min_gran_mayor !== undefined ? productData.min_gran_mayor : productData.minGranMayor;
+
     // Actualizar producto base
     const updated = await updateProduct(id, cleanProductData);
 
-    // Actualizar variantes si vienen en el body
+    // Si se enviaron variantes explícitas, actualizarlas
     if (variantes && Array.isArray(variantes)) {
       for (const v of variantes) {
         if (v.id) {
@@ -116,6 +131,19 @@ export async function PUT(
             activo: v.activo ?? true,
           });
         }
+      }
+    } else if (rawCostoMayor !== undefined || rawPrecioMayor !== undefined) {
+      // Si no se enviaron variantes pero el usuario actualizó costo o precio en el formulario general, sincronizar las variantes del producto
+      const variantUpdates: Record<string, any> = {};
+      if (rawCostoMayor !== undefined) variantUpdates.costo_mayor_usd = cleanProductData.costo_mayor_usd;
+      if (rawCostoGranMayor !== undefined) variantUpdates.costo_gran_mayor_usd = cleanProductData.costo_gran_mayor_usd;
+      if (rawPrecioMayor !== undefined && rawPrecioMayor !== null && rawPrecioMayor !== "") variantUpdates.precio_mayor_usd = Number(rawPrecioMayor);
+      if (rawPrecioGranMayor !== undefined && rawPrecioGranMayor !== null && rawPrecioGranMayor !== "") variantUpdates.precio_gran_mayor_usd = Number(rawPrecioGranMayor);
+      if (rawMinMayor !== undefined && rawMinMayor !== null && rawMinMayor !== "") variantUpdates.min_mayor = Number(rawMinMayor);
+      if (rawMinGranMayor !== undefined && rawMinGranMayor !== null && rawMinGranMayor !== "") variantUpdates.min_gran_mayor = Number(rawMinGranMayor);
+
+      if (Object.keys(variantUpdates).length > 0) {
+        await supabaseAdmin.from("variantes").update(variantUpdates).eq("producto_id", id);
       }
     }
 

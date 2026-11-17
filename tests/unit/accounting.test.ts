@@ -71,7 +71,7 @@ describe("Accounting & USDT Calculations", () => {
     expect(liveRate.tasaVenta).toBeGreaterThan(0);
     expect(liveRate.fuente).toBeDefined();
     expect(liveRate.timestamp).toBeDefined();
-  });
+  }, 15000);
 
   it("supports manual rate entry when negotiating custom P2P exchange rates", () => {
     // Escenario 1: El usuario pacta una tasa manual diferente a la de mercado (ej: 1080 Bs en vez de 1069)
