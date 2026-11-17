@@ -128,23 +128,21 @@ export const UsdtTable: React.FC<UsdtTableProps> = ({
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between text-slate-500 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-wider">Tasas Activas P2P</span>
               <div className="flex items-center gap-1.5">
-                <button
-                  onClick={onOpenRatesModal}
-                  className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200 transition-colors"
-                >
-                  <Zap className="w-3 h-3 text-emerald-600 fill-emerald-600" />
-                  <span>En vivo</span>
-                </button>
-                <button
-                  onClick={onOpenRatesModal}
-                  className="text-[11px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-0.5 cursor-pointer p-0.5"
-                  title="Ajustar tasas"
-                >
-                  <Settings2 className="w-3.5 h-3.5" />
-                </button>
+                <span className="text-[10px] font-black uppercase tracking-wider">Tasas Activas P2P</span>
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-100/80 px-1.5 py-0.5 rounded-full border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Auto 5 min
+                </span>
               </div>
+              <button
+                onClick={onOpenRatesModal}
+                className="text-[11px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 cursor-pointer bg-slate-50 hover:bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 transition-colors"
+                title="Ajustar o consultar tasas"
+              >
+                <Settings2 className="w-3.5 h-3.5 text-slate-600" />
+                <span>Config</span>
+              </button>
             </div>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-xs text-slate-400 font-bold">Compra:</span>
@@ -153,9 +151,16 @@ export const UsdtTable: React.FC<UsdtTableProps> = ({
               <span className="text-sm font-black text-slate-900">Bs. {rates.tasaVentaUsdt}</span>
             </div>
           </div>
-          <p className="text-[10px] text-amber-700 font-bold mt-2">
-            Brecha P2P vs BCV: +{brechaCompra}% (BCV Bs. {bcvRate.toFixed(2)})
-          </p>
+          <div className="mt-2 flex items-center justify-between text-[10px]">
+            <span className="text-amber-700 font-bold">
+              Brecha vs BCV: +{brechaCompra}% (BCV Bs. {bcvRate.toFixed(2)})
+            </span>
+            <span className="text-slate-400 font-medium">
+              {rates.ultimaActualizacion
+                ? `Act: ${new Date(rates.ultimaActualizacion).toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit" })}`
+                : "En vivo"}
+            </span>
+          </div>
         </div>
       </div>
 

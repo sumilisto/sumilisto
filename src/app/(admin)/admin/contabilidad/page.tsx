@@ -146,6 +146,30 @@ export default function AdminContabilidadPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-actualización silenciosa de tasas USDT y BCV cada 5 minutos (300,000 ms) sin intervención manual
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const autoSyncInterval = setInterval(async () => {
+      try {
+        const [bcvRes, acctRes] = await Promise.all([
+          fetch("/api/bcv").then((r) => r.json()).catch(() => null),
+          fetch("/api/accounting").then((r) => r.json()).catch(() => null),
+        ]);
+        if (bcvRes?.rate) {
+          setBcvRate(Number(bcvRes.rate));
+        }
+        if (acctRes?.ok && acctRes.tasasUsdt) {
+          setUsdtRates(acctRes.tasasUsdt);
+        }
+      } catch (e) {
+        console.warn("Fallo en sincronización periódica de 5 min:", e);
+      }
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(autoSyncInterval);
+  }, [isAuthenticated]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoggingIn(true);

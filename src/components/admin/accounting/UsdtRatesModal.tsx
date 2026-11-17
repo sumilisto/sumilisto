@@ -150,22 +150,20 @@ export const UsdtRatesModal: React.FC<UsdtRatesModalProps> = ({
             </span>
           </div>
 
-          {/* Sincronización en Tiempo Real desde Binance P2P */}
+          {/* Sincronización Automática cada 5 min desde Binance P2P */}
           <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
-                <Zap className="w-4 h-4 text-emerald-600 fill-emerald-600" />
-                <span>Mercado Binance P2P en Vivo</span>
-                {liveInfo && (
-                  <span className="px-1.5 py-0.2 rounded bg-emerald-200/60 text-emerald-900 text-[10px] font-bold">
-                    {liveInfo.fuente}
-                  </span>
-                )}
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Auto-sincronizado cada 5 minutos</span>
+                <span className="px-1.5 py-0.2 rounded bg-emerald-200/60 text-emerald-900 text-[10px] font-bold">
+                  {liveInfo?.fuente || "Binance P2P"}
+                </span>
               </div>
               <p className="text-[11px] text-emerald-800/80 mt-0.5">
                 {liveInfo
-                  ? `Última cotización: Bs. ${liveInfo.rate.toLocaleString("es-VE", { minimumFractionDigits: 2 })} por USDT`
-                  : "Consulta la tasa real que se está cotizando en Venezuela en este momento"}
+                  ? `Última cotización del mercado: Bs. ${liveInfo.rate.toLocaleString("es-VE", { minimumFractionDigits: 2 })} por USDT`
+                  : "Se actualiza automáticamente en segundo plano. Puedes forzar actualización o fijar tasas manuales."}
               </p>
             </div>
             <button
@@ -175,7 +173,7 @@ export const UsdtRatesModal: React.FC<UsdtRatesModalProps> = ({
               className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50 shrink-0"
             >
               <RefreshCcw className={`w-3.5 h-3.5 ${fetchingLive ? "animate-spin" : ""}`} />
-              <span>{fetchingLive ? "Consultando P2P..." : "⚡ Sincronizar en Vivo"}</span>
+              <span>{fetchingLive ? "Consultando P2P..." : "⚡ Actualizar Ahora"}</span>
             </button>
           </div>
 

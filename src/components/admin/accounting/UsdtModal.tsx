@@ -36,6 +36,8 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [fetchingLive, setFetchingLive] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [hasUserEditedTasa, setHasUserEditedTasa] = useState(false);
+  const [lastEditedField, setLastEditedField] = useState<"bs" | "usdt">("bs");
 
   const fetchLiveRateForModal = async () => {
     setFetchingLive(true);
@@ -53,18 +55,41 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
     }
   };
 
-  // Auto-llenar tasa según el tipo
+  // Inicializar tasa sugerida solo al abrir el modal o si el usuario no la ha modificado a mano
   useEffect(() => {
-    if (tipo === "compra") {
-      setTasaBsPorUsdt(String(rates.tasaCompraUsdt || 935));
-    } else if (tipo === "venta") {
-      setTasaBsPorUsdt(String(rates.tasaVentaUsdt || 925));
+    if (isOpen && !hasUserEditedTasa) {
+      if (tipo === "compra") {
+        setTasaBsPorUsdt(String(rates.tasaCompraUsdt || ""));
+      } else if (tipo === "venta") {
+        setTasaBsPorUsdt(String(rates.tasaVentaUsdt || ""));
+      }
     }
-  }, [tipo, rates]);
+  }, [isOpen, tipo, rates.tasaCompraUsdt, rates.tasaVentaUsdt, hasUserEditedTasa]);
 
-  // Recalcular montos al cambiar inputs en compra
+  // Al cerrar el modal, reiniciar estados para la próxima apertura
+  useEffect(() => {
+    if (!isOpen) {
+      setHasUserEditedTasa(false);
+      setMontoBs("");
+      setMontoUsdt("");
+      setErrorMsg("");
+    }
+  }, [isOpen]);
+
+  const handleSelectTipo = (newTipo: UsdtTxType) => {
+    setTipo(newTipo);
+    setHasUserEditedTasa(false);
+    if (newTipo === "compra") {
+      setTasaBsPorUsdt(String(rates.tasaCompraUsdt || ""));
+    } else if (newTipo === "venta") {
+      setTasaBsPorUsdt(String(rates.tasaVentaUsdt || ""));
+    }
+  };
+
+  // Recalcular montos al cambiar inputs en compra/venta
   const handleBsChange = (val: string) => {
     setMontoBs(val);
+    setLastEditedField("bs");
     const bs = Number(val);
     const tasa = Number(tasaBsPorUsdt);
     if (bs > 0 && tasa > 0) {
@@ -76,28 +101,38 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
 
   const handleTasaChange = (val: string) => {
     setTasaBsPorUsdt(val);
+    setHasUserEditedTasa(true); // El usuario la ingresó o modificó a mano
     const tasa = Number(val);
-    if (tipo === "compra") {
-      const bs = Number(montoBs);
-      if (bs > 0 && tasa > 0) {
-        setMontoUsdt((bs / tasa).toFixed(2));
-      }
-    } else if (tipo === "venta") {
-      const usdt = Number(montoUsdt);
-      if (usdt > 0 && tasa > 0) {
-        setMontoBs((usdt * tasa).toFixed(2));
+    if (tasa > 0) {
+      if (tipo === "compra") {
+        if (lastEditedField === "usdt") {
+          const usdt = Number(montoUsdt);
+          if (usdt > 0) setMontoBs((usdt * tasa).toFixed(2));
+        } else {
+          const bs = Number(montoBs);
+          if (bs > 0) setMontoUsdt((bs / tasa).toFixed(2));
+        }
+      } else if (tipo === "venta") {
+        if (lastEditedField === "bs") {
+          const bs = Number(montoBs);
+          if (bs > 0) setMontoUsdt((bs / tasa).toFixed(2));
+        } else {
+          const usdt = Number(montoUsdt);
+          if (usdt > 0) setMontoBs((usdt * tasa).toFixed(2));
+        }
       }
     }
   };
 
   const handleUsdtChange = (val: string) => {
     setMontoUsdt(val);
+    setLastEditedField("usdt");
     const usdt = Number(val);
     const tasa = Number(tasaBsPorUsdt);
-    if (tipo === "venta" && usdt > 0 && tasa > 0) {
+    if (usdt > 0 && tasa > 0) {
       setMontoBs((usdt * tasa).toFixed(2));
-    } else if (tipo === "compra" && usdt > 0 && tasa > 0) {
-      setMontoBs((usdt * tasa).toFixed(2));
+    } else if (usdt <= 0) {
+      setMontoBs("");
     }
   };
 
@@ -204,7 +239,7 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
         <div className="p-4 bg-slate-100 border-b border-slate-200 grid grid-cols-3 gap-2">
           <button
             type="button"
-            onClick={() => setTipo("compra")}
+            onClick={() => handleSelectTipo("compra")}
             className={`py-2 px-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all ${
               tipo === "compra"
                 ? "bg-emerald-700 text-white shadow-xs"
@@ -217,7 +252,7 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
 
           <button
             type="button"
-            onClick={() => setTipo("venta")}
+            onClick={() => handleSelectTipo("venta")}
             className={`py-2 px-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all ${
               tipo === "venta"
                 ? "bg-rose-700 text-white shadow-xs"
@@ -230,7 +265,7 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
 
           <button
             type="button"
-            onClick={() => setTipo("pago_proveedor")}
+            onClick={() => handleSelectTipo("pago_proveedor")}
             className={`py-2 px-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all ${
               tipo === "pago_proveedor"
                 ? "bg-purple-700 text-white shadow-xs"
@@ -276,18 +311,21 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Tasa Pactada (Bs. / USDT) *
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>Tasa Pactada (Bs. / USDT) *</span>
+                      <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                        Manual
+                      </span>
                     </label>
                     <button
                       type="button"
                       onClick={fetchLiveRateForModal}
                       disabled={fetchingLive}
                       className="text-[10px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer bg-emerald-100/70 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300 transition-colors"
-                      title="Obtener tasa P2P en vivo"
+                      title="Cargar cotización sugerida de Binance P2P"
                     >
                       <Zap className={`w-3 h-3 text-emerald-600 ${fetchingLive ? "animate-spin" : "fill-emerald-600"}`} />
-                      <span>{fetchingLive ? "..." : "P2P en vivo"}</span>
+                      <span>{fetchingLive ? "..." : "Sugerir P2P"}</span>
                     </button>
                   </div>
                   <input
@@ -296,9 +334,12 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
                     required
                     value={tasaBsPorUsdt}
                     onChange={(e) => handleTasaChange(e.target.value)}
-                    placeholder="ej. 935.00"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-bold text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
+                    placeholder="ej. 1070.00 (ingresa a mano)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-emerald-300/80 bg-white font-black text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 shadow-2xs"
                   />
+                  <p className="text-[11px] text-slate-500 font-medium mt-1">
+                    ✍️ Puedes ingresar la tasa a mano si tu contraparte te dio un valor diferente.
+                  </p>
                 </div>
               </div>
 
@@ -350,18 +391,21 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Tasa Pactada (Bs. / USDT) *
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>Tasa Pactada (Bs. / USDT) *</span>
+                      <span className="text-[10px] font-semibold text-rose-800 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                        Manual
+                      </span>
                     </label>
                     <button
                       type="button"
                       onClick={fetchLiveRateForModal}
                       disabled={fetchingLive}
                       className="text-[10px] font-bold text-rose-800 hover:text-rose-950 flex items-center gap-1 cursor-pointer bg-rose-100/70 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-300 transition-colors"
-                      title="Obtener tasa P2P en vivo"
+                      title="Cargar cotización sugerida de Binance P2P"
                     >
                       <Zap className={`w-3 h-3 text-rose-600 ${fetchingLive ? "animate-spin" : "fill-rose-600"}`} />
-                      <span>{fetchingLive ? "..." : "P2P en vivo"}</span>
+                      <span>{fetchingLive ? "..." : "Sugerir P2P"}</span>
                     </button>
                   </div>
                   <input
@@ -370,9 +414,12 @@ export const UsdtModal: React.FC<UsdtModalProps> = ({
                     required
                     value={tasaBsPorUsdt}
                     onChange={(e) => handleTasaChange(e.target.value)}
-                    placeholder="ej. 925.00"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-bold text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-600/20 focus:border-rose-600"
+                    placeholder="ej. 1065.00 (ingresa a mano)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-rose-300/80 bg-white font-black text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-600/20 focus:border-rose-600 shadow-2xs"
                   />
+                  <p className="text-[11px] text-slate-500 font-medium mt-1">
+                    ✍️ Puedes ingresar la tasa a mano si tu contraparte te dio un valor diferente.
+                  </p>
                 </div>
               </div>
 

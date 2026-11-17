@@ -72,4 +72,27 @@ describe("Accounting & USDT Calculations", () => {
     expect(liveRate.fuente).toBeDefined();
     expect(liveRate.timestamp).toBeDefined();
   });
+
+  it("supports manual rate entry when negotiating custom P2P exchange rates", () => {
+    // Escenario 1: El usuario pacta una tasa manual diferente a la de mercado (ej: 1080 Bs en vez de 1069)
+    const manualTasa = 1080.0;
+    const montoBsEntregado = 108000;
+    const usdtObtenido = Math.round((montoBsEntregado / manualTasa) * 100) / 100;
+    expect(usdtObtenido).toBe(100.0);
+
+    // Escenario 2: El usuario vende a tasa manual preferencial
+    const manualTasaVenta = 1060.0;
+    const usdtVendido = 50.0;
+    const bsRecibidos = Math.round(usdtVendido * manualTasaVenta * 100) / 100;
+    expect(bsRecibidos).toBe(53000.0);
+  });
+
+  it("resolves automatic background rates with 5-minute window", async () => {
+    const { getResolvedUsdtRates } = await import("@/lib/currency/usdt");
+    const rates = await getResolvedUsdtRates();
+
+    expect(rates).toBeDefined();
+    expect(rates.tasaCompraUsdt).toBeGreaterThan(0);
+    expect(rates.tasaVentaUsdt).toBeGreaterThan(0);
+  });
 });

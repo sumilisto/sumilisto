@@ -790,17 +790,22 @@ export interface AccountingData {
 
 export async function getAccountingData(): Promise<AccountingData> {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("configuracion")
-      .select("data")
-      .eq("id", 1)
-      .single();
+    const { getResolvedUsdtRates } = await import("@/lib/currency/usdt");
+    const [configRes, resolvedRates] = await Promise.all([
+      supabaseAdmin
+        .from("configuracion")
+        .select("data")
+        .eq("id", 1)
+        .single(),
+      getResolvedUsdtRates().catch(() => DEFAULT_USDT_RATES),
+    ]);
 
-    if (error || !data) {
+    const data = configRes.data;
+    if (configRes.error || !data) {
       return {
         gastos: [],
         operacionesUsdt: [],
-        tasasUsdt: DEFAULT_USDT_RATES,
+        tasasUsdt: resolvedRates || DEFAULT_USDT_RATES,
       };
     }
 
@@ -808,13 +813,13 @@ export async function getAccountingData(): Promise<AccountingData> {
     return {
       gastos: Array.isArray(currentData.gastos) ? currentData.gastos : [],
       operacionesUsdt: Array.isArray(currentData.operaciones_usdt) ? currentData.operaciones_usdt : [],
-      tasasUsdt: currentData.tasas_usdt && typeof currentData.tasas_usdt === "object"
+      tasasUsdt: resolvedRates || (currentData.tasas_usdt && typeof currentData.tasas_usdt === "object"
         ? {
             tasaCompraUsdt: Number(currentData.tasas_usdt.tasaCompraUsdt) || DEFAULT_USDT_RATES.tasaCompraUsdt,
             tasaVentaUsdt: Number(currentData.tasas_usdt.tasaVentaUsdt) || DEFAULT_USDT_RATES.tasaVentaUsdt,
             ultimaActualizacion: currentData.tasas_usdt.ultimaActualizacion,
           }
-        : DEFAULT_USDT_RATES,
+        : DEFAULT_USDT_RATES),
     };
   } catch (err) {
     console.error("Error obteniendo datos contables:", err);
