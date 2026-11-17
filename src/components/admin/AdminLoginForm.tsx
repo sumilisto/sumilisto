@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Lock, User, KeyRound, Eye, EyeOff, ShieldCheck, AlertCircle, Clock } from "lucide-react";
+import { Lock, User, KeyRound, Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
 import { loginAdmin, isTwoFactorConfigured } from "@/lib/actions/auth";
 import { useTheme } from "@/lib/theme/ThemeContext";
 
@@ -15,7 +15,7 @@ interface AdminLoginFormProps {
 export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
   onLoginSuccess,
   title = "Panel Administrativo",
-  subtitle = "Acceso seguro con protección anti-fuerza bruta y doble factor",
+  subtitle,
 }) => {
   const { theme } = useTheme();
   const [username, setUsername] = useState("");
@@ -76,7 +76,7 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
             )}
           </div>
           <h2 className="text-xl font-black text-slate-900 tracking-tight">{title}</h2>
-          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">{subtitle}</p>
+          {subtitle && <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">{subtitle}</p>}
         </div>
 
         {/* Formulario */}
@@ -194,12 +194,6 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                 </>
               )}
             </button>
-          </div>
-
-          <div className="text-center pt-2">
-            <span className="text-[11px] text-slate-400 flex items-center justify-center gap-1">
-              <Clock className="w-3 h-3" /> Máximo 5 intentos · Bloqueo de 15 min · SSL / HTTPS
-            </span>
           </div>
         </form>
       </div>
