@@ -37,6 +37,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validar SKUs duplicados en la lista de variantes enviada
+    if (Array.isArray(body.variantes) && body.variantes.length > 0) {
+      const variantSkus = body.variantes.map((v: any) => (v.sku || resolvedSku).trim().toUpperCase());
+      const duplicateSku = variantSkus.find((sku: string, idx: number) => variantSkus.indexOf(sku) !== idx);
+      if (duplicateSku) {
+        return NextResponse.json(
+          { error: `El código SKU "${duplicateSku}" está repetido en más de una variante. Cada variante debe tener un SKU único diferente.` },
+          { status: 400 }
+        );
+      }
+    }
+
     const slug = body.slug || body.nombre
       .toLowerCase()
       .normalize("NFD")
@@ -65,8 +77,10 @@ export async function POST(request: NextRequest) {
             sku: (v.sku || resolvedSku).trim(),
             color: (v.color || "ESTÁNDAR").trim(),
             presentacion: v.presentacion || body.unidad_venta || body.unidadVenta || "Unidad",
+            costo_mayor_usd: v.costo_mayor_usd != null && !isNaN(Number(v.costo_mayor_usd)) ? Number(v.costo_mayor_usd) : null,
             precio_mayor_usd: Number(v.precio_mayor_usd) || 0,
             min_mayor: Number(v.min_mayor) || 1,
+            costo_gran_mayor_usd: v.costo_gran_mayor_usd != null && !isNaN(Number(v.costo_gran_mayor_usd)) ? Number(v.costo_gran_mayor_usd) : null,
             precio_gran_mayor_usd: Number(v.precio_gran_mayor_usd) || 0,
             min_gran_mayor: Number(v.min_gran_mayor) || 5,
             stock: Number(v.stock) || 0,
@@ -79,8 +93,10 @@ export async function POST(request: NextRequest) {
           sku: resolvedSku,
           color: (body.color || "ESTÁNDAR").trim(),
           presentacion: body.presentacion || body.unidad_venta || body.unidadVenta || "Unidad",
+          costo_mayor_usd: body.costo_mayor_usd != null && !isNaN(Number(body.costo_mayor_usd)) ? Number(body.costo_mayor_usd) : null,
           precio_mayor_usd: Number(body.precio_mayor_usd) || 0,
           min_mayor: Number(body.min_mayor) || 1,
+          costo_gran_mayor_usd: body.costo_gran_mayor_usd != null && !isNaN(Number(body.costo_gran_mayor_usd)) ? Number(body.costo_gran_mayor_usd) : null,
           precio_gran_mayor_usd: Number(body.precio_gran_mayor_usd) || 0,
           min_gran_mayor: Number(body.min_gran_mayor) || 5,
           stock: Number(body.stock) || 0,
@@ -95,6 +111,19 @@ export async function POST(request: NextRequest) {
     if (createdProductId) {
       // Rollback: limpiar el producto huérfano si falló la creación de variantes para evitar bloqueos de sku_key
       await deleteProduct(createdProductId).catch(() => {});
+    }
+    const errMsg = String(error?.message || "");
+    if (errMsg.includes("variantes_sku_key") || errMsg.includes("duplicate key")) {
+      return NextResponse.json(
+        { error: "Uno de los códigos SKU ya está registrado en la base de datos o repetido. Cada variante debe tener un SKU único." },
+        { status: 400 }
+      );
+    }
+    if (errMsg.includes("productos_sku_key")) {
+      return NextResponse.json(
+        { error: "Ya existe un producto registrado con ese código SKU principal." },
+        { status: 400 }
+      );
     }
     return createSafeErrorResponse(error, "No se pudo crear el producto.");
   }

@@ -525,6 +525,17 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
       return;
     }
 
+    // Verificar si hay SKUs duplicados en las variantes ingresadas
+    const enteredSkus = createForm.variantes.map((v) => v.sku.trim().toUpperCase()).filter(Boolean);
+    const dupSku = enteredSkus.find((sku, idx) => enteredSkus.indexOf(sku) !== idx);
+    if (dupSku) {
+      showToast(
+        `El SKU "${dupSku}" está repetido en más de una variante. Cada variante debe tener un SKU único diferente.`,
+        "error"
+      );
+      return;
+    }
+
     setSavingNewProduct(true);
 
     try {
