@@ -13,6 +13,8 @@ export interface OrderItem {
 export type OrderStatus = "pendiente" | "pagado" | "despachado" | "entregado" | "cancelado";
 export type OrderSource = "web" | "manual";
 
+export type PaymentMethodType = "bolivares" | "dolares_efectivo" | "usdt" | "mixto";
+
 export interface Order {
   id: string;
   codigo: string; // #SUMI-5978 (4 dígitos no correlativos)
@@ -22,6 +24,8 @@ export interface Order {
   zonaEntrega: string;
   direccion: string;
   metodoPago: string;
+  tipoPago?: PaymentMethodType | string; // bolivares, dolares_efectivo, usdt
+  referenciaPago?: string; // 6 dígitos numéricos de confirmación bancaria o Binance
   notas?: string;
   items: OrderItem[];
   totalUsd: number;

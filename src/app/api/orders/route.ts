@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
       zonaEntrega,
       direccion,
       metodoPago,
+      tipoPago,
+      referenciaPago,
       notas,
       items,
       gastoFleteRetiroUsd,
@@ -125,6 +127,8 @@ export async function POST(req: NextRequest) {
       zonaEntrega: String(zonaEntrega || "").trim(),
       direccion: String(direccion || "").trim(),
       metodoPago: String(metodoPago || "Pago Móvil / Transferencia Bs (Tasa BCV)").trim(),
+      tipoPago: tipoPago ? String(tipoPago).trim() : "bolivares",
+      referenciaPago: referenciaPago ? String(referenciaPago).replace(/\D/g, "").slice(0, 6) : undefined,
       notas: notas ? String(notas).trim() : undefined,
       items: formattedItems,
       totalUsd,
@@ -164,6 +168,7 @@ export async function POST(req: NextRequest) {
     if (newOrder.zonaEntrega) whatsappText += `Zona: ${newOrder.zonaEntrega}\n`;
     if (newOrder.direccion) whatsappText += `Dirección: ${newOrder.direccion}\n`;
     whatsappText += `Método de Pago Acordado: ${newOrder.metodoPago}\n`;
+    if (newOrder.referenciaPago) whatsappText += `Referencia de Pago: *${newOrder.referenciaPago}*\n`;
     if (newOrder.notas) whatsappText += `Observaciones: ${newOrder.notas}\n`;
 
     whatsappText += `\nDETALLES DE ARTÍCULOS:\n`;
@@ -211,7 +216,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { orderId, estado, conIva } = body;
+    const { orderId, estado, conIva, tipoPago, referenciaPago, metodoPago } = body;
 
     if (!orderId) {
       return NextResponse.json({ error: "orderId es requerido" }, { status: 400 });
@@ -230,6 +235,18 @@ export async function PATCH(req: NextRequest) {
 
     if (conIva !== undefined) {
       updates.conIva = Boolean(conIva);
+    }
+
+    if (tipoPago !== undefined) {
+      updates.tipoPago = String(tipoPago).trim();
+    }
+
+    if (referenciaPago !== undefined) {
+      updates.referenciaPago = referenciaPago ? String(referenciaPago).replace(/\D/g, "").slice(0, 6) : undefined;
+    }
+
+    if (metodoPago !== undefined) {
+      updates.metodoPago = String(metodoPago).trim();
     }
 
     const ok = await updateOrder(orderId, updates);

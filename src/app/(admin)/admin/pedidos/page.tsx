@@ -71,6 +71,8 @@ export default function AdminPedidosPage() {
   const [manualTelefono, setManualTelefono] = useState("");
   const [manualZona, setManualZona] = useState("");
   const [manualDireccion, setManualDireccion] = useState("");
+  const [manualTipoPago, setManualTipoPago] = useState<"bolivares" | "dolares_efectivo" | "usdt">("bolivares");
+  const [manualReferenciaPago, setManualReferenciaPago] = useState("");
   const [manualMetodoPago, setManualMetodoPago] = useState("Pago Móvil / Transferencia Bs (Tasa BCV)");
   const [manualNotas, setManualNotas] = useState("");
   const [manualFleteRetiro, setManualFleteRetiro] = useState(5.0);
@@ -490,7 +492,13 @@ export default function AdminPedidosPage() {
           clienteTelefono: manualTelefono,
           zonaEntrega: manualZona,
           direccion: manualDireccion,
-          metodoPago: manualMetodoPago,
+          tipoPago: manualTipoPago,
+          referenciaPago: manualReferenciaPago ? manualReferenciaPago.trim() : undefined,
+          metodoPago: manualTipoPago === "bolivares"
+            ? "Pago Móvil / Transferencia Bs (Tasa BCV)"
+            : manualTipoPago === "dolares_efectivo"
+            ? "Dólares en Efectivo ($ Cash)"
+            : "USDT (Binance / Cripto)",
           notas: manualNotas,
           items: manualItems,
           gastoFleteRetiroUsd: manualFleteRetiro,
@@ -507,6 +515,8 @@ export default function AdminPedidosPage() {
         setManualTelefono("");
         setManualZona("");
         setManualDireccion("");
+        setManualTipoPago("bolivares");
+        setManualReferenciaPago("");
         setManualNotas("");
         setManualItems([]);
 
@@ -1244,15 +1254,83 @@ export default function AdminPedidosPage() {
                     />
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Método de Pago Acordado</label>
-                    <input
-                      type="text"
-                      value={manualMetodoPago}
-                      onChange={(e) => setManualMetodoPago(e.target.value)}
-                      placeholder="Ej: Pago Móvil / Transferencia Bs (Tasa BCV)"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-emerald-600"
-                    />
+                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Método de Cobro (Enlace Contable) *
+                      </label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualTipoPago("bolivares");
+                            setManualMetodoPago("Pago Móvil / Transferencia Bs (Tasa BCV)");
+                          }}
+                          className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-0.5 ${
+                            manualTipoPago === "bolivares"
+                              ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span>🇻🇪 Bolívares</span>
+                          <span className="text-[9px] font-normal opacity-90">Pago Móvil/BCV</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualTipoPago("dolares_efectivo");
+                            setManualMetodoPago("Dólares en Efectivo ($ Cash)");
+                          }}
+                          className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-0.5 ${
+                            manualTipoPago === "dolares_efectivo"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span>💵 $ Efectivo</span>
+                          <span className="text-[9px] font-normal opacity-90">Divisas Cash</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualTipoPago("usdt");
+                            setManualMetodoPago("USDT (Binance / Cripto)");
+                          }}
+                          className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-0.5 ${
+                            manualTipoPago === "usdt"
+                              ? "bg-amber-500 text-slate-950 border-amber-500 shadow-xs font-black"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span>🪙 USDT</span>
+                          <span className="text-[9px] font-normal opacity-90">Binance Pay</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-bold text-slate-700">
+                          Referencia de Pago (6 dígitos)
+                        </label>
+                        <span className="text-[10px] font-mono text-slate-400 font-bold">
+                          {manualReferenciaPago.length}/6 dígitos
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={manualReferenciaPago}
+                        onChange={(e) => setManualReferenciaPago(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="Ej: 849201"
+                        className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-sm font-mono font-black tracking-widest text-slate-900 focus:outline-emerald-600 shadow-2xs"
+                      />
+                      <span className="text-[10px] text-slate-400 block mt-1">
+                        Últimos 6 dígitos del comprobante bancario, pago móvil o Binance.
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

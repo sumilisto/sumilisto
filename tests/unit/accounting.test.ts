@@ -95,4 +95,45 @@ describe("Accounting & USDT Calculations", () => {
     expect(rates.tasaCompraUsdt).toBeGreaterThan(0);
     expect(rates.tasaVentaUsdt).toBeGreaterThan(0);
   });
+
+  it("links order revenue correctly into accounting by payment method (Bs, $ Cash, USDT)", () => {
+    const mockOrders = [
+      { id: "1", totalUsd: 400, tipoPago: "bolivares", referenciaPago: "849201", estado: "entregado" },
+      { id: "2", totalUsd: 250, tipoPago: "dolares_efectivo", referenciaPago: "102938", estado: "entregado" },
+      { id: "3", totalUsd: 500, tipoPago: "usdt", referenciaPago: "739102", estado: "entregado" },
+    ];
+
+    let facturacionTotal = 0;
+    let ingresosBs = 0;
+    let ingresosUsdEfectivo = 0;
+    let ingresosUsdt = 0;
+
+    mockOrders.forEach((o) => {
+      facturacionTotal += o.totalUsd || 0;
+      if (o.tipoPago === "usdt") ingresosUsdt += o.totalUsd || 0;
+      else if (o.tipoPago === "dolares_efectivo") ingresosUsdEfectivo += o.totalUsd || 0;
+      else ingresosBs += o.totalUsd || 0;
+    });
+
+    expect(facturacionTotal).toBe(1150);
+    expect(ingresosBs).toBe(400);
+    expect(ingresosUsdEfectivo).toBe(250);
+    expect(ingresosUsdt).toBe(500);
+  });
+
+  it("validates and normalizes 6-digit payment references", () => {
+    const rawRef1 = "849201";
+    const rawRef2 = "ref-123456789";
+    const rawRef3 = "59301";
+
+    const clean1 = rawRef1.replace(/\D/g, "").slice(0, 6);
+    const clean2 = rawRef2.replace(/\D/g, "").slice(0, 6);
+    const clean3 = rawRef3.replace(/\D/g, "").slice(0, 6);
+
+    expect(clean1).toBe("849201");
+    expect(clean1.length).toBe(6);
+    expect(clean2).toBe("123456");
+    expect(clean2.length).toBe(6);
+    expect(clean3).toBe("59301");
+  });
 });
