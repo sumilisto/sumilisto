@@ -5,7 +5,7 @@ import { createHmac, createHash, timingSafeEqual } from "crypto";
 import { verifyTotp } from "@/lib/security/totp";
 
 const COOKIE_NAME = "sumilisto_admin_session";
-const SESSION_HOURS = 8;
+const SESSION_HOURS = 72; // 3 días de vigencia de sesión para evitar cierres inesperados durante la gestión comercial
 
 // Rate limiting en memoria por IP y Usuario para mitigación de ataques de fuerza bruta
 const loginAttempts = new Map<string, { count: number; lockedUntil: number }>();
