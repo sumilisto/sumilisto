@@ -361,7 +361,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   const totalUsd = Math.round(pricePerPack * packCount * 100) / 100;
 
-  const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 500;
+  const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 999999;
   const maxPacks = Math.max(1, Math.floor(maxStock / unitsPerPack));
 
   const handleAddToCart = () => {
