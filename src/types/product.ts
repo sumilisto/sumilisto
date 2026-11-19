@@ -22,6 +22,7 @@ export interface ProductVariant {
   precioGranMayorUsd?: number;
   minGranMayor?: number;
   stock: number;
+  activo?: boolean;
   status: ProductStockStatus;
   isAvailable: boolean;
   fotos: ProductPhoto[];

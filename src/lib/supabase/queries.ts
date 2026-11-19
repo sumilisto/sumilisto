@@ -500,6 +500,7 @@ function mapDbToProduct(row: any, includeCosts: boolean = false): Product {
     precioGranMayorUsd: v.precio_gran_mayor_usd ? Number(v.precio_gran_mayor_usd) : undefined,
     minGranMayor: v.min_gran_mayor || 500,
     stock: v.stock || 0,
+    activo: v.activo !== false,
     status: v.activo ? "disponible" : "agotado",
     isAvailable: Boolean(v.activo && (v.precio_mayor_usd || 0) > 0),
     fotos: [],

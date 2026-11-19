@@ -222,8 +222,8 @@ export default function AdminContabilidadPage() {
           ord.tipoPago === "usdt"
             ? "🪙 USDT (Binance)"
             : ord.tipoPago === "dolares_efectivo"
-            ? "💵 $ Efectivo"
-            : "🇻🇪 Bs (Pago Móvil / BCV)";
+              ? "💵 $ Efectivo"
+              : "🇻🇪 Bs (Pago Móvil / BCV)";
 
         list.push({
           id: `ord-${ord.id}`,
@@ -248,19 +248,19 @@ export default function AdminContabilidadPage() {
         exp.categoria === "inventario"
           ? "Compra Inventario"
           : exp.categoria === "flete"
-          ? "Flete / Transporte"
-          : exp.categoria === "meta_ads"
-          ? "Publicidad Meta Ads"
-          : exp.categoria === "servicios"
-          ? "Servicios"
-          : "Gasto Operativo";
+            ? "Flete / Transporte"
+            : exp.categoria === "meta_ads"
+              ? "Publicidad Meta Ads"
+              : exp.categoria === "servicios"
+                ? "Servicios"
+                : "Gasto Operativo";
 
       const metodoDesc =
         exp.metodoPago === "usdt"
           ? "🪙 USDT"
           : exp.metodoPago === "bs_pago_movil" || exp.metodoPago === "bs_transferencia"
-          ? "🇻🇪 Bolívares"
-          : "💵 $ Efectivo";
+            ? "🇻🇪 Bolívares"
+            : "💵 $ Efectivo";
 
       list.push({
         id: `exp-${exp.id}`,
@@ -362,8 +362,8 @@ export default function AdminContabilidadPage() {
         paymentEditTipo === "bolivares"
           ? "Pago Móvil / Transferencia Bs (Tasa BCV)"
           : paymentEditTipo === "dolares_efectivo"
-          ? "Dólares en Efectivo ($ Cash)"
-          : "USDT (Binance / Cripto)";
+            ? "Dólares en Efectivo ($ Cash)"
+            : "USDT (Binance / Cripto)";
 
       const res = await fetch("/api/orders", {
         method: "PATCH",
@@ -383,13 +383,13 @@ export default function AdminContabilidadPage() {
         prev.map((o) =>
           o.id === editingPaymentOrder.id
             ? {
-                ...o,
-                tipoPago: paymentEditTipo,
-                referenciaPago: cleanRef || undefined,
-                metodoPago: metodoDesc,
-                estado: o.estado === "pendiente" ? "pagado" : o.estado,
-                updatedAt: new Date().toISOString(),
-              }
+              ...o,
+              tipoPago: paymentEditTipo,
+              referenciaPago: cleanRef || undefined,
+              metodoPago: metodoDesc,
+              estado: o.estado === "pendiente" ? "pagado" : o.estado,
+              updatedAt: new Date().toISOString(),
+            }
             : o
         )
       );
@@ -457,18 +457,16 @@ export default function AdminContabilidadPage() {
               <button
                 type="button"
                 onClick={() => setSelectedRange("mes")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  selectedRange === "mes" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${selectedRange === "mes" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 Este Mes
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedRange("todo")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  selectedRange === "todo" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${selectedRange === "todo" ? "bg-emerald-800 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 Histórico
               </button>
@@ -543,11 +541,10 @@ export default function AdminContabilidadPage() {
 
           {/* 3. SALDO NETO (Balance en Caja) */}
           <div
-            className={`p-5 rounded-2xl border shadow-2xs relative overflow-hidden ${
-              totales.saldoNeto >= 0
+            className={`p-5 rounded-2xl border shadow-2xs relative overflow-hidden ${totales.saldoNeto >= 0
                 ? "bg-slate-900 border-slate-800 text-white"
                 : "bg-rose-950 border-rose-900 text-white"
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between text-slate-300 mb-2">
               <span className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
@@ -638,11 +635,10 @@ export default function AdminContabilidadPage() {
                 setActiveTab("debe_haber");
                 setTipoMovimientoFilter("todos");
               }}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
-                activeTab === "debe_haber"
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${activeTab === "debe_haber"
                   ? "bg-slate-900 text-white shadow-xs"
                   : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
-              }`}
+                }`}
             >
               <FileText className="w-4 h-4 text-emerald-400" />
               <span>Libro Diario (Debe y Haber)</span>
@@ -654,11 +650,10 @@ export default function AdminContabilidadPage() {
             <button
               type="button"
               onClick={() => setActiveTab("usdt")}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
-                activeTab === "usdt"
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${activeTab === "usdt"
                   ? "bg-slate-900 text-white shadow-xs"
                   : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
-              }`}
+                }`}
             >
               <Coins className="w-4 h-4 text-amber-400" />
               <span>Mesa USDT ({filteredUsdtTransactions.length})</span>
@@ -686,11 +681,10 @@ export default function AdminContabilidadPage() {
               <button
                 type="button"
                 onClick={() => setTipoMovimientoFilter("todos")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  tipoMovimientoFilter === "todos"
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${tipoMovimientoFilter === "todos"
                     ? "bg-slate-800 text-white shadow-xs"
                     : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Todos ({movimientos.length})
               </button>
@@ -698,11 +692,10 @@ export default function AdminContabilidadPage() {
               <button
                 type="button"
                 onClick={() => setTipoMovimientoFilter("haber")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  tipoMovimientoFilter === "haber"
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${tipoMovimientoFilter === "haber"
                     ? "bg-emerald-700 text-white shadow-xs"
                     : "bg-white text-emerald-800 border border-emerald-200 hover:bg-emerald-50"
-                }`}
+                  }`}
               >
                 🟢 Solo Haber / Ingresos ({totales.haberCount} · +{formatUsd(totales.totalHaber)})
               </button>
@@ -710,11 +703,10 @@ export default function AdminContabilidadPage() {
               <button
                 type="button"
                 onClick={() => setTipoMovimientoFilter("debe")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  tipoMovimientoFilter === "debe"
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${tipoMovimientoFilter === "debe"
                     ? "bg-rose-700 text-white shadow-xs"
                     : "bg-white text-rose-800 border border-rose-200 hover:bg-rose-50"
-                }`}
+                  }`}
               >
                 🔴 Solo Debe / Egresos ({totales.debeCount} · -{formatUsd(totales.totalDebe)})
               </button>
@@ -723,11 +715,10 @@ export default function AdminContabilidadPage() {
                 <button
                   type="button"
                   onClick={() => setTipoMovimientoFilter("pendientes")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    tipoMovimientoFilter === "pendientes"
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${tipoMovimientoFilter === "pendientes"
                       ? "bg-amber-600 text-white shadow-xs"
                       : "bg-white text-amber-800 border border-amber-200 hover:bg-amber-50"
-                  }`}
+                    }`}
                 >
                   ⏳ Pendientes por Cobrar ({pedidosPendientes.length} · {formatUsd(totalPendientesUsd)})
                 </button>
@@ -1005,11 +996,10 @@ export default function AdminContabilidadPage() {
                   <button
                     type="button"
                     onClick={() => setPaymentEditTipo("bolivares")}
-                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                      paymentEditTipo === "bolivares"
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${paymentEditTipo === "bolivares"
                         ? "bg-emerald-800 text-white border-emerald-800 shadow-xs"
                         : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span>🇻🇪 Bolívares</span>
                     <span className="text-[10px] font-normal opacity-90">Pago Móvil</span>
@@ -1018,11 +1008,10 @@ export default function AdminContabilidadPage() {
                   <button
                     type="button"
                     onClick={() => setPaymentEditTipo("dolares_efectivo")}
-                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                      paymentEditTipo === "dolares_efectivo"
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${paymentEditTipo === "dolares_efectivo"
                         ? "bg-emerald-800 text-white border-emerald-800 shadow-xs"
                         : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span>💵 $ Efectivo</span>
                     <span className="text-[10px] font-normal opacity-90">Cash / Divisas</span>
@@ -1031,11 +1020,10 @@ export default function AdminContabilidadPage() {
                   <button
                     type="button"
                     onClick={() => setPaymentEditTipo("usdt")}
-                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                      paymentEditTipo === "usdt"
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${paymentEditTipo === "usdt"
                         ? "bg-amber-500 text-slate-950 border-amber-500 shadow-xs font-black"
                         : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span>🪙 USDT</span>
                     <span className="text-[10px] font-normal opacity-90">Binance Pay</span>

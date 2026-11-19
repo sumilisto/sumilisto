@@ -106,6 +106,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
     factorGranMayor: "",
     precioMayorUsd: "",
     precioGranMayorUsd: "",
+    activo: true,
   });
 
   // Estado para feedback
@@ -159,6 +160,33 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
       onRefresh();
     } catch (err: any) {
       showToast(err.message || "Error al actualizar estado", "error");
+    }
+  };
+
+  // Toggle directo de disponibilidad de variante (activo = true/false -> Disponible vs Agotado)
+  const toggleVariantStatus = async (variant: ProductVariant, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!variant.id) return;
+
+    const nextState = variant.activo === false ? true : false;
+    try {
+      const res = await fetch(`/api/variants/${variant.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activo: nextState }),
+      });
+
+      if (!res.ok) throw new Error("Error al cambiar disponibilidad");
+
+      showToast(
+        nextState
+          ? `¡Variante "${variant.color || variant.sku}" marcada como DISPONIBLE!`
+          : `Variante "${variant.color || variant.sku}" marcada como AGOTADA en la web`,
+        nextState ? "success" : "error"
+      );
+      onRefresh();
+    } catch (err: any) {
+      showToast(err.message || "Error al actualizar disponibilidad de variante", "error");
     }
   };
 
@@ -441,6 +469,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
       factorGranMayor: "",
       precioMayorUsd: variant.precioMayorUsd !== undefined && variant.precioMayorUsd !== null ? String(variant.precioMayorUsd) : "",
       precioGranMayorUsd: variant.precioGranMayorUsd !== undefined && variant.precioGranMayorUsd !== null ? String(variant.precioGranMayorUsd) : "",
+      activo: variant.activo !== false,
     });
   };
 
@@ -461,6 +490,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
         min_gran_mayor: Number(variantEditForm.minGranMayor) || 1,
         precio_mayor_usd: Number(variantEditForm.precioMayorUsd) || 0,
         precio_gran_mayor_usd: Number(variantEditForm.precioGranMayorUsd) || 0,
+        activo: variantEditForm.activo,
       };
 
       const res = await fetch(`/api/variants/${editingVariantItem.variant.id}`, {
@@ -1137,6 +1167,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                       <th className="py-2.5 px-2 text-right text-emerald-900 bg-emerald-50/40">PVP M</th>
                                       <th className="py-2.5 px-2 text-right text-emerald-900 bg-emerald-50/40">PVP GM</th>
                                       <th className="py-2.5 px-2 text-center text-indigo-900">Margen</th>
+                                      <th className="py-2.5 px-2 text-center">Estado Web</th>
                                       <th className="py-2.5 px-2 text-center">Acción</th>
                                     </tr>
                                   </thead>
@@ -1219,6 +1250,23 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                             ) : (
                                               <span className="text-slate-300">—</span>
                                             )}
+                                          </td>
+
+                                          {/* Estado Web Disponibilidad */}
+                                          <td className="py-2 px-2 text-center">
+                                            <button
+                                              type="button"
+                                              onClick={(e) => toggleVariantStatus(variant, e)}
+                                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black transition-all cursor-pointer ${
+                                                variant.activo !== false
+                                                  ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                                                  : "bg-rose-100 text-rose-800 hover:bg-rose-200 border border-rose-300"
+                                              }`}
+                                              title={variant.activo !== false ? "Clic para marcar como AGOTADO en la tienda" : "Clic para marcar como DISPONIBLE"}
+                                            >
+                                              <span className={`w-1.5 h-1.5 rounded-full ${variant.activo !== false ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+                                              <span>{variant.activo !== false ? "Disponible" : "Agotado"}</span>
+                                            </button>
                                           </td>
 
                                           {/* Botón Edición Rápida */}
@@ -1454,6 +1502,44 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Bloque Disponibilidad en Tienda Web */}
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <span className="font-black text-slate-800 text-xs block">
+                  Disponibilidad en la Tienda Web
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVariantEditForm({ ...variantEditForm, activo: true })}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                      variantEditForm.activo
+                        ? "bg-emerald-800 text-white border-emerald-800 shadow-xs"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span>🟢 Disponible</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVariantEditForm({ ...variantEditForm, activo: false })}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                      !variantEditForm.activo
+                        ? "bg-rose-700 text-white border-rose-700 shadow-xs"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-rose-400" />
+                    <span>🔴 Marcar como Agotado</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  {variantEditForm.activo
+                    ? "Los clientes pueden ver este color y agregarlo al carrito normalmente."
+                    : "Los clientes verán este color marcado como (Agotado) y no podrán comprarlo."}
+                </p>
               </div>
             </div>
 
