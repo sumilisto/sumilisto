@@ -181,11 +181,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           )}
 
-          {/* 2. Nombre del producto en negrita con line-clamp-2 y altura uniforme */}
+          {/* 2. Nombre del producto completo en negrita (line-clamp-4 para no recortar gramos, medidas ni especificaciones clave) */}
           <Link href={`/producto/${product.slug}`} className="block">
             <h3
               style={{ fontSize: titleSize, marginTop: lineSpacing }}
-              className="font-bold text-slate-900 leading-snug line-clamp-2 min-h-[2.4em] hover:text-brand transition-colors"
+              className="font-bold text-slate-900 leading-snug line-clamp-4 min-h-[2.4em] hover:text-brand transition-colors"
             >
               {product.nombre}
             </h3>

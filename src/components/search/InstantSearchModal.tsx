@@ -235,7 +235,7 @@ export const InstantSearchModal: React.FC<InstantSearchModalProps> = ({
                       <span className="text-[10px] text-slate-400">· {product.sku}</span>
                       <Badge status={product.status} className="scale-90 origin-left" />
                     </div>
-                    <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-brand transition-colors">
+                    <h4 className="text-sm font-semibold text-slate-900 line-clamp-2 group-hover:text-brand transition-colors">
                       {product.nombre}
                     </h4>
                     <p className="text-xs text-slate-500 truncate">
