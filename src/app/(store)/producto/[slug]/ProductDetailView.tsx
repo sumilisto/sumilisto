@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Product, ProductVariant } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from "@/lib/currency/format";
+import { resolveWholesaleLine, getNextWholesaleQuantity, getPrevWholesaleQuantity } from "@/lib/pricing/pricing";
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import {
@@ -312,7 +313,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   // Manejar selección de variante por botón
   const handleSelectVariant = (variant: ProductVariant) => {
     setSelectedSku(variant.sku);
-    setPackCount(1);
+    const vMinMayor = variant.minMayor || product.minMayor || 50;
+    setSelectedQuantity(vMinMayor);
+    setSelectedTier("mayor");
     setStockAlertMessage(null);
 
     // Si la variante tiene una foto asignada, saltar a ella en el carrusel
@@ -338,7 +341,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       );
       if (matchingVariant && matchingVariant.sku !== selectedSku) {
         setSelectedSku(matchingVariant.sku);
-        setPackCount(1);
+        const vMinMayor = matchingVariant.minMayor || product.minMayor || 50;
+        setSelectedQuantity(vMinMayor);
+        setSelectedTier("mayor");
         setStockAlertMessage(null);
       }
     }
@@ -347,22 +352,20 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   // Selección de Tarifa: "mayor" | "gran_mayor"
   const [selectedTier, setSelectedTier] = useState<"mayor" | "gran_mayor">("mayor");
 
-  // Multiplicador de paquetes / lotes (1, 2, 3...)
-  const [packCount, setPackCount] = useState<number>(1);
+  // Cantidad de unidades seleccionadas (progresión escalonada: 20 -> 40 -> 50 -> 70...)
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(minMayor);
   const [comentarios, setComentarios] = useState<string>("");
   const [addedFeedback, setAddedFeedback] = useState<boolean>(false);
   const [stockAlertMessage, setStockAlertMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
 
-  // Unidades totales resultantes
-  const unitsPerPack = selectedTier === "gran_mayor" ? minGranMayor : minMayor;
-  const pricePerPack = selectedTier === "gran_mayor" ? priceGranMayor : priceMayor;
-  const totalUnits = packCount * unitsPerPack;
-
-  const totalUsd = Math.round(pricePerPack * packCount * 100) / 100;
+  // Cálculo unificado de escala y tarifa
+  const wholesaleLine = resolveWholesaleLine(product, activeVariant, selectedQuantity);
+  const totalUnits = selectedQuantity;
+  const totalUsd = wholesaleLine.subtotalUsd;
+  const effectiveTier = wholesaleLine.tarifa;
 
   const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 999999;
-  const maxPacks = Math.max(1, Math.floor(maxStock / unitsPerPack));
 
   const handleAddToCart = () => {
     if (!activeVariant.isAvailable) return;
@@ -375,46 +378,37 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     }
 
     // Guarda en el carrito con su SKU único de variante (así ROJA y DORADA se guardan como productos separados)
-    updateQuantity(activeVariant.sku, totalUnits, selectedTier, comentarios, totalUsd);
+    updateQuantity(activeVariant.sku, totalUnits, effectiveTier, comentarios, totalUsd);
     setAddedFeedback(true);
     setStockAlertMessage(null);
     setTimeout(() => setAddedFeedback(false), 2500);
   };
 
   const handleIncrement = () => {
-    let nextPackCount = packCount + 1;
-    let nextTotalUnits = nextPackCount * unitsPerPack;
+    const nextQty = getNextWholesaleQuantity(selectedQuantity, minMayor, minGranMayor);
 
     // Si excede el stock
-    if (activeVariant.stock > 0 && nextTotalUnits > activeVariant.stock) {
+    if (activeVariant.stock > 0 && nextQty > activeVariant.stock) {
       setStockAlertMessage(`Solo quedan ${activeVariant.stock} unidades disponibles de este producto.`);
       setTimeout(() => setStockAlertMessage(null), 4000);
       return;
     }
 
-    // Si está en MAYOR y llega a la cantidad de GRAN MAYOR, auto-cambiar
-    if (selectedTier === "mayor" && priceGranMayor > 0 && minGranMayor > 0 && nextTotalUnits >= minGranMayor) {
+    setSelectedQuantity(nextQty);
+    if (priceGranMayor > 0 && minGranMayor > 0 && nextQty >= minGranMayor) {
       setSelectedTier("gran_mayor");
-      setPackCount(Math.floor(nextTotalUnits / minGranMayor));
-      setStockAlertMessage(null);
-      return;
     }
-
-    setPackCount(nextPackCount);
     setStockAlertMessage(null);
   };
 
   const handleDecrement = () => {
-    if (packCount <= 1) {
-      // Si está en Gran Mayor y presiona menos, bajar a Mayor
-      if (selectedTier === "gran_mayor") {
-        setSelectedTier("mayor");
-        const fallbackUnits = Math.max(minMayor, minGranMayor - minMayor);
-        setPackCount(Math.floor(fallbackUnits / minMayor));
-      }
-      return;
+    const prevQty = getPrevWholesaleQuantity(selectedQuantity, minMayor, minGranMayor);
+    if (prevQty < minMayor) return;
+
+    setSelectedQuantity(prevQty);
+    if (prevQty < minGranMayor) {
+      setSelectedTier("mayor");
     }
-    setPackCount((prev) => prev - 1);
     setStockAlertMessage(null);
   };
 
@@ -438,7 +432,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   const whatsappNum = normalizeWhatsAppPhone(theme.whatsappNumber || "584227864547");
   const whatsappInquiryUrl = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(
-    `Hola Sumilisto, quisiera consultar sobre el producto: ${product.nombre} (Color: ${activeVariant.color}, SKU: ${activeVariant.sku}, Modalidad: ${selectedTier === "gran_mayor" ? "Gran Mayor" : "Mayor"} de ${totalUnits} unds)`
+    `Hola Sumilisto, quisiera consultar sobre el producto: ${product.nombre} (Color: ${activeVariant.color}, SKU: ${activeVariant.sku}, Modalidad: ${effectiveTier === "gran_mayor" ? "Gran Mayor" : "Mayor"} de ${totalUnits} unds)`
   )}`;
 
   return (
@@ -550,14 +544,14 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <label
               onClick={() => {
                 setSelectedTier("mayor");
-                setPackCount(1);
+                setSelectedQuantity(minMayor);
                 setStockAlertMessage(null);
               }}
               style={{
-                backgroundColor: selectedTier === "mayor" ? (theme.softBgColor || "#f0fdf4") : undefined,
+                backgroundColor: effectiveTier === "mayor" ? (theme.softBgColor || "#f0fdf4") : undefined,
               }}
               className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${
-                selectedTier !== "mayor" ? "hover:bg-slate-50" : ""
+                effectiveTier !== "mayor" ? "hover:bg-slate-50" : ""
               }`}
             >
               <div>
@@ -575,10 +569,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 <input
                   type="radio"
                   name="tierSelection"
-                  checked={selectedTier === "mayor"}
+                  checked={effectiveTier === "mayor"}
                   onChange={() => {
                     setSelectedTier("mayor");
-                    setPackCount(1);
+                    setSelectedQuantity(minMayor);
                     setStockAlertMessage(null);
                   }}
                   className="w-5 h-5 text-brand focus:ring-brand cursor-pointer accent-brand"
@@ -591,14 +585,14 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <label
                 onClick={() => {
                   setSelectedTier("gran_mayor");
-                  setPackCount(1);
+                  setSelectedQuantity(minGranMayor);
                   setStockAlertMessage(null);
                 }}
                 style={{
-                  backgroundColor: selectedTier === "gran_mayor" ? (theme.softBgColor || "#f0fdf4") : undefined,
+                  backgroundColor: effectiveTier === "gran_mayor" ? (theme.softBgColor || "#f0fdf4") : undefined,
                 }}
                 className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${
-                  selectedTier !== "gran_mayor" ? "hover:bg-slate-50" : ""
+                  effectiveTier !== "gran_mayor" ? "hover:bg-slate-50" : ""
                 }`}
               >
                 <div>
@@ -639,10 +633,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   <input
                     type="radio"
                     name="tierSelection"
-                    checked={selectedTier === "gran_mayor"}
+                    checked={effectiveTier === "gran_mayor"}
                     onChange={() => {
                       setSelectedTier("gran_mayor");
-                      setPackCount(1);
+                      setSelectedQuantity(minGranMayor);
                       setStockAlertMessage(null);
                     }}
                     className="w-5 h-5 text-brand focus:ring-brand cursor-pointer accent-brand"
@@ -681,18 +675,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   <button
                     type="button"
                     onClick={handleDecrement}
-                    disabled={packCount <= 1 && selectedTier !== "gran_mayor"}
+                    disabled={selectedQuantity <= minMayor}
                     className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-slate-700 disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <div className="px-4 text-center font-black text-slate-900 text-base min-w-[2.5rem]">
-                    {packCount}
+                  <div className="px-3 text-center font-black text-slate-900 text-sm sm:text-base min-w-[5.5rem]">
+                    {selectedQuantity}{' '}
+                    <span className="text-[11px] font-normal text-slate-500">unds</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleIncrement}
-                    disabled={packCount >= maxPacks}
+                    disabled={activeVariant.stock > 0 && selectedQuantity >= activeVariant.stock}
                     className="w-11 h-11 flex items-center justify-center rounded-lg bg-white text-brand disabled:opacity-30 hover:bg-slate-200 transition-colors shadow-xs touch-target font-bold text-lg"
                   >
                     <Plus className="w-4 h-4" />

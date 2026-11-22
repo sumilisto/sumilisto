@@ -172,3 +172,73 @@ export function resolveWholesaleLine(
     costoTotalUsd,
   };
 }
+
+/**
+ * Calcula la siguiente cantidad escalonada respetando la escala Mayor y Gran Mayor:
+ * - Arranca en minMayor.
+ * - Va subiendo de minMayor en minMayor (ej: 20 -> 40).
+ * - Si el siguiente salto sobrepasaría minGranMayor (ej: 40 + 20 = 60 > 50),
+ *   el paso se clava exactamente en minGranMayor (50).
+ * - A partir de minGranMayor (50), sigue sumando según la cantidad mínima de Mayor (50 -> 70 -> 90 -> 110...).
+ */
+export function getNextWholesaleQuantity(
+  currentQty: number,
+  minMayor: number,
+  minGranMayor?: number
+): number {
+  const m = Math.max(1, minMayor);
+  const gm = minGranMayor && minGranMayor > m ? minGranMayor : 0;
+
+  if (currentQty <= 0) return m;
+
+  if (gm > 0) {
+    if (currentQty < gm) {
+      if (currentQty + m > gm) {
+        return gm;
+      }
+      return currentQty + m;
+    }
+    // A partir de Gran Mayor, sube de m en m
+    return currentQty + m;
+  }
+
+  return currentQty + m;
+}
+
+/**
+ * Calcula la cantidad anterior escalonada:
+ * - Por encima de Gran Mayor, baja de minMayor en minMayor (ej: 90 -> 70 -> 50).
+ * - En Gran Mayor (ej: 50), si Gran Mayor no es múltiplo de minMayor (50 no es mult de 20),
+ *   el escalón hacia abajo es el mayor múltiplo de minMayor anterior (50 -> 40).
+ * - Por debajo de Gran Mayor, baja de minMayor en minMayor (40 -> 20 -> 0).
+ */
+export function getPrevWholesaleQuantity(
+  currentQty: number,
+  minMayor: number,
+  minGranMayor?: number
+): number {
+  const m = Math.max(1, minMayor);
+  const gm = minGranMayor && minGranMayor > m ? minGranMayor : 0;
+
+  if (currentQty <= m) return 0;
+
+  if (gm > 0) {
+    if (currentQty > gm) {
+      if (currentQty - m < gm) {
+        return gm;
+      }
+      return currentQty - m;
+    }
+    if (currentQty === gm) {
+      const remainder = gm % m;
+      if (remainder !== 0) {
+        return gm - remainder;
+      }
+      return gm - m;
+    }
+    // currentQty < gm
+    return Math.max(0, currentQty - m);
+  }
+
+  return Math.max(0, currentQty - m);
+}

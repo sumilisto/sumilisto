@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { calculateProductPrice, resolveWholesaleLine } from "@/lib/pricing/pricing";
+import {
+  calculateProductPrice,
+  resolveWholesaleLine,
+  getNextWholesaleQuantity,
+  getPrevWholesaleQuantity,
+} from "@/lib/pricing/pricing";
 import { Product } from "@/types/product";
 
 describe("Motor de Precios Mayorista (Pricing Engine)", () => {
@@ -129,5 +134,48 @@ describe("Escala automática Mayor y Gran Mayor (resolveWholesaleLine)", () => {
     );
     expect(conVariante.tarifa).toBe("gran_mayor");
     expect(conVariante.subtotalUsd).toBe(110);
+  });
+});
+
+describe("Escalones progresivos de compra (getNextWholesaleQuantity & getPrevWholesaleQuantity)", () => {
+  it("salta con 20 + 20 + 10 hacia 50 de Gran Mayor y luego sube de 20 en 20", () => {
+    // Ejemplo exacto del cliente: Mayor 20, Gran Mayor 50
+    expect(getNextWholesaleQuantity(0, 20, 50)).toBe(20);
+    expect(getNextWholesaleQuantity(20, 20, 50)).toBe(40);
+    expect(getNextWholesaleQuantity(40, 20, 50)).toBe(50); // Se clava en 50 Gran Mayor
+    expect(getNextWholesaleQuantity(50, 20, 50)).toBe(70); // A partir de 50, suma de 20 en 20
+    expect(getNextWholesaleQuantity(70, 20, 50)).toBe(90);
+    expect(getNextWholesaleQuantity(90, 20, 50)).toBe(110);
+  });
+
+  it("desciende correctamente desde cantidades superiores pasando por 50 y luego de 20 en 20", () => {
+    expect(getPrevWholesaleQuantity(110, 20, 50)).toBe(90);
+    expect(getPrevWholesaleQuantity(90, 20, 50)).toBe(70);
+    expect(getPrevWholesaleQuantity(70, 20, 50)).toBe(50);
+    expect(getPrevWholesaleQuantity(50, 20, 50)).toBe(40); // 50 -> 40
+    expect(getPrevWholesaleQuantity(40, 20, 50)).toBe(20);
+    expect(getPrevWholesaleQuantity(20, 20, 50)).toBe(0);
+  });
+
+  it("funciona con múltiplos exactos (ej. Mayor 12, Gran Mayor 36)", () => {
+    expect(getNextWholesaleQuantity(0, 12, 36)).toBe(12);
+    expect(getNextWholesaleQuantity(12, 12, 36)).toBe(24);
+    expect(getNextWholesaleQuantity(24, 12, 36)).toBe(36);
+    expect(getNextWholesaleQuantity(36, 12, 36)).toBe(48);
+
+    expect(getPrevWholesaleQuantity(48, 12, 36)).toBe(36);
+    expect(getPrevWholesaleQuantity(36, 12, 36)).toBe(24);
+    expect(getPrevWholesaleQuantity(24, 12, 36)).toBe(12);
+    expect(getPrevWholesaleQuantity(12, 12, 36)).toBe(0);
+  });
+
+  it("funciona sin Gran Mayor definido (sube y baja sólo de minMayor)", () => {
+    expect(getNextWholesaleQuantity(0, 25)).toBe(25);
+    expect(getNextWholesaleQuantity(25, 25)).toBe(50);
+    expect(getNextWholesaleQuantity(50, 25)).toBe(75);
+
+    expect(getPrevWholesaleQuantity(75, 25)).toBe(50);
+    expect(getPrevWholesaleQuantity(50, 25)).toBe(25);
+    expect(getPrevWholesaleQuantity(25, 25)).toBe(0);
   });
 });

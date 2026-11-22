@@ -10,6 +10,7 @@ import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import { Plus, Minus, AlertCircle } from "lucide-react";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
+import { getNextWholesaleQuantity, getPrevWholesaleQuantity } from "@/lib/pricing/pricing";
 
 interface ProductCardProps {
   product: Product;
@@ -50,17 +51,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!activeVariant.isAvailable) return;
-    const step = minMayor || 1;
     const maxStock = activeVariant.stock > 0 ? activeVariant.stock : 999999;
-    if (quantity + step > maxStock) return;
-    addItem(currentSku, step);
+    const nextQty = getNextWholesaleQuantity(quantity, minMayor, minGranMayor);
+    if (nextQty > maxStock) return;
+    updateQuantity(currentSku, nextQty);
   };
 
   const handleDecrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const step = minMayor || 1;
-    const nextQty = quantity - step;
+    const nextQty = getPrevWholesaleQuantity(quantity, minMayor, minGranMayor);
     if (nextQty <= 0) {
       removeItem(currentSku);
     } else {

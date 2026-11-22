@@ -13,7 +13,7 @@ import { useCart } from '@/lib/cart/CartContext';
 import { useProducts } from '@/lib/products/ProductsContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from '@/lib/currency/format';
-import { resolveWholesaleLine } from '@/lib/pricing/pricing';
+import { resolveWholesaleLine, getNextWholesaleQuantity, getPrevWholesaleQuantity } from '@/lib/pricing/pricing';
 import { LocationPickerModal } from '@/components/cart/LocationPickerModal';
 import { generateOrderCode } from '@/lib/orders/orderCode';
 
@@ -27,6 +27,8 @@ interface Line {
   foto: string;
   cantidad: number; // unidades
   step: number; // unidades que suben o bajan con + y -
+  minMayor: number;
+  minGranMayor: number;
   maxStock: number;
   precioPaquete: number; // precio de un paquete completo
   unidadesPorPaquete: number;
@@ -112,6 +114,8 @@ export default function CartPage() {
         foto: variant?.fotos?.[0]?.url || product.fotos?.[0]?.url || FALLBACK_IMAGE,
         cantidad: item.cantidad,
         step: resolved.minMayor,
+        minMayor: resolved.minMayor,
+        minGranMayor: resolved.minGranMayor,
         maxStock: stock > 0 ? stock : 999999,
         precioPaquete: resolved.precioPaquete,
         unidadesPorPaquete: resolved.unidadesPorPaquete,
@@ -498,7 +502,14 @@ export default function CartPage() {
                 <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50">
                   <button
                     type="button"
-                    onClick={() => updateQuantity(l.sku, l.cantidad - l.step)}
+                    onClick={() => {
+                      const prevQty = getPrevWholesaleQuantity(l.cantidad, l.minMayor, l.minGranMayor);
+                      if (prevQty <= 0) {
+                        removeItem(l.sku);
+                      } else {
+                        updateQuantity(l.sku, prevQty);
+                      }
+                    }}
                     className="p-2 text-slate-600 hover:bg-slate-200 rounded-l-xl transition-colors"
                     aria-label="Disminuir cantidad"
                   >
@@ -511,8 +522,9 @@ export default function CartPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (l.cantidad + l.step > l.maxStock) return;
-                      updateQuantity(l.sku, l.cantidad + l.step);
+                      const nextQty = getNextWholesaleQuantity(l.cantidad, l.minMayor, l.minGranMayor);
+                      if (nextQty > l.maxStock) return;
+                      updateQuantity(l.sku, nextQty);
                     }}
                     className="p-2 text-slate-600 hover:bg-slate-200 rounded-r-xl transition-colors"
                     aria-label="Aumentar cantidad"
