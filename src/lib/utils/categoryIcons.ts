@@ -10,7 +10,7 @@ import {
   Boxes,
   Inbox,
   Soup,
-  Ribbon,
+  Sparkles,
   Utensils,
   Scroll,
   Gift,
@@ -82,9 +82,9 @@ export function getCategoryIcon(categoryName: string): LucideIcon {
     return Soup;
   }
 
-  // 10. Virutas, confeti, lazos, relleno decorativo
-  if (/(viruta|relleno|confeti|lazo|adorno)/.test(normalized)) {
-    return Ribbon;
+  // 10. Virutas, confeti, relleno decorativo
+  if (/(viruta|relleno|confeti|adorno)/.test(normalized)) {
+    return Sparkles;
   }
 
   // 11. Envases, contenedores, anime, térmico, aluminio
