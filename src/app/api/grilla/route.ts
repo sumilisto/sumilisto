@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
       completada: Boolean(i.completada),
       completadaAt: i.completadaAt || null,
       notas: i.notas || "",
+      contenido: i.contenido || null,
     }));
 
     // 1. Obtener data actual para no sobreescribir otros datos de configuración

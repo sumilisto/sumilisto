@@ -5,8 +5,10 @@ import Link from "next/link";
 import { isAdminAuthenticated, loginAdmin } from "@/lib/actions/auth";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
-import { GrillaItem, GrillaCanal, GrillaDia, FormatoContenido } from "@/types/grilla";
+import { GrillaItem, GrillaCanal, GrillaDia, FormatoContenido, NeuromarketingContent } from "@/types/grilla";
 import { getDefaultGrillaItems } from "@/lib/grilla/defaults";
+import { generateFullDayGrilla, refreshSlotWithNewProduct } from "@/lib/grilla/scheduler";
+import { generateNeuromarketingContent } from "@/lib/grilla/neuromarketing";
 import { Product } from "@/types/product";
 import {
   Calendar,
@@ -34,6 +36,13 @@ import {
   BarChart3,
   Target,
   Lightbulb,
+  Wand2,
+  Copy,
+  CheckCheck,
+  X,
+  Zap,
+  Layers,
+  FileText,
 } from "lucide-react";
 
 export default function AdminGrillaPage() {
@@ -64,6 +73,11 @@ export default function AdminGrillaPage() {
     "todos" | "instagram" | "ig_publicaciones" | "ig_historias" | "mercadolibre" | "facebook" | "pendientes"
   >("todos");
   const [products, setProducts] = useState<Product[]>([]);
+
+  // Neuromarketing & AI Generator state
+  const [selectedSlotForModal, setSelectedSlotForModal] = useState<GrillaItem | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   // 1. Helper para clasificar Historia vs Publicación
   const isHistoria = (item: GrillaItem): boolean => {
@@ -239,10 +253,22 @@ export default function AdminGrillaPage() {
       updateItemField(itemId, "productoNombre", undefined);
       updateItemField(itemId, "productoImagen", undefined);
       updateItemField(itemId, "productoCategoria", undefined);
+      updateItemField(itemId, "contenido", undefined);
       return;
     }
 
     const firstPhoto = prod.fotos?.[0]?.url || "";
+    const targetItem = items.find((it) => it.id === itemId);
+    const contenido = targetItem
+      ? generateNeuromarketingContent(prod, {
+          canal: targetItem.canal,
+          formatoTipo: targetItem.formatoTipo,
+          slotNumber: targetItem.slotNumber,
+          tipo: targetItem.tipo,
+          hora: targetItem.hora,
+        })
+      : undefined;
+
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== itemId) return item;
@@ -252,11 +278,91 @@ export default function AdminGrillaPage() {
           productoNombre: prod.nombre,
           productoImagen: firstPhoto,
           productoCategoria: prod.categoria,
-          titulo: prod.nombre,
+          titulo:
+            item.canal === "mercadolibre" && contenido?.mlTitulo
+              ? contenido.mlTitulo
+              : `${prod.nombre} (${contenido?.tipoEnfoque || "Estrategia"})`,
+          contenido,
         };
       })
     );
     setHasUnsavedChanges(true);
+  };
+
+  // Generador inteligente con IA para todo el día (Anti-repetición 14 días en RRSS + Nunca repetido en ML)
+  const handleGenerateAiGrilla = () => {
+    if (products.length === 0) {
+      alert("Cargando catálogo de productos... por favor espera un momento.");
+      return;
+    }
+
+    const hasAssigned = items.some((it) => it.productoId);
+    if (hasAssigned) {
+      if (
+        !confirm(
+          "¿Deseas generar automáticamente toda la grilla del día con IA?\n\nAsignará productos aleatorios únicos sin repetir en los últimos 14 días (Instagram/FB) y nuevos para MercadoLibre, con sus guiones de neuromarketing y copies listos."
+        )
+      ) {
+        return;
+      }
+    }
+
+    setAiGenerating(true);
+    try {
+      const { items: newItems, assignedCount } = generateFullDayGrilla(
+        selectedDate,
+        items,
+        products,
+        historial,
+        { overwriteExisting: true }
+      );
+      setItems(newItems);
+      setHasUnsavedChanges(true);
+      setSaveSuccessMsg(
+        `✨ ¡Listo! Se asignaron ${assignedCount} productos con neuromarketing sin repetir en los últimos 14 días.`
+      );
+      setTimeout(() => setSaveSuccessMsg(null), 6000);
+    } catch (e) {
+      console.error("Error generando grilla IA:", e);
+      alert("Hubo un error al generar la grilla con IA.");
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  // Refrescar un slot individual: cambia de producto aleatorio o regenera el enfoque
+  const handleRefreshSlot = (slotId: string, changeProduct: boolean = true) => {
+    try {
+      const updated = refreshSlotWithNewProduct(
+        slotId,
+        selectedDate,
+        items,
+        products,
+        historial,
+        { changeProduct }
+      );
+      setItems(updated);
+      setHasUnsavedChanges(true);
+
+      // Si el modal está abierto para este slot, actualizarlo
+      if (selectedSlotForModal && selectedSlotForModal.id === slotId) {
+        const refreshed = updated.find((it) => it.id === slotId);
+        if (refreshed) {
+          setSelectedSlotForModal(refreshed);
+        }
+      }
+    } catch (e) {
+      console.error("Error al refrescar slot:", e);
+    }
+  };
+
+  // Copiar texto al portapapeles con feedback visual
+  const handleCopyText = (text: string, key: string) => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2500);
+    }
   };
 
   const handleResetToDefaults = () => {
@@ -678,7 +784,17 @@ export default function AdminGrillaPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={handleGenerateAiGrilla}
+                    disabled={aiGenerating}
+                    className="px-3.5 py-2 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+                    title="Asignar productos aleatorios (sin repetir en 14 días) y generar contenidos de Neuromarketing automáticamente"
+                  >
+                    <Wand2 className={`w-3.5 h-3.5 ${aiGenerating ? "animate-spin" : ""}`} />
+                    <span>{aiGenerating ? "Generando con IA..." : "✨ Generar Grilla con IA"}</span>
+                  </button>
+
                   <button
                     onClick={() => handleSave()}
                     disabled={saving}
@@ -943,17 +1059,32 @@ export default function AdminGrillaPage() {
                         {itemIsHist ? "Historia" : "Publicación"}
                       </span>
 
-                      {/* Mensaje / Tipo en DOBLE LÍNEA (Sin truncar, lectura completa) */}
-                      <div
-                        className="text-xs font-bold text-slate-800 leading-snug line-clamp-2 max-w-[280px] sm:max-w-md break-words"
-                        title={item.tipo}
-                      >
-                        {item.tipo}
+                      {/* Mensaje / Tipo en DOBLE LÍNEA + Tag de Estrategia */}
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="text-xs font-bold text-slate-800 leading-snug line-clamp-2 max-w-[280px] sm:max-w-md break-words"
+                          title={item.tipo}
+                        >
+                          {item.tipo}
+                        </div>
+                        {item.contenido && (
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 inline-flex items-center gap-1">
+                              <Zap className="w-2.5 h-2.5 text-purple-600" />
+                              {item.contenido.tipoEnfoque || "Estrategia Activa"}
+                            </span>
+                            {item.productoNombre && (
+                              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 truncate max-w-[180px]">
+                                {item.productoNombre}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Centro: Selector de Producto Publicado */}
-                    <div className="w-full md:w-auto md:min-w-[260px] md:max-w-xs flex items-center gap-2 shrink-0">
+                    {/* Centro: Selector de Producto Publicado + Botones de Acción (Refrescar & Ver Idea) */}
+                    <div className="w-full md:w-auto md:min-w-[280px] md:max-w-sm flex items-center gap-1.5 shrink-0">
                       {item.productoImagen ? (
                         <img
                           src={item.productoImagen}
@@ -980,6 +1111,34 @@ export default function AdminGrillaPage() {
                           ))}
                         </select>
                       </div>
+
+                      {/* Botón Refrescar Producto (Cambia aleatorio sin repetir en 14 días) */}
+                      <button
+                        onClick={() => handleRefreshSlot(item.id, true)}
+                        className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg border border-slate-200 hover:border-emerald-300 transition-colors shrink-0 cursor-pointer"
+                        title="Refrescar: Asignar otro producto aleatorio y nueva idea de contenido (sin repetir en 14 días)"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Botón Ver Idea & Copy */}
+                      <button
+                        onClick={() => {
+                          if (!item.productoId) {
+                            handleRefreshSlot(item.id, true);
+                          }
+                          setSelectedSlotForModal(item);
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shrink-0 cursor-pointer ${
+                          item.contenido
+                            ? "bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 border border-purple-200 hover:border-purple-300 shadow-xs"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                        title="Ver guion viral, hook de 3s, acción y copy listo para publicar"
+                      >
+                        <Lightbulb className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />
+                        <span className="hidden sm:inline">Idea & Copy</span>
+                      </button>
                     </div>
 
                     {/* Derecha: Estado + Enlace directo + Eliminar */}
@@ -1484,6 +1643,256 @@ export default function AdminGrillaPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* ═══════════════════════════════════════════════════════
+            MODAL DE NEUROMARKETING, GUION Y COPY LISTO
+        ═══════════════════════════════════════════════════════ */}
+        {selectedSlotForModal && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+            <div
+              className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 animate-fadeIn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header del Modal */}
+              <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                      selectedSlotForModal.canal === "instagram"
+                        ? "bg-pink-600 text-white"
+                        : selectedSlotForModal.canal === "mercadolibre"
+                        ? "bg-amber-400 text-slate-950"
+                        : "bg-blue-600 text-white"
+                    }`}
+                  >
+                    {selectedSlotForModal.canal.toUpperCase()}
+                  </span>
+
+                  <span className="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-500" />
+                    {selectedSlotForModal.hora}
+                  </span>
+
+                  <span className="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    {selectedSlotForModal.contenido?.formatoRecomendado || "Contenido Estratégico"}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => setSelectedSlotForModal(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
+                  title="Cerrar ventana"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Cuerpo del Modal con Scroll */}
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
+                {/* Banner de Producto Vinculado */}
+                <div className="bg-gradient-to-br from-emerald-50/80 to-slate-50 rounded-2xl p-4 border border-emerald-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {selectedSlotForModal.productoImagen ? (
+                      <img
+                        src={selectedSlotForModal.productoImagen}
+                        alt="Producto"
+                        className="w-14 h-14 rounded-xl object-cover border border-emerald-300 bg-white shrink-0 shadow-xs"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-200">
+                        <ShoppingBag className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
+                        Producto Seleccionado ({selectedSlotForModal.productoCategoria || "Catálogo"})
+                      </span>
+                      <h3 className="text-sm font-black text-slate-900 truncate" title={selectedSlotForModal.productoNombre || ""}>
+                        {selectedSlotForModal.productoNombre || "Sin producto vinculado"}
+                      </h3>
+                      {selectedSlotForModal.contenido?.tipoEnfoque && (
+                        <span className="text-xs font-semibold text-purple-700 flex items-center gap-1 mt-0.5">
+                          <Zap className="w-3 h-3 text-purple-600" />
+                          Enfoque: {selectedSlotForModal.contenido.tipoEnfoque}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Acciones para Refrescar Producto o Enfoque */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleRefreshSlot(selectedSlotForModal.id, true)}
+                      className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                      title="Elegir otro producto aleatorio sin repetir en 14 días"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Cambiar Producto</span>
+                    </button>
+                    <button
+                      onClick={() => handleRefreshSlot(selectedSlotForModal.id, false)}
+                      className="px-3 py-1.5 bg-white hover:bg-purple-50 text-purple-800 border border-purple-200 rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                      title="Probar otra idea de neuromarketing con este mismo producto"
+                    >
+                      <Wand2 className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Otra Idea</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Si no tiene contenido generado todavía */}
+                {!selectedSlotForModal.contenido && (
+                  <div className="p-6 text-center text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                    <Lightbulb className="w-8 h-8 text-amber-500 mx-auto mb-2 opacity-80" />
+                    <p className="text-sm font-semibold">Este slot aún no tiene estrategia de neuromarketing generada.</p>
+                    <button
+                      onClick={() => handleRefreshSlot(selectedSlotForModal.id, false)}
+                      className="mt-3 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Wand2 className="w-3.5 h-3.5" /> Generar Idea Ahora
+                    </button>
+                  </div>
+                )}
+
+                {/* Contenido Estratégico Generado */}
+                {selectedSlotForModal.contenido && (
+                  <div className="space-y-4">
+                    {/* TÍTULO MERCADOLIBRE (Solo si es ML) */}
+                    {selectedSlotForModal.canal === "mercadolibre" && selectedSlotForModal.contenido.mlTitulo && (
+                      <div className="bg-amber-50/70 border border-amber-300 rounded-2xl p-4">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-black text-amber-900 uppercase tracking-wider flex items-center gap-1">
+                            💛 Título SEO MercadoLibre ({selectedSlotForModal.contenido.mlTitulo.length}/60 caracteres)
+                          </span>
+                          <button
+                            onClick={() => handleCopyText(selectedSlotForModal.contenido?.mlTitulo || "", "ml_title")}
+                            className="text-xs font-bold text-amber-900 hover:text-amber-950 flex items-center gap-1 bg-amber-200/70 hover:bg-amber-300 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                          >
+                            {copiedKey === "ml_title" ? (
+                              <>
+                                <CheckCheck className="w-3.5 h-3.5 text-emerald-700" />
+                                <span className="text-emerald-800">¡Copiado!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copiar Título</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <div className="font-mono text-xs font-bold text-slate-900 bg-white p-2.5 rounded-xl border border-amber-200">
+                          {selectedSlotForModal.contenido.mlTitulo}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* HOOK VIRAL 0-3 SEGUNDOS */}
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <Flame className="w-4 h-4 text-orange-600 fill-orange-500" />
+                        <span className="text-xs font-black text-orange-950 uppercase tracking-wider">
+                          Hook Viral (Primeros 3 Segundos)
+                        </span>
+                        <span className="text-[10px] font-bold text-orange-700 bg-orange-200/60 px-1.5 py-0.2 rounded-full ml-auto">
+                          Regla de oro: Retención inmediata
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-800 leading-relaxed whitespace-pre-line bg-white/80 p-3 rounded-xl border border-amber-200">
+                        {selectedSlotForModal.contenido.hookViral}
+                      </p>
+                    </div>
+
+                    {/* EL ENGANCHE (DOLOR / DESEO PSICOLÓGICO) */}
+                    <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-4">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <Target className="w-4 h-4 text-purple-600" />
+                        <span className="text-xs font-black text-purple-950 uppercase tracking-wider">
+                          El Enganche (Neuromarketing & Dolor Universal)
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed bg-white/80 p-3 rounded-xl border border-purple-100 font-medium">
+                        {selectedSlotForModal.contenido.problemaEnganche}
+                      </p>
+                    </div>
+
+                    {/* ACCIÓN, DIÁLOGO & EDICIÓN DINÁMICA */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <BarChart3 className="w-4 h-4 text-slate-700" />
+                        <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                          Guion de Acción, Diálogo & Ritmo de Edición
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white p-3 rounded-xl border border-slate-200 font-mono text-[11px]">
+                        {selectedSlotForModal.contenido.desarrolloAccion}
+                      </div>
+                    </div>
+
+                    {/* LLAMADA A LA ACCIÓN (CTA) */}
+                    <div className="bg-emerald-50/80 border border-emerald-300 rounded-2xl p-4">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <TrendingUp className="w-4 h-4 text-emerald-700" />
+                        <span className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                          Llamada a la Acción (CTA de Alta Conversión)
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-emerald-950 bg-white p-3 rounded-xl border border-emerald-200">
+                        {selectedSlotForModal.contenido.llamadaAccion}
+                      </p>
+                    </div>
+
+                    {/* COPY COMPLETO LISTO PARA PUBLICAR */}
+                    <div className="bg-slate-900 text-slate-100 rounded-2xl p-4 border border-slate-800">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="w-4 h-4 text-emerald-400" />
+                          <span className="text-xs font-black text-white uppercase tracking-wider">
+                            Copy Completo Listo para Publicar
+                          </span>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleCopyText(selectedSlotForModal.contenido?.copyCompleto || "", "full_copy")
+                          }
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all shadow-sm cursor-pointer"
+                        >
+                          {copiedKey === "full_copy" ? (
+                            <>
+                              <CheckCheck className="w-3.5 h-3.5" />
+                              <span>¡Copiado!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copiar Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="text-xs leading-relaxed font-sans whitespace-pre-line bg-slate-950 p-3.5 rounded-xl border border-slate-800 max-h-60 overflow-y-auto text-slate-200 select-all">
+                        {selectedSlotForModal.contenido.copyCompleto}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer del Modal */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                <span className="text-xs text-slate-500">
+                  Tip: Copia el texto y súbelo a tu herramienta de programación o aplicación directa.
+                </span>
+                <button
+                  onClick={() => setSelectedSlotForModal(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>
