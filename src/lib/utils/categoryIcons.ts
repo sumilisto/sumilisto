@@ -4,10 +4,13 @@ import {
   ShoppingBag,
   PartyPopper,
   CakeSlice,
-  Sparkles,
+  TreePine,
   CupSoda,
   Package,
-  Box,
+  Boxes,
+  Inbox,
+  Soup,
+  Ribbon,
   Utensils,
   Scroll,
   Gift,
@@ -55,8 +58,8 @@ export function getCategoryIcon(categoryName: string): LucideIcon {
   }
 
   // 5. Navidad, temporada, año nuevo
-  if (/(navidad|temporada|ano nuevo|especial|estrella)/.test(normalized)) {
-    return Sparkles;
+  if (/(navidad|temporada|ano nuevo|navideno|navidena|diciembre|arbol)/.test(normalized)) {
+    return TreePine;
   }
 
   // 6. Vasos, bebidas, café, copas
@@ -69,32 +72,47 @@ export function getCategoryIcon(categoryName: string): LucideIcon {
     return Package;
   }
 
-  // 8. Envases, contenedores, bandejas
-  if (/(envase|contenedor|tarrina|anime|termico|bandeja|aluminio|tapa|domo|salsa)/.test(normalized)) {
-    return Box;
+  // 8. Bandejas, charolas
+  if (/(bandeja|charola|platter)/.test(normalized)) {
+    return Inbox;
   }
 
-  // 9. Cubiertos, comida, alimentos
+  // 9. Tinas, salseras, porciones, potes
+  if (/(tina|salsera|porcion|tarrina|pote)/.test(normalized)) {
+    return Soup;
+  }
+
+  // 10. Virutas, confeti, lazos, relleno decorativo
+  if (/(viruta|relleno|confeti|lazo|adorno)/.test(normalized)) {
+    return Ribbon;
+  }
+
+  // 11. Envases, contenedores, anime, térmico, aluminio
+  if (/(envase|contenedor|anime|termico|aluminio|tapa|domo|salsa)/.test(normalized)) {
+    return Boxes;
+  }
+
+  // 12. Cubiertos, comida, alimentos
   if (/(cubierto|tenedor|cuchara|cuchillo|servilleta|plato|comida|alimento)/.test(normalized)) {
     return Utensils;
   }
 
-  // 10. Papel, rollos, film
+  // 13. Papel, rollos, film
   if (/(papel|rollo|antigrasa|film|envoplast|etiqueta|cinta|adhesivo)/.test(normalized)) {
     return Scroll;
   }
 
-  // 11. Regalo, obsequio, detalles
-  if (/(regalo|obsequio|lazo|cinta|detalle|sorpresa)/.test(normalized)) {
+  // 14. Regalo, obsequio, detalles
+  if (/(regalo|obsequio|detalle|sorpresa)/.test(normalized)) {
     return Gift;
   }
 
-  // 12. Limpieza, higiene
+  // 15. Limpieza, higiene
   if (/(limpieza|higiene|guante|desinfectante|bolsa de basura|papel higienico|toalla)/.test(normalized)) {
     return SprayCan;
   }
 
-  // 13. Ofertas, descuentos, promociones
+  // 16. Ofertas, descuentos, promociones
   if (/(oferta|descuento|promo|remate|liquidacion)/.test(normalized)) {
     return Percent;
   }
