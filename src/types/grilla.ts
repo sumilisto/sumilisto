@@ -1,6 +1,28 @@
 export type GrillaCanal = "instagram" | "mercadolibre" | "facebook";
 export type FormatoContenido = "publicacion" | "historia";
 
+export interface OpcionSimple {
+  conceptoVisual: string;      // Qué foto tomar o mostrar
+  titularImagen: string;       // Texto o titular superpuesto en la imagen
+  composicion: string;         // Elementos en la gráfica (badges, logo, precio)
+}
+
+export interface OpcionCarrusel {
+  tituloCarrusel: string;      // Tema general del carrusel
+  laminas: Array<{
+    numero: number;
+    titulo: string;
+    contenido: string;
+    indicacionVisual: string;
+  }>;
+}
+
+export interface OpcionReels {
+  hook0a3s: string;            // Visual + Texto en pantalla + Audio inicial
+  desarrolloAccion: string;    // Tomas, diálogo, edición dinámica (1.5s por toma)
+  ctaFinal: string;            // Llamada a la acción ganadora
+}
+
 export interface NeuromarketingContent {
   hookViral: string;          // 0-3 segundos: Qué decir + Qué mostrar + Texto en pantalla
   problemaEnganche: string;   // Disparador psicológico / dolor / curiosidad universal
@@ -10,6 +32,11 @@ export interface NeuromarketingContent {
   formatoRecomendado?: string;// "Reel Dinámico", "Carrusel Educativo", "Historia Interactiva", "Publicación MercadoLibre", "Marketplace"
   tipoEnfoque?: string;       // "Desglose de Costo Real", "Prueba de Resistencia", "Valor Percibido", "ASMR / Almacén", "Mayor vs Gran Mayor", etc.
   mlTitulo?: string;          // Solo MercadoLibre: Título SEO optimizado (<60 caracteres)
+
+  // Las 3 opciones de contenido para redes sociales
+  opcionSimple?: OpcionSimple;
+  opcionCarrusel?: OpcionCarrusel;
+  opcionReels?: OpcionReels;
 }
 
 export interface GrillaItem {

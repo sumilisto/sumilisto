@@ -43,6 +43,8 @@ import {
   Zap,
   Layers,
   FileText,
+  Film,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export default function AdminGrillaPage() {
@@ -76,6 +78,7 @@ export default function AdminGrillaPage() {
 
   // Neuromarketing & AI Generator state
   const [selectedSlotForModal, setSelectedSlotForModal] = useState<GrillaItem | null>(null);
+  const [modalFormatTab, setModalFormatTab] = useState<"reels" | "carrusel" | "simple">("reels");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [aiGenerating, setAiGenerating] = useState(false);
 
@@ -1791,62 +1794,195 @@ export default function AdminGrillaPage() {
                       </div>
                     )}
 
-                    {/* HOOK VIRAL 0-3 SEGUNDOS */}
-                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <Flame className="w-4 h-4 text-orange-600 fill-orange-500" />
-                        <span className="text-xs font-black text-orange-950 uppercase tracking-wider">
-                          Hook Viral (Primeros 3 Segundos)
-                        </span>
-                        <span className="text-[10px] font-bold text-orange-700 bg-orange-200/60 px-1.5 py-0.2 rounded-full ml-auto">
-                          Regla de oro: Retención inmediata
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold text-slate-800 leading-relaxed whitespace-pre-line bg-white/80 p-3 rounded-xl border border-amber-200">
-                        {selectedSlotForModal.contenido.hookViral}
-                      </p>
+                    {/* Selector de las 3 Opciones Solicitadas: Simple | Carrusel | Reels */}
+                    <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center gap-1.5 border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setModalFormatTab("simple")}
+                        className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          modalFormatTab === "simple"
+                            ? "bg-emerald-700 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                        }`}
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span>1. Simple (Foto)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setModalFormatTab("carrusel")}
+                        className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          modalFormatTab === "carrusel"
+                            ? "bg-pink-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                        }`}
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>2. Carrusel (Láminas)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setModalFormatTab("reels")}
+                        className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          modalFormatTab === "reels"
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                        }`}
+                      >
+                        <Film className="w-3.5 h-3.5" />
+                        <span>3. Reels (Video Viral)</span>
+                      </button>
                     </div>
 
-                    {/* EL ENGANCHE (DOLOR / DESEO PSICOLÓGICO) */}
-                    <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-4">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <Target className="w-4 h-4 text-purple-600" />
-                        <span className="text-xs font-black text-purple-950 uppercase tracking-wider">
-                          El Enganche (Neuromarketing & Dolor Universal)
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-700 leading-relaxed bg-white/80 p-3 rounded-xl border border-purple-100 font-medium">
-                        {selectedSlotForModal.contenido.problemaEnganche}
-                      </p>
-                    </div>
+                    {/* VISTA 1: OPCIÓN SIMPLE (IMAGEN / FOTO ÚNICA) */}
+                    {modalFormatTab === "simple" && (
+                      <div className="space-y-3 animate-fadeIn">
+                        <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <ImageIcon className="w-4 h-4 text-emerald-700" />
+                            <span className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                              Opción 1: Concepto Visual & Fotografía (Post Simple)
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-700 leading-relaxed bg-white/80 p-3 rounded-xl border border-emerald-100">
+                            {selectedSlotForModal.contenido.opcionSimple?.conceptoVisual ||
+                              "Fotografía nítida del producto sobre mesa limpia con buena iluminación natural."}
+                          </p>
+                        </div>
 
-                    {/* ACCIÓN, DIÁLOGO & EDICIÓN DINÁMICA */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <BarChart3 className="w-4 h-4 text-slate-700" />
-                        <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                          Guion de Acción, Diálogo & Ritmo de Edición
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white p-3 rounded-xl border border-slate-200 font-mono text-[11px]">
-                        {selectedSlotForModal.contenido.desarrolloAccion}
-                      </div>
-                    </div>
+                        <div className="bg-amber-50/70 border border-amber-300 rounded-2xl p-4">
+                          <span className="text-[10px] font-black text-amber-900 uppercase tracking-wider block mb-1">
+                            Titular Superpuesto en la Imagen (Alto Impacto)
+                          </span>
+                          <div className="font-mono text-xs font-bold text-slate-900 bg-white p-3 rounded-xl border border-amber-200">
+                            {selectedSlotForModal.contenido.opcionSimple?.titularImagen ||
+                              selectedSlotForModal.productoNombre}
+                          </div>
+                        </div>
 
-                    {/* LLAMADA A LA ACCIÓN (CTA) */}
-                    <div className="bg-emerald-50/80 border border-emerald-300 rounded-2xl p-4">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <TrendingUp className="w-4 h-4 text-emerald-700" />
-                        <span className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                          Llamada a la Acción (CTA de Alta Conversión)
-                        </span>
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                          <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+                            Composición Gráfica Recomendada (Badges & Sellos)
+                          </span>
+                          <div className="text-xs text-slate-700 whitespace-pre-line bg-white p-3 rounded-xl border border-slate-200">
+                            {selectedSlotForModal.contenido.opcionSimple?.composicion ||
+                              "Foto centrada con sello de Delivery Gratis en compras mayores a $50 y precio al Gran Mayor."}
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs font-bold text-emerald-950 bg-white p-3 rounded-xl border border-emerald-200">
-                        {selectedSlotForModal.contenido.llamadaAccion}
-                      </p>
-                    </div>
+                    )}
 
-                    {/* COPY COMPLETO LISTO PARA PUBLICAR */}
+                    {/* VISTA 2: OPCIÓN CARRUSEL (SECUENCIA DE LÁMINAS) */}
+                    {modalFormatTab === "carrusel" && (
+                      <div className="space-y-3 animate-fadeIn">
+                        <div className="bg-pink-50/70 border border-pink-200 rounded-2xl p-3.5">
+                          <span className="text-[10px] font-black text-pink-900 uppercase tracking-wider block mb-0.5">
+                            Tema Estratégico del Carrusel
+                          </span>
+                          <h4 className="text-xs font-black text-slate-900">
+                            {selectedSlotForModal.contenido.opcionCarrusel?.tituloCarrusel ||
+                              `Guía de Rentabilidad: ${selectedSlotForModal.productoNombre}`}
+                          </h4>
+                        </div>
+
+                        <div className="space-y-2">
+                          {(
+                            selectedSlotForModal.contenido.opcionCarrusel?.laminas || [
+                              {
+                                numero: 1,
+                                titulo: "PORTADA",
+                                indicacionVisual: "Foto principal con flecha",
+                                contenido: "¿Cuánto le cuesta a tu negocio un mal empaque?",
+                              },
+                            ]
+                          ).map((lamina) => (
+                            <div
+                              key={lamina.numero}
+                              className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs hover:border-pink-300 transition-colors"
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-200">
+                                  Lámina {lamina.numero}: {lamina.titulo}
+                                </span>
+                                <span className="text-[10px] text-slate-400 italic font-medium">
+                                  {lamina.indicacionVisual}
+                                </span>
+                              </div>
+                              <p className="text-xs font-medium text-slate-800 whitespace-pre-line bg-slate-50/70 p-2.5 rounded-lg border border-slate-100 mt-1.5">
+                                {lamina.contenido}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* VISTA 3: OPCIÓN REELS (VIDEO VIRAL CORTO) */}
+                    {modalFormatTab === "reels" && (
+                      <div className="space-y-3 animate-fadeIn">
+                        {/* HOOK VIRAL 0-3 SEGUNDOS */}
+                        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <Flame className="w-4 h-4 text-orange-600 fill-orange-500" />
+                            <span className="text-xs font-black text-orange-950 uppercase tracking-wider">
+                              Hook Viral (Primeros 3 Segundos)
+                            </span>
+                            <span className="text-[10px] font-bold text-orange-700 bg-orange-200/60 px-1.5 py-0.2 rounded-full ml-auto">
+                              Retención inmediata
+                            </span>
+                          </div>
+                          <p className="text-xs font-semibold text-slate-800 leading-relaxed whitespace-pre-line bg-white/80 p-3 rounded-xl border border-amber-200">
+                            {selectedSlotForModal.contenido.opcionReels?.hook0a3s ||
+                              selectedSlotForModal.contenido.hookViral}
+                          </p>
+                        </div>
+
+                        {/* EL ENGANCHE (DOLOR / DESEO PSICOLÓGICO) */}
+                        <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-4">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <Target className="w-4 h-4 text-purple-600" />
+                            <span className="text-xs font-black text-purple-950 uppercase tracking-wider">
+                              El Enganche (Neuromarketing & Dolor Universal)
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-700 leading-relaxed bg-white/80 p-3 rounded-xl border border-purple-100 font-medium">
+                            {selectedSlotForModal.contenido.problemaEnganche}
+                          </p>
+                        </div>
+
+                        {/* ACCIÓN, DIÁLOGO & EDICIÓN DINÁMICA */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <BarChart3 className="w-4 h-4 text-slate-700" />
+                            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                              Guion de Acción, Diálogo & Ritmo de Edición
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white p-3 rounded-xl border border-slate-200 font-mono text-[11px]">
+                            {selectedSlotForModal.contenido.opcionReels?.desarrolloAccion ||
+                              selectedSlotForModal.contenido.desarrolloAccion}
+                          </div>
+                        </div>
+
+                        {/* LLAMADA A LA ACCIÓN (CTA) */}
+                        <div className="bg-emerald-50/80 border border-emerald-300 rounded-2xl p-4">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <TrendingUp className="w-4 h-4 text-emerald-700" />
+                            <span className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                              Llamada a la Acción (CTA de Alta Conversión)
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-emerald-950 bg-white p-3 rounded-xl border border-emerald-200">
+                            {selectedSlotForModal.contenido.opcionReels?.ctaFinal ||
+                              selectedSlotForModal.contenido.llamadaAccion}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* COPY COMPLETO LISTO PARA PUBLICAR (ACOMPAÑA LAS 3 OPCIONES) */}
                     <div className="bg-slate-900 text-slate-100 rounded-2xl p-4 border border-slate-800">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5">

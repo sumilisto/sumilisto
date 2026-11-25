@@ -50,6 +50,18 @@ describe("Grilla & Neuromarketing Engine", () => {
     expect(content.copyCompleto).toBeTruthy();
     expect(content.copyCompleto).toContain("DELIVERY GRATIS");
     expect(content.copyCompleto).toContain(prod.nombre);
+
+    // Verificación de las 3 opciones solicitadas: Simple, Carrusel y Reels
+    expect(content.opcionSimple).toBeDefined();
+    expect(content.opcionSimple?.titularImagen).toBeTruthy();
+    expect(content.opcionSimple?.conceptoVisual).toBeTruthy();
+
+    expect(content.opcionCarrusel).toBeDefined();
+    expect(content.opcionCarrusel?.laminas.length).toBeGreaterThanOrEqual(3);
+    expect(content.opcionCarrusel?.laminas[0].titulo).toContain("PORTADA");
+
+    expect(content.opcionReels).toBeDefined();
+    expect(content.opcionReels?.hook0a3s).toContain("[0-3 seg]");
   });
 
   it("generates ideal MercadoLibre copy with title < 60 characters and structured specs", () => {

@@ -195,6 +195,25 @@ ${medidas ? `• Dimensiones: ${medidas}\n` : ""}${capacidad ? `• Capacidad: $
       copyCompleto: copyML,
       formatoRecomendado: "Publicación MercadoLibre (Catálogo)",
       tipoEnfoque: "Ficha Técnica Mayorista SEO",
+      opcionSimple: {
+        conceptoVisual: `Foto de portada en fondo 100% blanco puro (RGB 255,255,255) según los requisitos de MercadoLibre, mostrando ${product.nombre} nítido y centrado.`,
+        titularImagen: `${product.nombre} - Escala Mayorista`,
+        composicion: `Foto frontal limpia sin marcas de agua ni texto externo para cumplir el algoritmo de posicionamiento de MercadoLibre.`,
+      },
+      opcionCarrusel: {
+        tituloCarrusel: `Galería de Fotos para MercadoLibre: ${product.nombre}`,
+        laminas: [
+          { numero: 1, titulo: "FOTO 1 (Portada)", indicacionVisual: "Fondo blanco puro con el producto cerrado.", contenido: product.nombre },
+          { numero: 2, titulo: "FOTO 2 (Medidas)", indicacionVisual: "Foto con cinta métrica o infografía de dimensiones.", contenido: `Medidas: ${medidas || "Estándar"}` },
+          { numero: 3, titulo: "FOTO 3 (En Uso)", indicacionVisual: "Foto del producto conteniendo alimentos o en mesa.", contenido: "Resistencia de grado alimenticio" },
+          { numero: 4, titulo: "FOTO 4 (Bulto Cerrado)", indicacionVisual: "Foto del embalaje cerrado por mayor.", contenido: `Presentación por bulto desde ${minGranMayor} unidades` },
+        ],
+      },
+      opcionReels: {
+        hook0a3s: `[0-3 seg] Muestra el producto en mano. "Disponible para entrega inmediata en MercadoLibre".`,
+        desarrolloAccion: "Demuestra la calidad del material y el empaque seguro para envíos nacionales.",
+        ctaFinal: "Haz tu compra segura por MercadoLibre con envío a todo el país.",
+      },
     };
   }
 
@@ -223,6 +242,24 @@ Escríbeme al inbox o al WhatsApp para enviarte el catálogo completo con más d
       copyCompleto: copyFB,
       formatoRecomendado: "Publicación Marketplace",
       tipoEnfoque: "Venta Mayorista Local",
+      opcionSimple: {
+        conceptoVisual: `Fotografía real en almacén de ${product.nombre} con iluminación blanca o luz natural clara.`,
+        titularImagen: `DESDE $${formatUsd(unitGranMayor)} POR UNIDAD - ENTREGA INMEDIATA`,
+        composicion: `Foto principal con etiqueta de precio al Gran Mayor y sello verde "🛵 Delivery GRATIS +$50 en Caracas y Miranda".`,
+      },
+      opcionCarrusel: {
+        tituloCarrusel: `Catálogo Rápido Marketplace: ${product.nombre}`,
+        laminas: [
+          { numero: 1, titulo: "PORTADA", indicacionVisual: "Foto del producto en primer plano", contenido: `${product.nombre} al Mayor y Gran Mayor` },
+          { numero: 2, titulo: "PRECIOS Y ESCALA", indicacionVisual: "Foto de la escala de bultos", contenido: `Mayor: desde ${minMayor} unds ($${formatUsd(unitMayor)} c/u) | Gran Mayor: desde ${minGranMayor} unds ($${formatUsd(unitGranMayor)} c/u)` },
+          { numero: 3, titulo: "DELIVERY Y PAGO", indicacionVisual: "Foto de despacho y entregas", contenido: "Delivery gratis en compras +$50. Pagas al recibir en divisas o Pago Móvil BCV." },
+        ],
+      },
+      opcionReels: {
+        hook0a3s: `[0-3 seg] Abriendo el bulto de ${product.nombre}. "¿Tienes negocio de comida en Caracas? Mira este precio".`,
+        desarrolloAccion: "Muestra la resistencia del material y explica la escala de precios al mayor en 15 segundos.",
+        ctaFinal: "Escribe al inbox para coordinar entrega hoy mismo.",
+      },
     };
   }
 
@@ -275,6 +312,24 @@ Escríbeme al inbox o al WhatsApp para enviarte el catálogo completo con más d
       copyCompleto: chosenStory.copy,
       formatoRecomendado: "Historia Interactiva 24h",
       tipoEnfoque: chosenStory.nombre,
+      opcionSimple: {
+        conceptoVisual: chosenStory.visual,
+        titularImagen: chosenStory.hook,
+        composicion: `Foto vertical 9:16 con sticker interactivo de encuesta y texto de precio $${formatUsd(unitGranMayor)} al Gran Mayor.`,
+      },
+      opcionCarrusel: {
+        tituloCarrusel: `Secuencia de 3 Historias Consecutivas: ${chosenStory.nombre}`,
+        laminas: [
+          { numero: 1, titulo: "HISTORIA 1 (Gancho)", indicacionVisual: chosenStory.visual, contenido: chosenStory.hook },
+          { numero: 2, titulo: "HISTORIA 2 (Detalle y Precio)", indicacionVisual: "Foto de la escala de precios", contenido: `Gran Mayor desde ${minGranMayor} unidades a $${formatUsd(unitGranMayor)} c/u.` },
+          { numero: 3, titulo: "HISTORIA 3 (Sticker Link)", indicacionVisual: "Sticker con enlace web / WhatsApp", contenido: chosenStory.cta },
+        ],
+      },
+      opcionReels: {
+        hook0a3s: `[0-3 seg] ${chosenStory.visual}\nAudio: "${chosenStory.hook}"`,
+        desarrolloAccion: `Tomas rápidas de 10-15 segundos mostrando el producto y los despachos activos.`,
+        ctaFinal: chosenStory.cta,
+      },
     };
   }
 
@@ -352,13 +407,67 @@ Escríbeme al inbox o al WhatsApp para enviarte el catálogo completo con más d
 
   const chosenAngle = reelsAngles[seedIndex % reelsAngles.length];
 
+  // 1. Opción Simple (Post de imagen única o fotografía fija de alto impacto)
+  const opcionSimple = {
+    conceptoVisual: `Fotografía limpia y en alta definición de ${product.nombre} sobre mesa de trabajo o en uso real con comida/repostería adentro. Iluminación frontal natural sin sombras duras.`,
+    titularImagen: `DESDE $${formatUsd(unitGranMayor)} POR UNIDAD AL GRAN MAYOR`,
+    composicion: `• Titular superior grande y legible en 1 segundo: "CALIDAD PROFESIONAL PARA TU NEGOCIO".\n• Centro: El producto en primer plano.\n• Badge inferior izquierdo: "Escala Mayorista: desde ${minMayor} unds a $${formatUsd(precioMayor)}".\n• Sello inferior derecho verde: "🛵 Delivery GRATIS compras +$50".`,
+  };
+
+  // 2. Opción Carrusel (Secuencia educativa y comparativa de 5 láminas deslizables)
+  const opcionCarrusel = {
+    tituloCarrusel: `Carrusel Estratégico: 5 Razones por las que tu negocio necesita ${product.nombre}`,
+    laminas: [
+      {
+        numero: 1,
+        titulo: "PORTADA (El Gancho Visual)",
+        indicacionVisual: `Foto en primer plano de ${product.nombre} con flecha curva indicando deslizar.`,
+        contenido: `Titular en portada: "¿Cuánto le cuesta a tu negocio un mal empaque? (Desliza para ver números reales 👉)"`,
+      },
+      {
+        numero: 2,
+        titulo: "EL PROBLEMA (El Dolor Común)",
+        indicacionVisual: "Foto dividida o comparativa visual del error típico al comprar insumos sueltos.",
+        contenido: `Comprar empaques al detal en la calle te hace perder hasta $40 al mes en sobreprecio. Además, materiales débiles arruinan la presentación de tu producto.`,
+      },
+      {
+        numero: 3,
+        titulo: "LA SOLUCIÓN & FICHA TÉCNICA",
+        indicacionVisual: `Foto técnica con viñetas limpias sobre ${product.nombre}.`,
+        contenido: `• Producto: ${product.nombre}\n• Categoría: ${product.categoria}\n${medidas ? `• Dimensiones: ${medidas}\n` : ""}• Material seguro, resistente a traslados y de grado alimenticio.`,
+      },
+      {
+        numero: 4,
+        titulo: "ESCALA DE PRECIOS & AHORRO",
+        indicacionVisual: "Gráfico de barras o cajas comparando escala Mayor vs Gran Mayor.",
+        contenido: `• Escala Mayor: desde ${minMayor} unds a $${formatUsd(precioMayor)} ($${formatUsd(unitMayor)} c/u)\n• Escala Gran Mayor: desde ${minGranMayor} unds a $${formatUsd(precioGranMayor)} ($${formatUsd(unitGranMayor)} c/u)\n👉 Ahorro neto directo a tu ganancia: ¡${porcentajeAhorro}%!`,
+      },
+      {
+        numero: 5,
+        titulo: "LLAMADO A LA ACCIÓN (Cierre)",
+        indicacionVisual: "Foto de embalaje de Sumilisto listo para despacho con logo y delivery.",
+        contenido: `🛵 DELIVERY GRATIS en Caracas, Guarenas y Guatire en compras desde $50.\n\n📌 Guarda este carrusel para tu próxima compra y comenta "PRECIOS" para enviarte el catálogo completo a tu DM.`,
+      },
+    ],
+  };
+
+  // 3. Opción Reels (Video dinámico corto 15-25 seg)
+  const opcionReels = {
+    hook0a3s: `[0-3 seg] ${chosenAngle.visualHook}\nAudio / Qué decir: "${chosenAngle.hook}"`,
+    desarrolloAccion: chosenAngle.desarrollo,
+    ctaFinal: chosenAngle.cta,
+  };
+
   return {
     hookViral: `[0-3 seg] ${chosenAngle.visualHook}\nAudio / Qué decir: "${chosenAngle.hook}"`,
     problemaEnganche: chosenAngle.enganche,
     desarrolloAccion: chosenAngle.desarrollo,
     llamadaAccion: chosenAngle.cta,
     copyCompleto: chosenAngle.copy,
-    formatoRecomendado: "Reel Dinámico (15-25 seg) / Carrusel",
+    formatoRecomendado: "Reel Dinámico (15-25 seg) / Carrusel / Simple",
     tipoEnfoque: chosenAngle.tipoEnfoque,
+    opcionSimple,
+    opcionCarrusel,
+    opcionReels,
   };
 }
