@@ -8,6 +8,7 @@ import {
   getPast14DaysList,
   getRecentSocialProductIds,
   getMercadoLibrePublishedProductIds,
+  isProductAvailableForGrilla,
 } from "@/lib/grilla/scheduler";
 import { getDefaultGrillaItems } from "@/lib/grilla/defaults";
 import { Product } from "@/types/product";
@@ -169,5 +170,74 @@ describe("Grilla & Neuromarketing Engine", () => {
     expect(refreshedSlot).toBeDefined();
     expect(refreshedSlot?.productoId).not.toBe(initialProductId);
     expect(refreshedSlot?.contenido).toBeDefined();
+  });
+
+  it("strictly excludes agotados / inactivos from selection", () => {
+    const availableProd: Product = {
+      id: "prod-avail",
+      sku: "SKU-AVAIL",
+      nombre: "Producto Disponible",
+      slug: "producto-disponible",
+      categoria: "Envases",
+      presentacion: "Unidad",
+      unidadVenta: "50 Unds",
+      stock: 10,
+      activo: true,
+      status: "disponible",
+      isAvailable: true,
+      fotos: [],
+    };
+
+    const agotadoProd: Product = {
+      id: "prod-agotado",
+      sku: "SKU-AGOTADO",
+      nombre: "Producto Agotado",
+      slug: "producto-agotado",
+      categoria: "Envases",
+      presentacion: "Unidad",
+      unidadVenta: "50 Unds",
+      stock: 0,
+      activo: true,
+      status: "agotado",
+      isAvailable: false,
+      fotos: [],
+    };
+
+    const inactivoProd: Product = {
+      id: "prod-inactivo",
+      sku: "SKU-INACTIVO",
+      nombre: "Producto Inactivo",
+      slug: "producto-inactivo",
+      categoria: "Envases",
+      presentacion: "Unidad",
+      unidadVenta: "50 Unds",
+      stock: 10,
+      activo: false,
+      status: "no_disponible",
+      isAvailable: false,
+      fotos: [],
+    };
+
+    expect(isProductAvailableForGrilla(availableProd)).toBe(true);
+    expect(isProductAvailableForGrilla(agotadoProd)).toBe(false);
+    expect(isProductAvailableForGrilla(inactivoProd)).toBe(false);
+
+    // En selección social, nunca debe escoger el agotado ni el inactivo
+    const pickedSocial = pickProductForSocial(
+      [agotadoProd, inactivoProd, availableProd],
+      new Set(),
+      new Set(),
+      new Map()
+    );
+    expect(pickedSocial?.id).toBe("prod-avail");
+
+    // En MercadoLibre, tampoco
+    const pickedMl = pickProductForMercadoLibre(
+      [agotadoProd, inactivoProd, availableProd],
+      new Set(),
+      new Set(),
+      new Map()
+    );
+    expect(pickedMl?.id).toBe("prod-avail");
   });
 });

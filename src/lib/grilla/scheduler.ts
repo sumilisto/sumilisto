@@ -95,7 +95,26 @@ export function getMercadoLibrePublishedProductIds(
 }
 
 /**
+ * Validador estricto de disponibilidad:
+ * Excluye productos agotados, inactivos o sin variantes disponibles.
+ */
+export function isProductAvailableForGrilla(product: Product): boolean {
+  if (!product || !product.id) return false;
+  if (product.activo === false) return false;
+  if (product.status === "agotado" || product.status === "no_disponible") return false;
+  if (product.isAvailable === false) return false;
+  if (Array.isArray(product.variantes) && product.variantes.length > 0) {
+    const hasAnyAvailableVariant = product.variantes.some(
+      (v) => v.activo !== false && v.status !== "agotado" && v.isAvailable !== false
+    );
+    if (!hasAnyAvailableVariant) return false;
+  }
+  return true;
+}
+
+/**
  * Selecciona un producto aleatorio para Instagram / Facebook respetando la ventana de 14 días
+ * y excluyendo productos agotados.
  */
 export function pickProductForSocial(
   allProducts: Product[],
@@ -103,10 +122,10 @@ export function pickProductForSocial(
   alreadyAssignedTodayIds: Set<string>,
   lastSeenMap: Map<string, number>
 ): Product | null {
-  const activeProducts = allProducts.filter((p) => p.activo !== false && p.id);
+  const activeProducts = allProducts.filter((p) => isProductAvailableForGrilla(p));
   if (activeProducts.length === 0) return null;
 
-  // 1. Prioridad: Productos no usados hoy Y no usados en los últimos 14 días
+  // 1. Prioridad: Productos disponibles, no usados hoy Y no usados en los últimos 14 días
   const eligibleFresh = activeProducts.filter(
     (p) => !alreadyAssignedTodayIds.has(p.id!) && !excluded14DayIds.has(p.id!)
   );
@@ -116,11 +135,10 @@ export function pickProductForSocial(
     return eligibleFresh[randomIndex];
   }
 
-  // 2. Si el catálogo se agotó en la ventana de 14 días, seleccionamos por LRU (menos recientemente usado)
+  // 2. Si el catálogo disponible se agotó en la ventana de 14 días, seleccionamos por LRU (menos recientemente usado)
   // evitando duplicados en el MISMO día
   const availableToday = activeProducts.filter((p) => !alreadyAssignedTodayIds.has(p.id!));
   if (availableToday.length === 0) {
-    // Si no queda ningún producto libre hoy, tomamos cualquiera al azar
     return activeProducts[Math.floor(Math.random() * activeProducts.length)];
   }
 
@@ -131,7 +149,6 @@ export function pickProductForSocial(
     return timeA - timeB;
   });
 
-  // Tomamos los primeros (más antiguos) y elegimos al azar entre los más antiguos
   const poolSize = Math.max(1, Math.min(5, Math.ceil(availableToday.length * 0.25)));
   const topCandidates = availableToday.slice(0, poolSize);
   return topCandidates[Math.floor(Math.random() * topCandidates.length)];
@@ -139,6 +156,7 @@ export function pickProductForSocial(
 
 /**
  * Selecciona un producto aleatorio para MercadoLibre que NUNCA se haya publicado antes
+ * y que NO esté agotado.
  */
 export function pickProductForMercadoLibre(
   allProducts: Product[],
@@ -146,10 +164,10 @@ export function pickProductForMercadoLibre(
   alreadyAssignedTodayMlIds: Set<string>,
   lastSeenMlMap: Map<string, number>
 ): Product | null {
-  const activeProducts = allProducts.filter((p) => p.activo !== false && p.id);
+  const activeProducts = allProducts.filter((p) => isProductAvailableForGrilla(p));
   if (activeProducts.length === 0) return null;
 
-  // 1. Productos que NUNCA han sido publicados en MercadoLibre y no se han asignado hoy
+  // 1. Productos disponibles que NUNCA han sido publicados en MercadoLibre y no se han asignado hoy
   const neverPublished = activeProducts.filter(
     (p) => !alreadyAssignedTodayMlIds.has(p.id!) && !publishedMlIds.has(p.id!)
   );
@@ -159,7 +177,7 @@ export function pickProductForMercadoLibre(
     return neverPublished[randomIndex];
   }
 
-  // 2. Si ya se publicaron todos los productos del catálogo en ML, tomar el publicado hace más tiempo
+  // 2. Si ya se publicaron todos los productos disponibles en ML, tomar el publicado hace más tiempo
   const availableToday = activeProducts.filter((p) => !alreadyAssignedTodayMlIds.has(p.id!));
   if (availableToday.length === 0) {
     return activeProducts[Math.floor(Math.random() * activeProducts.length)];
