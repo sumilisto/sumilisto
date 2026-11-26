@@ -76,9 +76,11 @@ export default function AdminGrillaPage() {
   const [pickerSearch, setPickerSearch] = useState<string>("");
   const [pickerCategory, setPickerCategory] = useState<string>("todos");
 
-  // Lista de productos estrictamente disponibles (excluye agotados)
+  // Lista de productos estrictamente disponibles (excluye agotados) ordenados alfabéticamente A-Z
   const availableProductsList = useMemo(() => {
-    return products.filter((p) => isProductAvailableForGrilla(p));
+    return products
+      .filter((p) => isProductAvailableForGrilla(p))
+      .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" }));
   }, [products]);
 
   const pickerCategories = useMemo(() => {
@@ -91,7 +93,12 @@ export default function AdminGrillaPage() {
         });
       }
     });
-    return ["todos", ...Array.from(cats).sort()];
+    return [
+      "todos",
+      ...Array.from(cats).sort((a, b) =>
+        a.localeCompare(b, "es", { sensitivity: "base" })
+      ),
+    ];
   }, [availableProductsList]);
 
   const filteredPickerProducts = useMemo(() => {
@@ -1110,13 +1117,11 @@ export default function AdminGrillaPage() {
                           className="w-full text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 truncate"
                         >
                           <option value="">-- Vincular Producto --</option>
-                          {products
-                            .filter((p) => isProductAvailableForGrilla(p))
-                            .map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.nombre} ({p.categoria})
-                              </option>
-                            ))}
+                          {availableProductsList.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.nombre} ({p.categoria})
+                            </option>
+                          ))}
                         </select>
                       </div>
 
