@@ -215,7 +215,9 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
       }
     });
 
-    return Array.from(cats).sort();
+    return Array.from(cats).sort((a, b) =>
+      a.localeCompare(b, "es", { sensitivity: "base" })
+    );
   }, [DEFAULT_CATEGORIES, theme?.deletedCategories, theme?.customCategories, products]);
 
   // Usar categorías activas para el filtro principal

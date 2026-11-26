@@ -30,13 +30,6 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
 
 export const STORE_CATEGORIES: CategoryInfo[] = [
   {
-    id: "envases",
-    nombre: "Envases",
-    slug: "envases",
-    icono: "Package",
-    descripcion: "Envases, bandejas, contenedores térmicos y potes de alta resistencia al mayor.",
-  },
-  {
     id: "bolsas",
     nombre: "Bolsas",
     slug: "bolsas",
@@ -49,6 +42,13 @@ export const STORE_CATEGORIES: CategoryInfo[] = [
     slug: "cubiertos",
     icono: "Utensils",
     descripcion: "Cubiertos descartables, kits individuales y artículos para eventos y comercios al mayor.",
+  },
+  {
+    id: "envases",
+    nombre: "Envases",
+    slug: "envases",
+    icono: "Package",
+    descripcion: "Envases, bandejas, contenedores térmicos y potes de alta resistencia al mayor.",
   },
   {
     id: "papel",
