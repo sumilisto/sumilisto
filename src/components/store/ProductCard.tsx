@@ -138,14 +138,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={handleIncrement}
-              aria-label={`Agregar ${product.nombre} al pedido`}
-              className="absolute bottom-2 right-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand text-white shadow-md hover:bg-brand-hover active:scale-90 transition-all flex items-center justify-center"
+            <Link
+              href={`/producto/${product.slug}`}
+              aria-label={`Seleccionar opciones y agregar ${product.nombre}`}
+              className="absolute bottom-2 right-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand text-white shadow-md hover:bg-brand-hover active:scale-90 transition-all flex items-center justify-center cursor-pointer"
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
-            </button>
+            </Link>
           )
         ) : (
           <a

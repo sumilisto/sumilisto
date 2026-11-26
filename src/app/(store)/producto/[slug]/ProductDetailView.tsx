@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Product, ProductVariant } from "@/types/product";
 import { Badge } from "@/components/ui/Badge";
 import { formatUsd, formatVes, calculateVesTotal, normalizeWhatsAppPhone } from "@/lib/currency/format";
@@ -10,6 +11,7 @@ import { resolveWholesaleLine, getNextWholesaleQuantity, getPrevWholesaleQuantit
 import { useCart } from "@/lib/cart/CartContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import {
+  ArrowLeft,
   ShieldCheck,
   Truck,
   Palette,
@@ -235,6 +237,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   product,
   bcvRate,
 }) => {
+  const router = useRouter();
   const { getItemQuantity, updateQuantity } = useCart();
   const { theme } = useTheme();
   
@@ -381,7 +384,17 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     updateQuantity(activeVariant.sku, totalUnits, effectiveTier, comentarios, totalUsd);
     setAddedFeedback(true);
     setStockAlertMessage(null);
-    setTimeout(() => setAddedFeedback(false), 2500);
+
+    // Devuelve automáticamente al usuario a la sección del catálogo donde estaba para seguir viendo productos
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        if (window.history.length > 1) {
+          router.back();
+        } else {
+          router.push("/#categorias");
+        }
+      }, 400);
+    }
   };
 
   const handleIncrement = () => {
@@ -437,6 +450,24 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-xs max-w-5xl mx-auto">
+      {/* Botón Volver al catálogo */}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/#categorias");
+            }
+          }}
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-brand transition-colors py-1.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 touch-target cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Volver al catálogo</span>
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         
         {/* Título y SKU - Primero en móvil */}
