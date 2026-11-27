@@ -207,6 +207,162 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// PUT /api/orders — Editar / actualizar un pedido completo
+export async function PUT(req: NextRequest) {
+  try {
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const {
+      id,
+      orderId = id,
+      clienteNombre,
+      clienteTelefono,
+      zonaEntrega,
+      direccion,
+      metodoPago,
+      tipoPago,
+      referenciaPago,
+      notas,
+      items,
+      gastoFleteRetiroUsd,
+      gastoEmbalajeUsd,
+      tasaBcv,
+      estado,
+    } = body;
+
+    const targetId = orderId || id;
+    if (!targetId) {
+      return NextResponse.json({ error: "orderId es requerido" }, { status: 400 });
+    }
+
+    if (!clienteNombre || !clienteTelefono || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: "Nombre, teléfono y al menos un producto son requeridos" },
+        { status: 400 }
+      );
+    }
+
+    const allProducts = await getAllProductsAdmin();
+    const parsedTasa = Number(tasaBcv) || 880.12;
+
+    let totalUsd = 0;
+    let costoMercanciaTotal = 0;
+
+    const formattedItems: OrderItem[] = items.map((it: any) => {
+      const prod = allProducts.find(
+        (p) => p.sku === it.sku || p.id === it.productoId || (p.variantes || []).some((v) => v.sku === it.sku)
+      );
+      const variant = (prod?.variantes || []).find((v) => v.sku === it.sku || (it.color && v.color === it.color));
+
+      const cantidad = Number(it.cantidad) || 1;
+      let tarifa: "mayor" | "gran_mayor" = it.tarifa === "gran_mayor" ? "gran_mayor" : "mayor";
+      let precioPaquete = Number(it.precioUnitarioUsd !== undefined ? it.precioUnitarioUsd : it.precioPaquete) || 0;
+      let costoPaquete = Number(it.costoUnitarioUsd !== undefined ? it.costoUnitarioUsd : it.costoPaquete) || (precioPaquete > 0 ? precioPaquete * 0.75 : 0);
+      let subtotal = it.subtotalUsd !== undefined ? Number(it.subtotalUsd) : 0;
+      let costoTotalItem = it.costoTotalUsd !== undefined ? Number(it.costoTotalUsd) : 0;
+
+      if (prod && (subtotal === 0 || it.autoCalculate)) {
+        const resolved = resolveWholesaleLine(prod, variant, cantidad);
+        tarifa = resolved.tarifa;
+        precioPaquete = resolved.precioPaquete || precioPaquete;
+        costoPaquete = resolved.costoPaquete || costoPaquete;
+        subtotal = resolved.subtotalUsd;
+        costoTotalItem = resolved.costoTotalUsd;
+      } else if (subtotal === 0 && precioPaquete > 0) {
+        const fallbackStep = tarifa === "gran_mayor" ? 100 : 50;
+        const paquetes = cantidad / fallbackStep;
+        subtotal = Math.round(precioPaquete * paquetes * 100) / 100;
+        costoTotalItem = Math.round(costoPaquete * paquetes * 100) / 100;
+      } else if (costoTotalItem === 0) {
+        const step = variant?.minMayor || prod?.minMayor || (tarifa === "gran_mayor" ? 100 : 50);
+        const paquetes = cantidad / (step > 0 ? step : 50);
+        costoTotalItem = Math.round(costoPaquete * paquetes * 100) / 100;
+      }
+
+      totalUsd += subtotal;
+      costoMercanciaTotal += costoTotalItem;
+
+      return {
+        sku: String(it.sku || prod?.sku || "SKU"),
+        nombre: String(it.nombre || prod?.nombre || "Producto"),
+        presentacion: it.presentacion ? String(it.presentacion) : undefined,
+        color: it.color ? String(it.color) : undefined,
+        cantidad,
+        precioUnitarioUsd: precioPaquete,
+        costoUnitarioUsd: costoPaquete,
+        subtotalUsd: Math.round(subtotal * 100) / 100,
+        tarifa,
+      };
+    });
+
+    totalUsd = Math.round(totalUsd * 100) / 100;
+    costoMercanciaTotal = Math.round(costoMercanciaTotal * 100) / 100;
+
+    const fleteRetiro = gastoFleteRetiroUsd !== undefined ? Number(gastoFleteRetiroUsd) : 5.0;
+    const embalaje = gastoEmbalajeUsd !== undefined ? Number(gastoEmbalajeUsd) : 0.5;
+
+    const gananciaBruta = Math.max(0, Math.round((totalUsd - costoMercanciaTotal) * 100) / 100);
+    const gananciaNeta = Math.max(0, Math.round((gananciaBruta - fleteRetiro - embalaje) * 100) / 100);
+    const totalVes = calculateVesTotal(totalUsd, parsedTasa);
+    const now = new Date().toISOString();
+
+    const updates: Partial<Order> = {
+      clienteNombre: String(clienteNombre).trim(),
+      clienteTelefono: String(clienteTelefono).trim(),
+      zonaEntrega: String(zonaEntrega || "").trim(),
+      direccion: String(direccion || "").trim(),
+      metodoPago: String(metodoPago || "Pago Móvil / Transferencia Bs (Tasa BCV)").trim(),
+      tipoPago: tipoPago ? String(tipoPago).trim() : "bolivares",
+      referenciaPago: referenciaPago ? String(referenciaPago).replace(/\D/g, "").slice(0, 6) : undefined,
+      notas: notas ? String(notas).trim() : undefined,
+      items: formattedItems,
+      totalUsd,
+      totalVes,
+      tasaBcv: parsedTasa,
+      costoMercanciaUsd: costoMercanciaTotal,
+      gastoFleteRetiroUsd: fleteRetiro,
+      gastoEmbalajeUsd: embalaje,
+      gananciaBrutaUsd: gananciaBruta,
+      gananciaNetaUsd: gananciaNeta,
+      reparto: {
+        reinversion: Math.round(gananciaNeta * 0.5 * 100) / 100,
+        reserva: Math.round(gananciaNeta * 0.2 * 100) / 100,
+        sueldo: Math.round(gananciaNeta * 0.2 * 100) / 100,
+        ahorro: Math.round(gananciaNeta * 0.1 * 100) / 100,
+      },
+      updatedAt: now,
+    };
+
+    if (estado !== undefined) {
+      updates.estado = estado as OrderStatus;
+      if (estado === "cancelado") {
+        updates.cancelledAt = now;
+      } else {
+        updates.cancelledAt = undefined;
+      }
+    }
+
+    const ok = await updateOrder(targetId, updates);
+    if (!ok) {
+      return NextResponse.json({ error: "No se pudo actualizar el pedido" }, { status: 500 });
+    }
+
+    const existingOrders = await getOrders();
+    const updatedOrder = existingOrders.find((o) => o.id === targetId || o.codigo === targetId);
+
+    return NextResponse.json({
+      ok: true,
+      order: updatedOrder || { id: targetId, ...updates },
+    });
+  } catch (error: any) {
+    return createSafeErrorResponse(error, "No se pudo actualizar el pedido.", 500, true);
+  }
+}
+
 // PATCH /api/orders — Actualizar estado o régimen fiscal (con/sin IVA) del pedido
 export async function PATCH(req: NextRequest) {
   try {

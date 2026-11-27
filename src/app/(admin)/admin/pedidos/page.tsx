@@ -10,6 +10,7 @@ import { Product } from "@/types/product";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { DeliveryNoteModal } from "@/components/admin/DeliveryNoteModal";
+import { EditOrderModal } from "@/components/admin/EditOrderModal";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import {
   Package,
@@ -37,6 +38,7 @@ import {
   Calendar,
   DollarSign,
   Info,
+  Edit,
 } from "lucide-react";
 
 export default function AdminPedidosPage() {
@@ -66,6 +68,9 @@ export default function AdminPedidosPage() {
 
   // Modal de Nota de Entrega Imprimible
   const [selectedOrderForDeliveryNote, setSelectedOrderForDeliveryNote] = useState<Order | null>(null);
+
+  // Modal de Edición de Pedido
+  const [selectedOrderForEditing, setSelectedOrderForEditing] = useState<Order | null>(null);
 
   // Modal de Pedido Manual
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -273,6 +278,19 @@ export default function AdminPedidosPage() {
       await fetch(`/api/orders?id=${orderId}`, { method: "DELETE" });
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // 4b. Manejar actualización completa de un pedido tras editarlo
+  const handleOrderUpdated = (updatedOrder: Order) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
+    );
+    if (selectedOrderForPicking?.id === updatedOrder.id) {
+      setSelectedOrderForPicking(updatedOrder);
+    }
+    if (selectedOrderForDeliveryNote?.id === updatedOrder.id) {
+      setSelectedOrderForDeliveryNote(updatedOrder);
     }
   };
 
@@ -866,6 +884,16 @@ export default function AdminPedidosPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
+                              onClick={() => setSelectedOrderForEditing(ord)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition-all text-xs cursor-pointer shadow-2xs"
+                              title="Editar datos, productos o pagos del pedido"
+                            >
+                              <Edit className="w-3.5 h-3.5 text-amber-700" />
+                              <span>Editar</span>
+                            </button>
+
+                            <button
+                              type="button"
                               onClick={() => setSelectedOrderForDeliveryNote(ord)}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold transition-all text-xs cursor-pointer shadow-2xs"
                               title="Generar e imprimir Nota de Entrega"
@@ -940,6 +968,17 @@ export default function AdminPedidosPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedOrderForEditing(selectedOrderForPicking);
+                  }}
+                  className="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Editar datos, artículos o pagos del pedido"
+                >
+                  <Edit className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Editar</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setSelectedOrderForDeliveryNote(selectedOrderForPicking)}
@@ -1617,6 +1656,19 @@ export default function AdminPedidosPage() {
           order={selectedOrderForDeliveryNote}
           onClose={() => setSelectedOrderForDeliveryNote(null)}
           bcvRate={bcvRate}
+        />
+      )}
+
+      {/* ─────────────────────────────────────────────────────────── */}
+      {/* MODAL 4: EDICIÓN DE PEDIDO                                  */}
+      {/* ─────────────────────────────────────────────────────────── */}
+      {selectedOrderForEditing && (
+        <EditOrderModal
+          order={selectedOrderForEditing}
+          products={products}
+          bcvRate={bcvRate}
+          onClose={() => setSelectedOrderForEditing(null)}
+          onOrderUpdated={handleOrderUpdated}
         />
       )}
     </div>
