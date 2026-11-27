@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product, ProductVariant } from "@/types/product";
@@ -139,6 +139,19 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
     setToastMsg({ text, type });
     setTimeout(() => setToastMsg(null), 3500);
   };
+
+  // Bloquear scroll de la página cuando cualquier modal esté abierto
+  useEffect(() => {
+    const isModalOpen = Boolean(editingVariantItem || showCreateMatrixModal || showCategoryManagerModal);
+    if (isModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [editingVariantItem, showCreateMatrixModal, showCategoryManagerModal]);
 
   // Toggle de expansión de un producto
   const toggleExpand = (productId: string) => {
@@ -1351,11 +1364,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
 
       {/* 5. MODAL: Edición Rápida de Costos & Stock de una Variante */}
       {editingVariantItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95">
+            {/* Header del Modal (Fijo) */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
               <div>
-                <h3 className="text-base font-black text-slate-900">
+                <h3 className="text-base font-black text-slate-900 leading-tight">
                   Editar Costos e Inventario de Variante
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -1365,13 +1379,14 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
               <button
                 type="button"
                 onClick={() => setEditingVariantItem(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500"
+                className="w-8 h-8 rounded-full bg-white hover:bg-slate-200 border border-slate-200 flex items-center justify-center text-slate-500 transition-colors shadow-xs"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-4 text-xs">
+            {/* Contenido con scroll independiente */}
+            <div className="p-4 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">SKU Único</label>
@@ -1695,11 +1710,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-6 pt-3 border-t border-slate-100">
+            {/* Footer del Modal (Fijo) */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:px-6 border-t border-slate-100 bg-slate-50/80 shrink-0">
               <button
                 type="button"
                 onClick={() => setEditingVariantItem(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors"
               >
                 Cancelar
               </button>
@@ -1707,7 +1723,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                 type="button"
                 onClick={handleSaveVariantEdit}
                 disabled={savingVariantEdit}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand hover:bg-brand-hover shadow-sm disabled:opacity-50 flex items-center gap-1.5 transition-all"
               >
                 {savingVariantEdit ? (
                   <>
