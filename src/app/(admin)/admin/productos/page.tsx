@@ -1122,8 +1122,6 @@ export default function AdminProductosPage() {
           categoria: editingProduct.categoria,
           descripcion: editingProduct.descripcionLarga,
           unidad_venta: editingProduct.unidadVenta,
-          costo_mayor_usd: editingProduct.costoMayorUsd !== undefined && editingProduct.costoMayorUsd !== null && String(editingProduct.costoMayorUsd).trim() !== "" ? Number(editingProduct.costoMayorUsd) : null,
-          costo_gran_mayor_usd: editingProduct.costoGranMayorUsd !== undefined && editingProduct.costoGranMayorUsd !== null && String(editingProduct.costoGranMayorUsd).trim() !== "" ? Number(editingProduct.costoGranMayorUsd) : null,
           activo: editingProduct.activo,
           destacado: editingProduct.destacado,
         }),

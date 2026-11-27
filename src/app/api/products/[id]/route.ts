@@ -133,17 +133,26 @@ export async function PUT(
         }
       }
     } else if (rawCostoMayor !== undefined || rawPrecioMayor !== undefined) {
-      // Si no se enviaron variantes pero el usuario actualizó costo o precio en el formulario general, sincronizar las variantes del producto
-      const variantUpdates: Record<string, any> = {};
-      if (rawCostoMayor !== undefined) variantUpdates.costo_mayor_usd = cleanProductData.costo_mayor_usd;
-      if (rawCostoGranMayor !== undefined) variantUpdates.costo_gran_mayor_usd = cleanProductData.costo_gran_mayor_usd;
-      if (rawPrecioMayor !== undefined && rawPrecioMayor !== null && rawPrecioMayor !== "") variantUpdates.precio_mayor_usd = Number(rawPrecioMayor);
-      if (rawPrecioGranMayor !== undefined && rawPrecioGranMayor !== null && rawPrecioGranMayor !== "") variantUpdates.precio_gran_mayor_usd = Number(rawPrecioGranMayor);
-      if (rawMinMayor !== undefined && rawMinMayor !== null && rawMinMayor !== "") variantUpdates.min_mayor = Number(rawMinMayor);
-      if (rawMinGranMayor !== undefined && rawMinGranMayor !== null && rawMinGranMayor !== "") variantUpdates.min_gran_mayor = Number(rawMinGranMayor);
+      // Si no se enviaron variantes pero el usuario actualizó costo o precio en el formulario general,
+      // SOLO sincronizar si el producto tiene 1 sola variante (producto simple sin múltiples variantes diferenciadas).
+      // Esto previene sobrescribir accidentalmente variantes con precios o márgenes independientes (ej. Marrón vs Rojo).
+      const { count } = await supabaseAdmin
+        .from("variantes")
+        .select("id", { count: "exact", head: true })
+        .eq("producto_id", id);
 
-      if (Object.keys(variantUpdates).length > 0) {
-        await supabaseAdmin.from("variantes").update(variantUpdates).eq("producto_id", id);
+      if (count !== null && count <= 1) {
+        const variantUpdates: Record<string, any> = {};
+        if (rawCostoMayor !== undefined) variantUpdates.costo_mayor_usd = cleanProductData.costo_mayor_usd;
+        if (rawCostoGranMayor !== undefined) variantUpdates.costo_gran_mayor_usd = cleanProductData.costo_gran_mayor_usd;
+        if (rawPrecioMayor !== undefined && rawPrecioMayor !== null && rawPrecioMayor !== "") variantUpdates.precio_mayor_usd = Number(rawPrecioMayor);
+        if (rawPrecioGranMayor !== undefined && rawPrecioGranMayor !== null && rawPrecioGranMayor !== "") variantUpdates.precio_gran_mayor_usd = Number(rawPrecioGranMayor);
+        if (rawMinMayor !== undefined && rawMinMayor !== null && rawMinMayor !== "") variantUpdates.min_mayor = Number(rawMinMayor);
+        if (rawMinGranMayor !== undefined && rawMinGranMayor !== null && rawMinGranMayor !== "") variantUpdates.min_gran_mayor = Number(rawMinGranMayor);
+
+        if (Object.keys(variantUpdates).length > 0) {
+          await supabaseAdmin.from("variantes").update(variantUpdates).eq("producto_id", id);
+        }
       }
     }
 
