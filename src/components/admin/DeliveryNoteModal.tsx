@@ -93,28 +93,19 @@ export function DeliveryNoteModal({ order, onClose, bcvRate = 880.12 }: Delivery
         >
           {/* Encabezado Principal */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <img
-                  src="/logo-green.png"
-                  alt="Sumilisto"
-                  className="h-10 w-auto object-contain"
-                  onError={(e) => {
-                    // Fallback visual si la imagen tarda en cargar
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-                <h1 className="text-2xl font-black text-emerald-950 tracking-tight">
-                  SUMILISTO
-                </h1>
-              </div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                Insumos, Envases y Empaques al Mayor
+            <div className="space-y-1.5">
+              <img
+                src="/logo-sumi.png"
+                alt="Sumi"
+                className="h-14 w-auto object-contain"
+              />
+              <p className="text-xs font-black text-slate-900 uppercase tracking-wide">
+                INSUMOS, ENVASES Y EMPAQUES AL MAYOR
               </p>
-              <div className="text-[11px] text-slate-500 space-y-0.5 leading-snug">
-                <p>📍 Despachos a Nivel Nacional · Caracas, Miranda y toda Venezuela</p>
-                <p>📱 WhatsApp Ventas: +58 412-9960903 · Web: www.sumilisto.shop</p>
-                <p>📸 Instagram: @sumilisto.ve</p>
+              <div className="text-[11px] text-slate-600 space-y-0.5 leading-snug font-medium">
+                <p>Despachos en Caracas, Guarenas y Guatire · Contamos con envíos a nivel nacional</p>
+                <p>WhatsApp Ventas: +58 422-7864547 · Web: www.sumilisto.com</p>
+                <p>Instagram: @sumilisto_</p>
               </div>
             </div>
 
@@ -306,39 +297,9 @@ export function DeliveryNoteModal({ order, onClose, bcvRate = 880.12 }: Delivery
             </div>
           </div>
 
-          {/* Sección de Conformidad y Firmas */}
-          <div className="border-t border-slate-200 pt-6">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-6 text-center">
-              CONSTANCIA DE DESPACHO Y RECEPCIÓN CONFORME
-            </span>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
-              {/* Despacho */}
-              <div className="text-center space-y-1">
-                <div className="border-b border-slate-400 pb-1 mb-1 h-12" />
-                <p className="font-black text-slate-800 text-[11px] uppercase">Despachado por (Sumilisto)</p>
-                <p className="text-[10px] text-slate-500">Nombre, Firma y Sello</p>
-              </div>
-
-              {/* Transporte */}
-              <div className="text-center space-y-1">
-                <div className="border-b border-slate-400 pb-1 mb-1 h-12" />
-                <p className="font-black text-slate-800 text-[11px] uppercase">Transporte / Delivery</p>
-                <p className="text-[10px] text-slate-500">Conductor / C.I. / Encomienda</p>
-              </div>
-
-              {/* Cliente */}
-              <div className="text-center space-y-1">
-                <div className="border-b border-slate-400 pb-1 mb-1 h-12" />
-                <p className="font-black text-slate-800 text-[11px] uppercase">Recibido Conforme (Cliente)</p>
-                <p className="text-[10px] text-slate-500">Nombre, C.I./RIF y Firma</p>
-              </div>
-            </div>
-          </div>
-
           {/* Mensaje al pie */}
-          <div className="border-t border-slate-100 pt-3 text-center">
-            <p className="text-[10px] text-slate-500 font-medium">
+          <div className="border-t border-slate-200 pt-4 text-center">
+            <p className="text-xs text-slate-600 font-medium">
               Por favor revise el estado y la cantidad de sus bultos al momento de la entrega. ¡Gracias por confiar en <strong>SUMILISTO</strong>!
             </p>
           </div>
