@@ -1467,9 +1467,9 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                       />
                     </div>
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="font-bold text-amber-900">Factor / % Mayor</label>
-                        <span className="text-[10px] text-emerald-800 font-bold">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <label className="font-bold text-amber-900 truncate">Factor / %</label>
+                        <span className="text-[10px] text-emerald-800 font-extrabold whitespace-nowrap shrink-0">
                           {(() => {
                             const pct = getMarginPctFromFactor(variantEditForm.factorMayor || "");
                             return pct !== null ? `${pct}% ganancia` : "÷ factor o %";
@@ -1558,9 +1558,9 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                       />
                     </div>
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="font-bold text-amber-900">Factor / % GM</label>
-                        <span className="text-[10px] text-emerald-800 font-bold">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <label className="font-bold text-amber-900 truncate">Factor / % GM</label>
+                        <span className="text-[10px] text-emerald-800 font-extrabold whitespace-nowrap shrink-0">
                           {(() => {
                             const pct = getMarginPctFromFactor(variantEditForm.factorGranMayor || "");
                             return pct !== null ? `${pct}% ganancia` : "÷ factor o %";
