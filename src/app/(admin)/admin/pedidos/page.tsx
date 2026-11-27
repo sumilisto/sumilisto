@@ -9,6 +9,7 @@ import { Order, OrderItem, OrderStatus } from "@/types/order";
 import { Product } from "@/types/product";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
+import { DeliveryNoteModal } from "@/components/admin/DeliveryNoteModal";
 import { WhatsAppIcon } from "@/components/common/WhatsAppIcon";
 import {
   Package,
@@ -29,6 +30,7 @@ import {
   MapPin,
   ClipboardList,
   Printer,
+  FileText,
   CheckSquare,
   Square,
   Send,
@@ -61,6 +63,9 @@ export default function AdminPedidosPage() {
   // Modal de Detallado / Picking (Hoja de Armado)
   const [selectedOrderForPicking, setSelectedOrderForPicking] = useState<Order | null>(null);
   const [packedItemsMap, setPackedItemsMap] = useState<Record<string, Record<number, boolean>>>({});
+
+  // Modal de Nota de Entrega Imprimible
+  const [selectedOrderForDeliveryNote, setSelectedOrderForDeliveryNote] = useState<Order | null>(null);
 
   // Modal de Pedido Manual
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -859,6 +864,16 @@ export default function AdminPedidosPage() {
                         {/* ACCIONES */}
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrderForDeliveryNote(ord)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold transition-all text-xs cursor-pointer shadow-2xs"
+                              title="Generar e imprimir Nota de Entrega"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Nota de Entrega</span>
+                            </button>
+
                             <a
                               href={whatsappChatUrl}
                               target="_blank"
@@ -927,12 +942,21 @@ export default function AdminPedidosPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  onClick={() => setSelectedOrderForDeliveryNote(selectedOrderForPicking)}
+                  className="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Ver e Imprimir Nota de Entrega para el cliente"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Nota de Entrega</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => window.print()}
                   className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                   title="Imprimir hoja de armado para bodega"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Imprimir</span>
+                  <span className="hidden sm:inline">Imprimir Picking</span>
                 </button>
                 <button
                   type="button"
@@ -1583,6 +1607,17 @@ export default function AdminPedidosPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────── */}
+      {/* MODAL 3: NOTA DE ENTREGA IMPRIMIBLE                        */}
+      {/* ─────────────────────────────────────────────────────────── */}
+      {selectedOrderForDeliveryNote && (
+        <DeliveryNoteModal
+          order={selectedOrderForDeliveryNote}
+          onClose={() => setSelectedOrderForDeliveryNote(null)}
+          bcvRate={bcvRate}
+        />
       )}
     </div>
   );
