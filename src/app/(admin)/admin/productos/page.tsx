@@ -1124,10 +1124,6 @@ export default function AdminProductosPage() {
           unidad_venta: editingProduct.unidadVenta,
           costo_mayor_usd: editingProduct.costoMayorUsd !== undefined && editingProduct.costoMayorUsd !== null && String(editingProduct.costoMayorUsd).trim() !== "" ? Number(editingProduct.costoMayorUsd) : null,
           costo_gran_mayor_usd: editingProduct.costoGranMayorUsd !== undefined && editingProduct.costoGranMayorUsd !== null && String(editingProduct.costoGranMayorUsd).trim() !== "" ? Number(editingProduct.costoGranMayorUsd) : null,
-          precio_mayor_usd: editingProduct.precioMayorUsd !== undefined && editingProduct.precioMayorUsd !== null && String(editingProduct.precioMayorUsd).trim() !== "" ? Number(editingProduct.precioMayorUsd) : 0,
-          min_mayor: Number(editingProduct.minMayor) || 1,
-          precio_gran_mayor_usd: editingProduct.precioGranMayorUsd !== undefined && editingProduct.precioGranMayorUsd !== null && String(editingProduct.precioGranMayorUsd).trim() !== "" ? Number(editingProduct.precioGranMayorUsd) : 0,
-          min_gran_mayor: Number(editingProduct.minGranMayor) || 5,
           activo: editingProduct.activo,
           destacado: editingProduct.destacado,
         }),
@@ -1135,7 +1131,7 @@ export default function AdminProductosPage() {
 
       if (!res.ok) throw new Error("Error al guardar cambios");
 
-      showToast("¡Información y costos del producto actualizados con éxito!");
+      showToast("¡Información del producto actualizada con éxito!");
       setEditingProduct(null);
       await loadProducts();
     } catch (err: any) {
@@ -3416,214 +3412,21 @@ export default function AdminProductosPage() {
                       </div>
                     </div>
 
-                    {/* ─── COSTOS Y PRECIOS BASE (Modificables si hubo variación de costo de proveedor) ─── */}
-                    <div className="rounded-2xl border-2 border-amber-500/30 bg-amber-50/40 p-4 space-y-3.5">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/70 pb-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-xs">
-                            <DollarSign className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                              Costos de Compra y Precios de Venta (Base)
-                            </h4>
-                            <p className="text-[11px] text-slate-600">
-                              Modifica los costos si tu proveedor varió el precio para calcular tu margen exacto.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Botón sugerir precios automáticamente */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cMayor = Number(editingProduct.costoMayorUsd) || 0;
-                            if (cMayor > 0) {
-                              const sugMayor = Number((cMayor / 0.70).toFixed(2));
-                              const cGran = Number(editingProduct.costoGranMayorUsd) || cMayor;
-                              const sugGran = Number((cGran / 0.80).toFixed(2));
-                              setEditingProduct({
-                                ...editingProduct,
-                                precioMayorUsd: sugMayor,
-                                precioGranMayorUsd: sugGran,
-                              });
-                              showToast(`Precios sugeridos calculados: Mayor $${sugMayor.toFixed(2)} / Gran Mayor $${sugGran.toFixed(2)}`);
-                            } else {
-                              showToast("Ingresa primero el Costo de Compra Mayor para sugerir precios", "error");
-                            }
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-2xs self-start sm:self-auto transition-all active:scale-95"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>Sugerir Precios (÷ 0.70 / ÷ 0.80)</span>
-                        </button>
+                    {/* Aviso informativo: costos y precios se configuran por variante */}
+                    <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-amber-700 shrink-0" />
+                        <span>
+                          Los costos de compra, precios de venta y márgenes se configuran directamente por cada SKU en la pestaña <strong>2. Variantes &amp; SKUs</strong> o en la tabla exterior.
+                        </span>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        {/* Columna Nivel 1: Al Mayor */}
-                        <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-3 shadow-2xs">
-                          <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                            <span className="font-black text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                              <span className="w-2 h-2 rounded-full bg-slate-900" />
-                              Nivel 1: Venta al Mayor
-                            </span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                              Base Regular
-                            </span>
-                          </div>
-
-                          <div className="space-y-2.5">
-                            <div>
-                              <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                Costo Compra Proveedor ($ USD)
-                              </label>
-                              <div className="relative">
-                                <DollarSign className="w-3.5 h-3.5 text-amber-600 absolute left-2.5 top-2.5" />
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editingProduct.costoMayorUsd ?? ""}
-                                  onChange={(e) => setEditingProduct({ ...editingProduct, costoMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                  placeholder="0.00"
-                                  className="w-full h-8 pl-7 pr-3 rounded-lg border border-amber-300 bg-amber-50/20 focus:bg-white font-bold text-xs text-slate-900"
-                                />
-                              </div>
-                              <span className="text-[9px] text-slate-400 block mt-0.5 pl-0.5">
-                                Costo que te cobra el proveedor por paquete/unidad.
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                  Precio Venta ($ USD) *
-                                </label>
-                                <div className="relative">
-                                  <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={editingProduct.precioMayorUsd ?? ""}
-                                    onChange={(e) => setEditingProduct({ ...editingProduct, precioMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                    placeholder="0.00"
-                                    className="w-full h-8 pl-7 pr-3 rounded-lg border border-slate-300 bg-white font-black text-xs text-slate-900"
-                                    required
-                                  />
-                                </div>
-                              </div>
-
-                              <div>
-                                <label className="block font-bold text-slate-700 text-[11px] mb-1">
-                                  Cant. Mínima (u.) *
-                                </label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={editingProduct.minMayor || 1}
-                                  onChange={(e) => setEditingProduct({ ...editingProduct, minMayor: Number(e.target.value) || 1 })}
-                                  placeholder="1"
-                                  className="w-full h-8 px-2.5 rounded-lg border border-slate-300 bg-white font-bold text-xs text-slate-900"
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* Margen Mayor calculado en vivo */}
-                            {Boolean(editingProduct.precioMayorUsd && editingProduct.costoMayorUsd) && (
-                              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[10px] flex items-center justify-between">
-                                <span className="text-slate-600">
-                                  Ganancia: <strong className="text-emerald-700">+${(Number(editingProduct.precioMayorUsd) - Number(editingProduct.costoMayorUsd)).toFixed(2)}</strong>
-                                </span>
-                                <span className="text-slate-700 font-bold">
-                                  Margen: {Math.round(((Number(editingProduct.precioMayorUsd) - Number(editingProduct.costoMayorUsd)) / Number(editingProduct.precioMayorUsd)) * 100)}%
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Columna Nivel 2: Gran Mayor */}
-                        <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-300/80 space-y-3 shadow-2xs">
-                          <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
-                            <span className="font-black text-emerald-950 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                              <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                              Nivel 2: Gran Mayor (Volumen)
-                            </span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900">
-                              Precio Volumen
-                            </span>
-                          </div>
-
-                          <div className="space-y-2.5">
-                            <div>
-                              <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                Costo Compra Gran Mayor ($ USD)
-                              </label>
-                              <div className="relative">
-                                <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editingProduct.costoGranMayorUsd ?? ""}
-                                  onChange={(e) => setEditingProduct({ ...editingProduct, costoGranMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                  placeholder={editingProduct.costoMayorUsd ? `Mismo ($${editingProduct.costoMayorUsd})` : "0.00"}
-                                  className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                />
-                              </div>
-                              <span className="text-[9px] text-emerald-700 block mt-0.5 pl-0.5">
-                                Costo con descuento que da el proveedor al comprar volumen.
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                  Precio Gran Mayor ($ USD) *
-                                </label>
-                                <div className="relative">
-                                  <DollarSign className="w-3.5 h-3.5 text-emerald-700 absolute left-2.5 top-2.5" />
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={editingProduct.precioGranMayorUsd ?? ""}
-                                    onChange={(e) => setEditingProduct({ ...editingProduct, precioGranMayorUsd: e.target.value === "" ? undefined : Number(e.target.value) })}
-                                    placeholder="0.00"
-                                    className="w-full h-8 pl-7 pr-3 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-950"
-                                    required
-                                  />
-                                </div>
-                              </div>
-
-                              <div>
-                                <label className="block font-bold text-emerald-950 text-[11px] mb-1">
-                                  Mínimo Gran Mayor (u.) *
-                                </label>
-                                <input
-                                  type="number"
-                                  min="2"
-                                  value={editingProduct.minGranMayor || 5}
-                                  onChange={(e) => setEditingProduct({ ...editingProduct, minGranMayor: Number(e.target.value) || 5 })}
-                                  placeholder="5"
-                                  className="w-full h-8 px-2.5 rounded-lg border border-emerald-300 bg-white font-bold text-xs text-emerald-950"
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            {/* Margen Gran Mayor calculado en vivo */}
-                            {Boolean(editingProduct.precioGranMayorUsd && (editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)) && (
-                              <div className="p-2 rounded-lg bg-white/90 border border-emerald-200 text-[10px] flex items-center justify-between">
-                                <span className="text-emerald-900">
-                                  Ganancia: <strong className="text-emerald-700">+${(Number(editingProduct.precioGranMayorUsd) - Number(editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)).toFixed(2)}</strong>
-                                </span>
-                                <span className="text-emerald-800 font-bold">
-                                  Margen: {Math.round(((Number(editingProduct.precioGranMayorUsd) - Number(editingProduct.costoGranMayorUsd || editingProduct.costoMayorUsd)) / Number(editingProduct.precioGranMayorUsd)) * 100)}%
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditActiveTab("variants")}
+                        className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 font-bold text-[11px] shrink-0 self-start sm:self-auto transition-colors"
+                      >
+                        Ir a Variantes &rarr;
+                      </button>
                     </div>
                   </form>
                 )}

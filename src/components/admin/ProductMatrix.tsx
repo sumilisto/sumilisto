@@ -23,13 +23,36 @@ interface ProductMatrixProps {
   onOpenVariantModal?: (product: Product) => void;
 }
 
-// Calcula el PVP dividiendo el Costo entre el Factor Divisor (ej. $35 ÷ 0.70 = $50.00 para 30% de ganancia)
+// Obtiene el porcentaje de ganancia a partir de un string de factor o porcentaje
+function getMarginPctFromFactor(factorStr: string): number | null {
+  const clean = String(factorStr).replace("%", "").replace(",", ".").trim();
+  const num = parseFloat(clean);
+  if (isNaN(num) || num <= 0) return null;
+  if (num >= 1 && num < 100) return Math.round(num);
+  if (num > 0 && num < 1) return Math.round((1 - num) * 100);
+  return null;
+}
+
+// Calcula el PVP dividiendo el Costo entre el Factor Divisor o según el % de ganancia
 function computePvpFromFactor(costStr: string, factorStr: string): string {
   const cost = parseFloat(String(costStr).replace(",", "."));
-  const factor = parseFloat(String(factorStr).replace(",", "."));
-  if (!isNaN(cost) && cost > 0 && !isNaN(factor) && factor > 0 && factor < 1) {
-    return (cost / factor).toFixed(2);
+  if (isNaN(cost) || cost <= 0) return "";
+
+  const clean = String(factorStr).replace("%", "").replace(",", ".").trim();
+  const num = parseFloat(clean);
+  if (isNaN(num) || num <= 0) return "";
+
+  // Caso 1: Ingreso como porcentaje de ganancia directo (ej. 20 -> 20% ganancia, divisor 0.80; 15 -> 15% ganancia, divisor 0.85)
+  if (num >= 1 && num < 100) {
+    const divisor = (100 - num) / 100;
+    return (cost / divisor).toFixed(2);
   }
+
+  // Caso 2: Ingreso como factor divisor decimal directo (ej. 0.80 -> 20% ganancia; 0.85 -> 15% ganancia; 0.70 -> 30% ganancia)
+  if (num > 0 && num < 1) {
+    return (cost / num).toFixed(2);
+  }
+
   return "";
 }
 
@@ -458,6 +481,15 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
       productName: product.nombre,
       variant,
     });
+
+    const cM = variant.costoMayorUsd !== undefined && variant.costoMayorUsd !== null ? Number(variant.costoMayorUsd) : 0;
+    const pM = variant.precioMayorUsd !== undefined && variant.precioMayorUsd !== null ? Number(variant.precioMayorUsd) : 0;
+    const initFactorM = pM > 0 && cM > 0 ? (cM / pM).toFixed(2) : "";
+
+    const cGM = variant.costoGranMayorUsd !== undefined && variant.costoGranMayorUsd !== null ? Number(variant.costoGranMayorUsd) : 0;
+    const pGM = variant.precioGranMayorUsd !== undefined && variant.precioGranMayorUsd !== null ? Number(variant.precioGranMayorUsd) : 0;
+    const initFactorGM = pGM > 0 && cGM > 0 ? (cGM / pGM).toFixed(2) : "";
+
     setVariantEditForm({
       sku: variant.sku || "",
       color: variant.color || "",
@@ -465,10 +497,10 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
       stock: variant.stock !== undefined && variant.stock !== null ? variant.stock : ("" as any),
       costoMayorUsd: variant.costoMayorUsd !== undefined && variant.costoMayorUsd !== null ? String(variant.costoMayorUsd) : "",
       minMayor: variant.minMayor !== undefined && variant.minMayor !== null && variant.minMayor > 0 ? variant.minMayor : ("" as any),
-      factorMayor: "",
+      factorMayor: initFactorM,
       costoGranMayorUsd: variant.costoGranMayorUsd !== undefined && variant.costoGranMayorUsd !== null ? String(variant.costoGranMayorUsd) : "",
       minGranMayor: variant.minGranMayor !== undefined && variant.minGranMayor !== null && variant.minGranMayor > 0 ? variant.minGranMayor : ("" as any),
-      factorGranMayor: "",
+      factorGranMayor: initFactorGM,
       precioMayorUsd: variant.precioMayorUsd !== undefined && variant.precioMayorUsd !== null ? String(variant.precioMayorUsd) : "",
       precioGranMayorUsd: variant.precioGranMayorUsd !== undefined && variant.precioGranMayorUsd !== null ? String(variant.precioGranMayorUsd) : "",
       activo: variant.activo !== false,
@@ -1182,6 +1214,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                         ? Math.round(((sellM - costM) / sellM) * 100)
                                         : 0;
 
+                                      const costGM = variant.costoGranMayorUsd || 0;
+                                      const sellGM = variant.precioGranMayorUsd || 0;
+                                      const marginPctGM = sellGM > 0 && costGM > 0
+                                        ? Math.round(((sellGM - costGM) / sellGM) * 100)
+                                        : 0;
+
                                       return (
                                         <tr key={variant.id || variant.sku} className="hover:bg-slate-50/80 transition-colors">
                                           {/* Color */}
@@ -1241,14 +1279,24 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                           {/* Margen Mayor */}
                                           <td className="py-2 px-2 text-center">
                                             {marginPctM > 0 ? (
-                                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full font-black text-[9.5px] ${marginPctM >= 25
-                                                ? "bg-emerald-100 text-emerald-900"
-                                                : marginPctM >= 15
-                                                  ? "bg-blue-100 text-blue-900"
-                                                  : "bg-amber-100 text-amber-900"
+                                              <div className="inline-flex flex-col items-center gap-0.5">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-black text-[10px] shadow-2xs ${
+                                                  marginPctM >= 25
+                                                    ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                                                    : marginPctM >= 20
+                                                      ? "bg-teal-100 text-teal-900 border border-teal-300"
+                                                      : marginPctM >= 15
+                                                        ? "bg-blue-100 text-blue-900 border border-blue-300"
+                                                        : "bg-amber-100 text-amber-900 border border-amber-300"
                                                 }`}>
-                                                +{marginPctM}%
-                                              </span>
+                                                  +{marginPctM}%
+                                                </span>
+                                                {marginPctGM > 0 && (
+                                                  <span className="text-[9px] font-bold text-slate-500" title={`Margen Gran Mayor: +${marginPctGM}%`}>
+                                                    GM: +{marginPctGM}%
+                                                  </span>
+                                                )}
+                                              </div>
                                             ) : (
                                               <span className="text-slate-300">—</span>
                                             )}
@@ -1356,7 +1404,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
               </div>
 
               {/* Bloque de Costos y Factores de Ganancia */}
-              <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3">
+              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <span className="font-black text-amber-900 text-xs flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5" /> Estructura de Costos &amp; Factor de Ganancia
@@ -1367,112 +1415,184 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                 </div>
 
                 {/* Fila Mayor */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <label className="font-bold text-amber-900 block mb-1">Costo Mayor ($)</label>
-                    <input
-                      type="text"
-                      value={variantEditForm.costoMayorUsd}
-                      onChange={(e) => {
-                        const newCost = e.target.value;
-                        const auto = computePvpFromFactor(newCost, variantEditForm.factorMayor || "0.70");
-                        setVariantEditForm({
-                          ...variantEditForm,
-                          costoMayorUsd: newCost,
-                          precioMayorUsd: auto || variantEditForm.precioMayorUsd,
-                        });
-                      }}
-                      placeholder="Ej: 22.00"
-                      className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="font-bold text-amber-900">Factor Mayor</label>
-                      <span className="text-[10px] text-emerald-800 font-bold">
-                        {variantEditForm.factorMayor ? `${Math.round((1 - (parseFloat(variantEditForm.factorMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
-                      </span>
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <span className="font-extrabold text-[11px] text-amber-950 uppercase tracking-wide">
+                      1. Venta al Mayor
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-amber-800 font-bold mr-0.5">Margen:</span>
+                      {[15, 20, 25, 30, 35].map((pct) => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => {
+                            const factor = ((100 - pct) / 100).toFixed(2);
+                            const auto = computePvpFromFactor(variantEditForm.costoMayorUsd, factor);
+                            setVariantEditForm({
+                              ...variantEditForm,
+                              factorMayor: factor,
+                              precioMayorUsd: auto || variantEditForm.precioMayorUsd,
+                            });
+                          }}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all ${
+                            getMarginPctFromFactor(variantEditForm.factorMayor || "") === pct
+                              ? "bg-amber-600 text-white shadow-2xs"
+                              : "bg-white text-amber-900 border border-amber-300 hover:bg-amber-100"
+                          }`}
+                        >
+                          {pct}%
+                        </button>
+                      ))}
                     </div>
-                    <input
-                      type="text"
-                      value={variantEditForm.factorMayor || ""}
-                      onChange={(e) => {
-                        const newFactor = e.target.value;
-                        const auto = computePvpFromFactor(variantEditForm.costoMayorUsd, newFactor);
-                        setVariantEditForm({
-                          ...variantEditForm,
-                          factorMayor: newFactor,
-                          precioMayorUsd: auto || variantEditForm.precioMayorUsd,
-                        });
-                      }}
-                      placeholder="0.70"
-                      className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold text-center"
-                    />
                   </div>
-                  <div>
-                    <label className="font-bold text-amber-900 block mb-1">Cant. Mayor (Unds)</label>
-                    <input
-                      type="number"
-                      value={variantEditForm.minMayor !== undefined && variantEditForm.minMayor !== "" ? variantEditForm.minMayor : ""}
-                      onChange={(e) => setVariantEditForm({ ...variantEditForm, minMayor: e.target.value === "" ? "" : Number(e.target.value) })}
-                      placeholder="Ej: 50"
-                      className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
-                    />
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <label className="font-bold text-amber-900 block mb-1">Costo Mayor ($)</label>
+                      <input
+                        type="text"
+                        value={variantEditForm.costoMayorUsd}
+                        onChange={(e) => {
+                          const newCost = e.target.value;
+                          const auto = computePvpFromFactor(newCost, variantEditForm.factorMayor || "0.70");
+                          setVariantEditForm({
+                            ...variantEditForm,
+                            costoMayorUsd: newCost,
+                            precioMayorUsd: auto || variantEditForm.precioMayorUsd,
+                          });
+                        }}
+                        placeholder="Ej: 22.00"
+                        className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-amber-900">Factor / % Mayor</label>
+                        <span className="text-[10px] text-emerald-800 font-bold">
+                          {(() => {
+                            const pct = getMarginPctFromFactor(variantEditForm.factorMayor || "");
+                            return pct !== null ? `${pct}% ganancia` : "÷ factor o %";
+                          })()}
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={variantEditForm.factorMayor || ""}
+                        onChange={(e) => {
+                          const newFactor = e.target.value;
+                          const auto = computePvpFromFactor(variantEditForm.costoMayorUsd, newFactor);
+                          setVariantEditForm({
+                            ...variantEditForm,
+                            factorMayor: newFactor,
+                            precioMayorUsd: auto || variantEditForm.precioMayorUsd,
+                          });
+                        }}
+                        placeholder="0.80 o 20"
+                        className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-amber-900 block mb-1">Cant. Mayor (Unds)</label>
+                      <input
+                        type="number"
+                        value={variantEditForm.minMayor !== undefined && variantEditForm.minMayor !== "" ? variantEditForm.minMayor : ""}
+                        onChange={(e) => setVariantEditForm({ ...variantEditForm, minMayor: e.target.value === "" ? "" : Number(e.target.value) })}
+                        placeholder="Ej: 50"
+                        className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 {/* Fila Gran Mayor */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs pt-1 border-t border-amber-200/60">
-                  <div>
-                    <label className="font-bold text-amber-900 block mb-1">Costo Gran Mayor ($)</label>
-                    <input
-                      type="text"
-                      value={variantEditForm.costoGranMayorUsd}
-                      onChange={(e) => {
-                        const newCost = e.target.value;
-                        const auto = computePvpFromFactor(newCost, variantEditForm.factorGranMayor || "0.80");
-                        setVariantEditForm({
-                          ...variantEditForm,
-                          costoGranMayorUsd: newCost,
-                          precioGranMayorUsd: auto || variantEditForm.precioGranMayorUsd,
-                        });
-                      }}
-                      placeholder="Ej: 70.00"
-                      className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="font-bold text-amber-900">Factor Gran Mayor</label>
-                      <span className="text-[10px] text-emerald-800 font-bold">
-                        {variantEditForm.factorGranMayor ? `${Math.round((1 - (parseFloat(variantEditForm.factorGranMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
-                      </span>
+                <div className="space-y-1.5 pt-2 border-t border-amber-200/70">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <span className="font-extrabold text-[11px] text-amber-950 uppercase tracking-wide">
+                      2. Gran Mayor (Volumen)
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-amber-800 font-bold mr-0.5">Margen:</span>
+                      {[10, 15, 20, 25].map((pct) => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => {
+                            const factor = ((100 - pct) / 100).toFixed(2);
+                            const auto = computePvpFromFactor(variantEditForm.costoGranMayorUsd, factor);
+                            setVariantEditForm({
+                              ...variantEditForm,
+                              factorGranMayor: factor,
+                              precioGranMayorUsd: auto || variantEditForm.precioGranMayorUsd,
+                            });
+                          }}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all ${
+                            getMarginPctFromFactor(variantEditForm.factorGranMayor || "") === pct
+                              ? "bg-amber-600 text-white shadow-2xs"
+                              : "bg-white text-amber-900 border border-amber-300 hover:bg-amber-100"
+                          }`}
+                        >
+                          {pct}%
+                        </button>
+                      ))}
                     </div>
-                    <input
-                      type="text"
-                      value={variantEditForm.factorGranMayor || ""}
-                      onChange={(e) => {
-                        const newFactor = e.target.value;
-                        const auto = computePvpFromFactor(variantEditForm.costoGranMayorUsd, newFactor);
-                        setVariantEditForm({
-                          ...variantEditForm,
-                          factorGranMayor: newFactor,
-                          precioGranMayorUsd: auto || variantEditForm.precioGranMayorUsd,
-                        });
-                      }}
-                      placeholder="0.80"
-                      className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold text-center"
-                    />
                   </div>
-                  <div>
-                    <label className="font-bold text-amber-900 block mb-1">Cant. Gran Mayor (Unds)</label>
-                    <input
-                      type="number"
-                      value={variantEditForm.minGranMayor !== undefined && variantEditForm.minGranMayor !== "" ? variantEditForm.minGranMayor : ""}
-                      onChange={(e) => setVariantEditForm({ ...variantEditForm, minGranMayor: e.target.value === "" ? "" : Number(e.target.value) })}
-                      placeholder="Ej: 200"
-                      className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
-                    />
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <label className="font-bold text-amber-900 block mb-1">Costo Gran Mayor ($)</label>
+                      <input
+                        type="text"
+                        value={variantEditForm.costoGranMayorUsd}
+                        onChange={(e) => {
+                          const newCost = e.target.value;
+                          const auto = computePvpFromFactor(newCost, variantEditForm.factorGranMayor || "0.80");
+                          setVariantEditForm({
+                            ...variantEditForm,
+                            costoGranMayorUsd: newCost,
+                            precioGranMayorUsd: auto || variantEditForm.precioGranMayorUsd,
+                          });
+                        }}
+                        placeholder="Ej: 70.00"
+                        className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-amber-900">Factor / % GM</label>
+                        <span className="text-[10px] text-emerald-800 font-bold">
+                          {(() => {
+                            const pct = getMarginPctFromFactor(variantEditForm.factorGranMayor || "");
+                            return pct !== null ? `${pct}% ganancia` : "÷ factor o %";
+                          })()}
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={variantEditForm.factorGranMayor || ""}
+                        onChange={(e) => {
+                          const newFactor = e.target.value;
+                          const auto = computePvpFromFactor(variantEditForm.costoGranMayorUsd, newFactor);
+                          setVariantEditForm({
+                            ...variantEditForm,
+                            factorGranMayor: newFactor,
+                            precioGranMayorUsd: auto || variantEditForm.precioGranMayorUsd,
+                          });
+                        }}
+                        placeholder="0.80 o 20"
+                        className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-amber-900 block mb-1">Cant. Gran Mayor (Unds)</label>
+                      <input
+                        type="number"
+                        value={variantEditForm.minGranMayor !== undefined && variantEditForm.minGranMayor !== "" ? variantEditForm.minGranMayor : ""}
+                        onChange={(e) => setVariantEditForm({ ...variantEditForm, minGranMayor: e.target.value === "" ? "" : Number(e.target.value) })}
+                        placeholder="Ej: 200"
+                        className="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 font-bold"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1488,7 +1608,20 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                     <input
                       type="text"
                       value={variantEditForm.precioMayorUsd}
-                      onChange={(e) => setVariantEditForm({ ...variantEditForm, precioMayorUsd: e.target.value })}
+                      onChange={(e) => {
+                        const newPvp = e.target.value;
+                        const cost = parseFloat(String(variantEditForm.costoMayorUsd).replace(",", "."));
+                        const pvp = parseFloat(String(newPvp).replace(",", "."));
+                        let updatedFactor = variantEditForm.factorMayor;
+                        if (!isNaN(cost) && cost > 0 && !isNaN(pvp) && pvp > 0) {
+                          updatedFactor = (cost / pvp).toFixed(2);
+                        }
+                        setVariantEditForm({
+                          ...variantEditForm,
+                          precioMayorUsd: newPvp,
+                          factorMayor: updatedFactor,
+                        });
+                      }}
                       placeholder="Ej: 31.57"
                       className="w-full h-9 px-3 rounded-xl bg-white border border-emerald-300 font-extrabold text-emerald-900"
                     />
@@ -1498,7 +1631,20 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                     <input
                       type="text"
                       value={variantEditForm.precioGranMayorUsd}
-                      onChange={(e) => setVariantEditForm({ ...variantEditForm, precioGranMayorUsd: e.target.value })}
+                      onChange={(e) => {
+                        const newPvp = e.target.value;
+                        const cost = parseFloat(String(variantEditForm.costoGranMayorUsd).replace(",", "."));
+                        const pvp = parseFloat(String(newPvp).replace(",", "."));
+                        let updatedFactor = variantEditForm.factorGranMayor;
+                        if (!isNaN(cost) && cost > 0 && !isNaN(pvp) && pvp > 0) {
+                          updatedFactor = (cost / pvp).toFixed(2);
+                        }
+                        setVariantEditForm({
+                          ...variantEditForm,
+                          precioGranMayorUsd: newPvp,
+                          factorGranMayor: updatedFactor,
+                        });
+                      }}
                       placeholder="Ej: 99.47"
                       className="w-full h-9 px-3 rounded-xl bg-white border border-emerald-300 font-extrabold text-brand"
                     />
@@ -1840,9 +1986,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                           </div>
                           <div>
                             <div className="flex items-center justify-between mb-0.5">
-                              <label className="font-bold text-slate-700">Factor Divisor</label>
+                              <label className="font-bold text-slate-700">Factor / %</label>
                               <span className="text-[9px] text-emerald-800 font-bold">
-                                {v.factorMayor ? `${Math.round((1 - (parseFloat(v.factorMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
+                                {(() => {
+                                  const pct = getMarginPctFromFactor(v.factorMayor || "");
+                                  return pct !== null ? `${pct}% ganancia` : "÷ factor o %";
+                                })()}
                               </span>
                             </div>
                             <input
@@ -1856,7 +2005,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                 if (auto) updated[idx].precioMayorUsd = auto;
                                 setCreateForm({ ...createForm, variantes: updated });
                               }}
-                              placeholder="0.70"
+                              placeholder="0.70 o 30"
                               className="w-full h-8 px-2 rounded-lg bg-white border border-amber-300 font-bold text-center"
                             />
                           </div>
@@ -1921,9 +2070,12 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                           </div>
                           <div>
                             <div className="flex items-center justify-between mb-0.5">
-                              <label className="font-bold text-slate-700">Factor Divisor</label>
+                              <label className="font-bold text-slate-700">Factor / %</label>
                               <span className="text-[9px] text-emerald-800 font-bold">
-                                {v.factorGranMayor ? `${Math.round((1 - (parseFloat(v.factorGranMayor) || 0)) * 100)}% ganancia` : "÷ factor"}
+                                {(() => {
+                                  const pct = getMarginPctFromFactor(v.factorGranMayor || "");
+                                  return pct !== null ? `${pct}% ganancia` : "÷ factor o %";
+                                })()}
                               </span>
                             </div>
                             <input
@@ -1937,7 +2089,7 @@ export const ProductMatrix: React.FC<ProductMatrixProps> = ({
                                 if (auto) updated[idx].precioGranMayorUsd = auto;
                                 setCreateForm({ ...createForm, variantes: updated });
                               }}
-                              placeholder="0.80"
+                              placeholder="0.80 o 20"
                               className="w-full h-8 px-2 rounded-lg bg-white border border-emerald-300 font-bold text-center"
                             />
                           </div>
