@@ -113,6 +113,7 @@ export default function AdminEstadisticasPage() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [bottomTab, setBottomTab] = useState<"ranking" | "visitantes">("ranking");
   const [liveViewMode, setLiveViewMode] = useState<"unicos" | "eventos">("unicos");
   const [timelineMetric, setTimelineMetric] = useState<"visitantesUnicos" | "visitas">("visitantesUnicos");
   const [expandedVisitorId, setExpandedVisitorId] = useState<string | null>(null);
@@ -1001,122 +1002,6 @@ export default function AdminEstadisticasPage() {
         </div>
       </div>
 
-      {/* ── RANKING DE PRODUCTOS MÁS VISTOS ── */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-          <div>
-            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-              <Package className="w-4 h-4 text-brand" />
-              Ranking de Productos Más Vistos y Consultados
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Descubre qué suministros y empaques generan mayor interés en tus clientes mayoristas
-            </p>
-          </div>
-          <span className="text-[11px] font-bold px-2 py-1 rounded-xl bg-purple-50 text-purple-900 border border-purple-200">
-            {data?.topProductos?.length ?? 0} Productos con visitas
-          </span>
-        </div>
-
-        {data?.topProductos && data.topProductos.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  <th className="pb-3 pl-2"># Posición</th>
-                  <th className="pb-3">Producto y SKU</th>
-                  <th className="pb-3 text-center">Categoría</th>
-                  <th className="pb-3 text-center">Visitas Totales</th>
-                  <th className="pb-3 text-center">Visitantes Únicos</th>
-                  <th className="pb-3">Interés Relativo</th>
-                  <th className="pb-3 pr-2 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.topProductos.map((p, idx) => {
-                  const relativePct = Math.round((p.views / maxProductViews) * 100);
-                  return (
-                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 pl-2 font-black text-slate-400">
-                        {idx === 0 ? (
-                          <span className="w-6 h-6 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xs shadow-xs">1</span>
-                        ) : idx === 1 ? (
-                          <span className="w-6 h-6 rounded-full bg-slate-300 text-slate-800 flex items-center justify-center font-black text-xs">2</span>
-                        ) : idx === 2 ? (
-                          <span className="w-6 h-6 rounded-full bg-amber-700/70 text-white flex items-center justify-center font-black text-xs">3</span>
-                        ) : (
-                          `#${idx + 1}`
-                        )}
-                      </td>
-                      <td className="py-3">
-                        <div className="flex items-center gap-3">
-                          {p.fotoUrl ? (
-                            <img src={p.fotoUrl} alt={p.nombre} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-                              <Package className="w-5 h-5" />
-                            </div>
-                          )}
-                          <div>
-                            <span className="font-bold text-slate-900 block max-w-xs sm:max-w-md truncate">
-                              {p.nombre}
-                            </span>
-                            <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-black">
-                              SKU: {p.sku}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 text-center">
-                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]">
-                          {p.categoria}
-                        </span>
-                      </td>
-                      <td className="py-3 text-center font-black text-slate-900 text-sm">
-                        {p.views}
-                      </td>
-                      <td className="py-3 text-center font-bold text-slate-600">
-                        {p.uniqueVisitors} clientes
-                      </td>
-                      <td className="py-3 min-w-[140px]">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-                            <div
-                              style={{ width: `${relativePct}%` }}
-                              className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full"
-                            />
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-500 w-8 text-right">
-                            {relativePct}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-2 text-right">
-                        {p.slug && (
-                          <a
-                            href={`/producto/${p.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors"
-                          >
-                            <span>Ver Ficha</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-slate-400 text-xs">
-            Aún no hay visitas registradas a fichas de productos en este período.
-          </div>
-        )}
-      </div>
-
       {/* ── DISPOSITIVOS Y NAVEGADORES (POR VISITANTES ÚNICOS) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
         {/* Dispositivos */}
@@ -1229,255 +1114,475 @@ export default function AdminEstadisticasPage() {
         </div>
       </div>
 
-      {/* ── FEED DE VISITANTES EN VIVO (ÚNICOS Y TIEMPO REAL) ── */}
+      {/* ── SECCIÓN FINAL CON 2 ETIQUETAS: RANKING Y VISITANTES EN VIVO ── */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-brand" />
-                Visitantes en Vivo (Tiempo Real)
-              </h2>
+        {/* Cabecera con 2 etiquetas para alternar entre Ranking y Visitantes en Vivo */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200/80 gap-1 flex-wrap sm:flex-nowrap">
+            <button
+              type="button"
+              onClick={() => setBottomTab("ranking")}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                bottomTab === "ranking"
+                  ? "bg-white text-brand shadow-xs font-black border border-slate-200/60"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+              }`}
+            >
+              <Package className="w-4 h-4 text-brand" />
+              <span>Ranking de Productos Más Vistos y Consultados</span>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  bottomTab === "ranking"
+                    ? "bg-purple-100 text-purple-900"
+                    : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {data?.topProductos?.length ?? 0}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setBottomTab("visitantes")}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                bottomTab === "visitantes"
+                  ? "bg-white text-emerald-800 shadow-xs font-black border border-slate-200/60"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+              }`}
+            >
+              <Clock className="w-4 h-4 text-emerald-600" />
+              <span>Visitantes en Vivo (Tiempo Real)</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                {data?.resumen.activosAhora ?? 0} en línea ahora
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  bottomTab === "visitantes"
+                    ? "bg-emerald-100 text-emerald-900"
+                    : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {data?.resumen.activosAhora ?? 0} en línea
+              </span>
+            </button>
+          </div>
+
+          {/* Controles del lado derecho según la etiqueta activa */}
+          {bottomTab === "ranking" ? (
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 self-start md:self-center">
+              {data?.topProductos?.length ?? 0} Productos con visitas
+            </span>
+          ) : (
+            <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
+              {/* Selector de modo de vista */}
+              <div className="inline-flex p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setLiveViewMode("unicos")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    liveViewMode === "unicos"
+                      ? "bg-white text-emerald-800 shadow-xs font-black"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Visitantes Únicos ({data?.ultimosVisitantes?.length ?? 0})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLiveViewMode("eventos")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    liveViewMode === "eventos"
+                      ? "bg-white text-brand shadow-xs font-black"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Todos los Eventos ({data?.ultimasVisitas?.length ?? 0})</span>
+                </button>
+              </div>
+
+              <span className="hidden md:inline text-[10px] text-slate-400 font-medium pl-1">
+                {lastUpdated.toLocaleTimeString("es-VE")}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Monitoreo por visitante único con ubicación, dispositivo y páginas recorridas
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Selector de modo de vista */}
-            <div className="inline-flex p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setLiveViewMode("unicos")}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  liveViewMode === "unicos"
-                    ? "bg-white text-emerald-800 shadow-xs font-black"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>Visitantes Únicos ({data?.ultimosVisitantes?.length ?? 0})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setLiveViewMode("eventos")}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  liveViewMode === "eventos"
-                    ? "bg-white text-brand shadow-xs font-black"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>Todos los Eventos ({data?.ultimasVisitas?.length ?? 0})</span>
-              </button>
-            </div>
-
-            <span className="hidden md:inline text-[10px] text-slate-400 font-medium pl-2">
-              {lastUpdated.toLocaleTimeString("es-VE")}
-            </span>
-          </div>
+          )}
         </div>
 
-        {/* MODO 1: VISITANTES ÚNICOS */}
-        {liveViewMode === "unicos" && (
-          <div>
-            {data?.ultimosVisitantes && data.ultimosVisitantes.length > 0 ? (
-              <div className="space-y-3">
-                {data.ultimosVisitantes.map((v) => {
-                  const isExpanded = expandedVisitorId === v.sessionId;
-                  return (
-                    <div
-                      key={v.sessionId}
-                      className={`p-3.5 rounded-2xl border transition-all ${
-                        v.isOnline
-                          ? "bg-emerald-50/30 border-emerald-200 hover:border-emerald-300 shadow-xs"
-                          : "bg-white border-slate-200/80 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        {/* Datos del visitante */}
-                        <div className="flex items-start gap-3 min-w-0 flex-1">
-                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 relative ${
-                            v.isOnline ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
-                          }`}>
-                            {v.dispositivo === "Móvil" ? (
-                              <Smartphone className="w-5 h-5" />
+        {/* ── CONTENIDO ETIQUETA 1: RANKING DE PRODUCTOS ── */}
+        {bottomTab === "ranking" && (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500">
+              Descubre qué suministros y empaques generan mayor interés en tus clientes mayoristas
+            </p>
+
+            {data?.topProductos && data.topProductos.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      <th className="pb-3 pl-2"># Posición</th>
+                      <th className="pb-3">Producto y SKU</th>
+                      <th className="pb-3 text-center">Categoría</th>
+                      <th className="pb-3 text-center">Visitas Totales</th>
+                      <th className="pb-3 text-center">Visitantes Únicos</th>
+                      <th className="pb-3">Interés Relativo</th>
+                      <th className="pb-3 pr-2 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {data.topProductos.map((p, idx) => {
+                      const relativePct = Math.round((p.views / maxProductViews) * 100);
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 pl-2 font-black text-slate-400">
+                            {idx === 0 ? (
+                              <span className="w-6 h-6 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xs shadow-xs">
+                                1
+                              </span>
+                            ) : idx === 1 ? (
+                              <span className="w-6 h-6 rounded-full bg-slate-300 text-slate-800 flex items-center justify-center font-black text-xs">
+                                2
+                              </span>
+                            ) : idx === 2 ? (
+                              <span className="w-6 h-6 rounded-full bg-amber-700/70 text-white flex items-center justify-center font-black text-xs">
+                                3
+                              </span>
                             ) : (
-                              <Monitor className="w-5 h-5" />
+                              `#${idx + 1}`
                             )}
-                            {v.isOnline && (
-                              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
-                            )}
-                          </div>
-
-                          <div className="space-y-1 min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-black text-slate-900 text-sm flex items-center gap-1.5">
-                                <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                                <span>{v.ciudad}, {v.estado}</span>
-                              </span>
-
-                              {v.isOnline ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                  En línea ahora
-                                </span>
+                          </td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-3">
+                              {p.fotoUrl ? (
+                                <img
+                                  src={p.fotoUrl}
+                                  alt={p.nombre}
+                                  className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+                                />
                               ) : (
-                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                                  {getElapsedTimeText(v.ultimaActividad)}
-                                </span>
-                              )}
-
-                              <span className="text-[11px] text-slate-400 font-medium">
-                                · {v.dispositivo} ({v.navegador})
-                              </span>
-
-                              {v.esHumano === false ? (
-                                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                                  🤖 Bot / Servidor
-                                </span>
-                              ) : (v.totalPaginasVistas >= 2 || (v.productosVistos && v.productosVistos.length > 0)) ? (
-                                <span className="text-[10px] font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                                  🔥 Cliente Activo
-                                </span>
-                              ) : null}
-                            </div>
-
-                            {/* Actividad actual */}
-                            <div className="text-slate-600 text-xs break-words">
-                              {v.ultimoProductoNombre ? (
-                                <span className="text-purple-800 font-semibold flex items-center gap-1.5 flex-wrap">
-                                  <Package className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                                  <span>Ficha de producto: <strong className="text-slate-900">{v.ultimoProductoNombre}</strong> ({v.ultimoProductoSku})</span>
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1.5 flex-wrap">
-                                  <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                  <span>Página actual: <strong className="font-mono text-slate-800 break-all">{v.ultimaRuta}</strong></span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Métricas y botón expandir historial */}
-                        <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
-                          <div className="flex items-center gap-1.5 text-[11px]">
-                            <span className="px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold" title="Total de pantallas o páginas visitadas en esta sesión">
-                              📄 {v.totalPaginasVistas} pág{v.totalPaginasVistas !== 1 ? "s" : ""}
-                            </span>
-                            {v.productosVistos && v.productosVistos.length > 0 && (
-                              <span className="px-2 py-1 rounded-lg bg-purple-50 text-purple-800 font-bold border border-purple-200" title="Catálogo consultado">
-                                📦 {v.productosVistos.length} prod{v.productosVistos.length !== 1 ? "s" : ""}
-                              </span>
-                            )}
-                          </div>
-
-                          {v.historial && v.historial.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => setExpandedVisitorId(isExpanded ? null : v.sessionId)}
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
-                                isExpanded
-                                  ? "bg-slate-900 text-white border-slate-900"
-                                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                              }`}
-                            >
-                              <span>Recorrido</span>
-                              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Historial desplegable / Recorrido del visitante */}
-                      {isExpanded && v.historial && (
-                        <div className="mt-3 pt-3 border-t border-slate-200/80 bg-slate-50/70 p-3 rounded-xl space-y-2">
-                          <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">
-                            Recorrido del visitante en esta sesión ({v.historial.length} pasos):
-                          </p>
-                          <div className="space-y-1.5 pl-2 border-l-2 border-emerald-400">
-                            {v.historial.map((h, i) => (
-                              <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1 sm:gap-2 py-0.5">
-                                <div className="flex items-start gap-2 min-w-0 flex-1 break-words">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 mt-1.5" />
-                                  {h.productoNombre ? (
-                                    <span className="text-purple-900 font-medium">
-                                      Vio producto: <strong className="font-bold">{h.productoNombre}</strong> ({h.productoSku})
-                                    </span>
-                                  ) : (
-                                    <span className="text-slate-700 break-all">
-                                      Visitó: <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">{h.ruta}</code>
-                                    </span>
-                                  )}
+                                <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                                  <Package className="w-5 h-5" />
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-mono self-end sm:self-center shrink-0">
-                                  {new Date(h.hora).toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                              )}
+                              <div>
+                                <span className="font-bold text-slate-900 block max-w-xs sm:max-w-md truncate">
+                                  {p.nombre}
+                                </span>
+                                <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-black">
+                                  SKU: {p.sku}
                                 </span>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                            </div>
+                          </td>
+                          <td className="py-3 text-center">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]">
+                              {p.categoria}
+                            </span>
+                          </td>
+                          <td className="py-3 text-center font-black text-slate-900 text-sm">
+                            {p.views}
+                          </td>
+                          <td className="py-3 text-center font-bold text-slate-600">
+                            {p.uniqueVisitors} clientes
+                          </td>
+                          <td className="py-3 min-w-[140px]">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                <div
+                                  style={{ width: `${relativePct}%` }}
+                                  className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full"
+                                />
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-500 w-8 text-right">
+                                {relativePct}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-2 text-right">
+                            {p.slug && (
+                              <a
+                                href={`/producto/${p.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors"
+                              >
+                                <span>Ver Ficha</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             ) : (
-              <p className="text-center py-8 text-xs text-slate-400">No hay visitantes registrados en este período.</p>
+              <div className="text-center py-8 text-slate-400 text-xs">
+                Aún no hay visitas registradas a fichas de productos en este período.
+              </div>
             )}
           </div>
         )}
 
-        {/* MODO 2: TODOS LOS EVENTOS RAW */}
-        {liveViewMode === "eventos" && (
-          <div>
-            {data?.ultimasVisitas && data.ultimasVisitas.length > 0 ? (
-              <div className="divide-y divide-slate-100">
-                {data.ultimasVisitas.map((v) => (
-                  <div key={v.id} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs hover:bg-slate-50/60 px-2 rounded-xl transition-colors">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
-                        {v.dispositivo === "Móvil" ? (
-                          <Smartphone className="w-4 h-4 text-emerald-700" />
-                        ) : (
-                          <Monitor className="w-4 h-4 text-blue-700" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1 break-words">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-bold text-slate-900">
-                            {v.ciudad}, {v.estado}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            · {v.dispositivo} ({v.navegador})
-                          </span>
-                        </div>
-                        <div className="text-slate-500 text-[11px] break-words">
-                          {v.productoNombre ? (
-                            <span className="text-purple-700 font-semibold flex items-center gap-1 flex-wrap">
-                              <Package className="w-3 h-3 shrink-0" /> <span>Ficha: {v.productoNombre} ({v.productoSku})</span>
-                            </span>
-                          ) : (
-                            <span className="break-all">Ruta: {v.ruta}</span>
+        {/* ── CONTENIDO ETIQUETA 2: VISITANTES EN VIVO ── */}
+        {bottomTab === "visitantes" && (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500">
+              Monitoreo por visitante único con ubicación, dispositivo y páginas recorridas
+            </p>
+
+            {/* MODO 1: VISITANTES ÚNICOS */}
+            {liveViewMode === "unicos" && (
+              <div>
+                {data?.ultimosVisitantes && data.ultimosVisitantes.length > 0 ? (
+                  <div className="space-y-3">
+                    {data.ultimosVisitantes.map((v) => {
+                      const isExpanded = expandedVisitorId === v.sessionId;
+                      return (
+                        <div
+                          key={v.sessionId}
+                          className={`p-3.5 rounded-2xl border transition-all ${
+                            v.isOnline
+                              ? "bg-emerald-50/30 border-emerald-200 hover:border-emerald-300 shadow-xs"
+                              : "bg-white border-slate-200/80 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            {/* Datos del visitante */}
+                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                              <div
+                                className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 relative ${
+                                  v.isOnline
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : "bg-slate-100 text-slate-600"
+                                }`}
+                              >
+                                {v.dispositivo === "Móvil" ? (
+                                  <Smartphone className="w-5 h-5" />
+                                ) : (
+                                  <Monitor className="w-5 h-5" />
+                                )}
+                                {v.isOnline && (
+                                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
+                                )}
+                              </div>
+
+                              <div className="space-y-1 min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-black text-slate-900 text-sm flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                    <span>
+                                      {v.ciudad}, {v.estado}
+                                    </span>
+                                  </span>
+
+                                  {v.isOnline ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                      En línea ahora
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                      {getElapsedTimeText(v.ultimaActividad)}
+                                    </span>
+                                  )}
+
+                                  <span className="text-[11px] text-slate-400 font-medium">
+                                    · {v.dispositivo} ({v.navegador})
+                                  </span>
+
+                                  {v.esHumano === false ? (
+                                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                                      🤖 Bot / Servidor
+                                    </span>
+                                  ) : v.totalPaginasVistas >= 2 ||
+                                    (v.productosVistos && v.productosVistos.length > 0) ? (
+                                    <span className="text-[10px] font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                                      🔥 Cliente Activo
+                                    </span>
+                                  ) : null}
+                                </div>
+
+                                {/* Actividad actual */}
+                                <div className="text-slate-600 text-xs break-words">
+                                  {v.ultimoProductoNombre ? (
+                                    <span className="text-purple-800 font-semibold flex items-center gap-1.5 flex-wrap">
+                                      <Package className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                      <span>
+                                        Ficha de producto:{" "}
+                                        <strong className="text-slate-900">
+                                          {v.ultimoProductoNombre}
+                                        </strong>{" "}
+                                        ({v.ultimoProductoSku})
+                                      </span>
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1.5 flex-wrap">
+                                      <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <span>
+                                        Página actual:{" "}
+                                        <strong className="font-mono text-slate-800 break-all">
+                                          {v.ultimaRuta}
+                                        </strong>
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Métricas y botón expandir historial */}
+                            <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                              <div className="flex items-center gap-1.5 text-[11px]">
+                                <span
+                                  className="px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold"
+                                  title="Total de pantallas o páginas visitadas en esta sesión"
+                                >
+                                  📄 {v.totalPaginasVistas} pág{v.totalPaginasVistas !== 1 ? "s" : ""}
+                                </span>
+                                {v.productosVistos && v.productosVistos.length > 0 && (
+                                  <span
+                                    className="px-2 py-1 rounded-lg bg-purple-50 text-purple-800 font-bold border border-purple-200"
+                                    title="Catálogo consultado"
+                                  >
+                                    📦 {v.productosVistos.length} prod
+                                    {v.productosVistos.length !== 1 ? "s" : ""}
+                                  </span>
+                                )}
+                              </div>
+
+                              {v.historial && v.historial.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedVisitorId(isExpanded ? null : v.sessionId)
+                                  }
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                                    isExpanded
+                                      ? "bg-slate-900 text-white border-slate-900"
+                                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span>Recorrido</span>
+                                  <ChevronDown
+                                    className={`w-3.5 h-3.5 transition-transform ${
+                                      isExpanded ? "rotate-180" : ""
+                                    }`}
+                                  />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Historial desplegable / Recorrido del visitante */}
+                          {isExpanded && v.historial && (
+                            <div className="mt-3 pt-3 border-t border-slate-200/80 bg-slate-50/70 p-3 rounded-xl space-y-2">
+                              <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                                Recorrido del visitante en esta sesión ({v.historial.length} pasos):
+                              </p>
+                              <div className="space-y-1.5 pl-2 border-l-2 border-emerald-400">
+                                {v.historial.map((h, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1 sm:gap-2 py-0.5"
+                                  >
+                                    <div className="flex items-start gap-2 min-w-0 flex-1 break-words">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 mt-1.5" />
+                                      {h.productoNombre ? (
+                                        <span className="text-purple-900 font-medium">
+                                          Vio producto:{" "}
+                                          <strong className="font-bold">
+                                            {h.productoNombre}
+                                          </strong>{" "}
+                                          ({h.productoSku})
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-700 break-all">
+                                          Visitó:{" "}
+                                          <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                            {h.ruta}
+                                          </code>
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 font-mono self-end sm:self-center shrink-0">
+                                      {new Date(h.hora).toLocaleTimeString("es-VE", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] font-bold text-slate-500 shrink-0 self-end sm:self-center">
-                      {getElapsedTimeText(v.fecha)}
-                    </div>
+                      );
+                    })}
                   </div>
-                ))}
+                ) : (
+                  <p className="text-center py-8 text-xs text-slate-400">
+                    No hay visitantes registrados en este período.
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="text-center py-6 text-xs text-slate-400">Sin visitas recientes registradas.</p>
+            )}
+
+            {/* MODO 2: TODOS LOS EVENTOS RAW */}
+            {liveViewMode === "eventos" && (
+              <div>
+                {data?.ultimasVisitas && data.ultimasVisitas.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {data.ultimasVisitas.map((v) => (
+                      <div
+                        key={v.id}
+                        className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs hover:bg-slate-50/60 px-2 rounded-xl transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                            {v.dispositivo === "Móvil" ? (
+                              <Smartphone className="w-4 h-4 text-emerald-700" />
+                            ) : (
+                              <Monitor className="w-4 h-4 text-blue-700" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1 break-words">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-bold text-slate-900">
+                                {v.ciudad}, {v.estado}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                · {v.dispositivo} ({v.navegador})
+                              </span>
+                            </div>
+                            <div className="text-slate-500 text-[11px] break-words">
+                              {v.productoNombre ? (
+                                <span className="text-purple-700 font-semibold flex items-center gap-1 flex-wrap">
+                                  <Package className="w-3 h-3 shrink-0" />{" "}
+                                  <span>
+                                    Ficha: {v.productoNombre} ({v.productoSku})
+                                  </span>
+                                </span>
+                              ) : (
+                                <span className="break-all">Ruta: {v.ruta}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] font-bold text-slate-500 shrink-0 self-end sm:self-center">
+                          {getElapsedTimeText(v.fecha)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-6 text-xs text-slate-400">
+                    Sin visitas recientes registradas.
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
